@@ -220,63 +220,63 @@ dist/ (静的ファイル)
 ```ts
 // src/types/content.ts
 
-export type ContentType = 'notes' | 'glossary' | 'books'
+export type ContentType = "notes" | "glossary" | "books";
 
-export type Status = 'published' | 'draft' | 'archived'
+export type Status = "published" | "draft" | "archived";
 
 export interface BaseFrontmatter {
-  status?: Status
-  tags?: string[]
-  summary?: string
-  featured?: boolean
-  created?: string  // ISO 8601
-  updated?: string  // ISO 8601
+  status?: Status;
+  tags?: string[];
+  summary?: string;
+  featured?: boolean;
+  created?: string; // ISO 8601
+  updated?: string; // ISO 8601
 }
 
 export interface NotesFrontmatter extends BaseFrontmatter {
-  title?: string
-  created: string  // 必須
-  updated: string  // 必須
+  title?: string;
+  created: string; // 必須
+  updated: string; // 必須
 }
 
 export interface GlossaryFrontmatter extends BaseFrontmatter {
-  term?: string
-  furigana?: string
-  aliases?: string[]
+  term?: string;
+  furigana?: string;
+  aliases?: string[];
 }
 
 export interface BooksFrontmatter extends BaseFrontmatter {
-  aliases: string[]   // 必須
-  authors: string[]   // 必須
-  isbn?: string
-  read_date?: string
-  pubYear?: number
-  publisher?: string
-  cover?: string
+  aliases: string[]; // 必須
+  authors: string[]; // 必須
+  isbn?: string;
+  read_date?: string;
+  pubYear?: number;
+  publisher?: string;
+  cover?: string;
 }
 
 export interface ContentItem<F = BaseFrontmatter> {
-  type: ContentType
-  slug: string
-  filePath: string
-  frontmatter: F
-  body: string  // Markdown 本文
-  html: string  // 変換後の HTML
-  toc: TocEntry[]
-  outgoingLinks: string[]  // このコンテンツから出ているリンク先 slug
-  incomingLinks: BacklinkRef[]  // バックリンク
+  type: ContentType;
+  slug: string;
+  filePath: string;
+  frontmatter: F;
+  body: string; // Markdown 本文
+  html: string; // 変換後の HTML
+  toc: TocEntry[];
+  outgoingLinks: string[]; // このコンテンツから出ているリンク先 slug
+  incomingLinks: BacklinkRef[]; // バックリンク
 }
 
 export interface TocEntry {
-  depth: 2 | 3
-  text: string
-  id: string  // アンカー
+  depth: 2 | 3;
+  text: string;
+  id: string; // アンカー
 }
 
 export interface BacklinkRef {
-  type: ContentType
-  slug: string
-  title: string
+  type: ContentType;
+  slug: string;
+  title: string;
 }
 ```
 
@@ -304,10 +304,10 @@ Vitest でユニットテスト・統合テストを記述する。
 
 将来的な機能追加を見据えた拡張ポイントを意識する。
 
-| 機能 | 拡張アプローチ |
-| --- | --- |
-| 差分ビルド | コンテンツ収集ステージにハッシュ計算を組み込み、後段で差分検出 |
-| 画像最適化 | 画像コピーステージを最適化処理に置き換え (sharp 等) |
-| 動的 OGP | rehype プラグインまたは個別ステージで Satori 等を使い OGP 画像生成 |
-| サーバーサイド機能 | Workers のルートハンドラを TanStack Start で記述 |
-| 検索範囲拡大 | Pagefind の対象セレクタを調整 (タイトル + summary + tags → 本文含む) |
+| 機能               | 拡張アプローチ                                                       |
+| ------------------ | -------------------------------------------------------------------- |
+| 差分ビルド         | コンテンツ収集ステージにハッシュ計算を組み込み、後段で差分検出       |
+| 画像最適化         | 画像コピーステージを最適化処理に置き換え (sharp 等)                  |
+| 動的 OGP           | rehype プラグインまたは個別ステージで Satori 等を使い OGP 画像生成   |
+| サーバーサイド機能 | Workers のルートハンドラを TanStack Start で記述                     |
+| 検索範囲拡大       | Pagefind の対象セレクタを調整 (タイトル + summary + tags → 本文含む) |

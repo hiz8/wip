@@ -6,49 +6,49 @@ Obsidian Vault 内のコンテンツに関する仕様を定義する。frontmat
 
 設定ファイル (`site.config.ts`) で各コンテンツタイプのフォルダパスを個別に指定する。
 
-| コンテンツタイプ | Vault 内パス | 備考 |
-| --- | --- | --- |
-| Notes | Vault 直下 | サブフォルダあり、`Glossary/`、`Books/` 等は除外する |
-| Glossary | `Glossary/` | フラット (サブフォルダなし) |
-| Books | `Books/` | フラット、ファイル名は ISBN |
+| コンテンツタイプ | Vault 内パス | 備考                                                 |
+| ---------------- | ------------ | ---------------------------------------------------- |
+| Notes            | Vault 直下   | サブフォルダあり、`Glossary/`、`Books/` 等は除外する |
+| Glossary         | `Glossary/`  | フラット (サブフォルダなし)                          |
+| Books            | `Books/`     | フラット、ファイル名は ISBN                          |
 
 ## frontmatter スキーマ
 
 すべてのコンテンツに共通のオプション項目として `status` を持つ。
 
-| 値 | 公開状態 |
-| --- | --- |
-| `published` (デフォルト) | 公開 |
-| `draft` | 非公開 |
-| `archived` | 非公開 |
+| 値                       | 公開状態 |
+| ------------------------ | -------- |
+| `published` (デフォルト) | 公開     |
+| `draft`                  | 非公開   |
+| `archived`               | 非公開   |
 
 `status` を指定しない場合は `published` 扱いとする。
 
 ### Notes
 
-| キー | 型 | 必須 | 説明 |
-| --- | --- | --- | --- |
-| `title` | string | 任意 | 表示タイトル。指定がなければ Markdown 内の最初の H1、それもなければファイル名 (拡張子除く) を使用する |
-| `created` | date (ISO 8601) | 必須 | 作成日 |
-| `updated` | date (ISO 8601) | 必須 | 更新日 |
-| `status` | enum | 任意 | 公開状態 (上記参照) |
-| `tags` | string[] | 任意 | タグ。階層タグ (`frontend/react` 等) サポート |
-| `summary` | string | 任意 | 一覧表示用の要約 |
-| `featured` | boolean | 任意 | `true` の場合、トップページの Featured セクションに表示 |
+| キー       | 型              | 必須 | 説明                                                                                                  |
+| ---------- | --------------- | ---- | ----------------------------------------------------------------------------------------------------- |
+| `title`    | string          | 任意 | 表示タイトル。指定がなければ Markdown 内の最初の H1、それもなければファイル名 (拡張子除く) を使用する |
+| `created`  | date (ISO 8601) | 必須 | 作成日                                                                                                |
+| `updated`  | date (ISO 8601) | 必須 | 更新日                                                                                                |
+| `status`   | enum            | 任意 | 公開状態 (上記参照)                                                                                   |
+| `tags`     | string[]        | 任意 | タグ。階層タグ (`frontend/react` 等) サポート                                                         |
+| `summary`  | string          | 任意 | 一覧表示用の要約                                                                                      |
+| `featured` | boolean         | 任意 | `true` の場合、トップページの Featured セクションに表示                                               |
 
 ### Glossary
 
-| キー | 型 | 必須 | 説明 |
-| --- | --- | --- | --- |
-| `term` | string | 任意 | 用語の表記。指定がなければ Markdown 内の最初の H1、それもなければファイル名 (拡張子除く) を使用する |
-| `furigana` | string | 任意 | ふりがな (例: 「アクセシビリティツリー」→「あくせしびりてぃつりー」)。五十音インデックスとソートに使用 |
-| `aliases` | string[] | 任意 | 別名・略称 |
-| `summary` | string | 任意 | 要約 |
-| `tags` | string[] | 任意 | タグ |
-| `status` | enum | 任意 | 公開状態 |
-| `featured` | boolean | 任意 | Featured フラグ |
-| `created` | date | 任意 | 作成日 |
-| `updated` | date | 任意 | 更新日 |
+| キー       | 型       | 必須 | 説明                                                                                                   |
+| ---------- | -------- | ---- | ------------------------------------------------------------------------------------------------------ |
+| `term`     | string   | 任意 | 用語の表記。指定がなければ Markdown 内の最初の H1、それもなければファイル名 (拡張子除く) を使用する    |
+| `furigana` | string   | 任意 | ふりがな (例: 「アクセシビリティツリー」→「あくせしびりてぃつりー」)。五十音インデックスとソートに使用 |
+| `aliases`  | string[] | 任意 | 別名・略称                                                                                             |
+| `summary`  | string   | 任意 | 要約                                                                                                   |
+| `tags`     | string[] | 任意 | タグ                                                                                                   |
+| `status`   | enum     | 任意 | 公開状態                                                                                               |
+| `featured` | boolean  | 任意 | Featured フラグ                                                                                        |
+| `created`  | date     | 任意 | 作成日                                                                                                 |
+| `updated`  | date     | 任意 | 更新日                                                                                                 |
 
 `furigana` が未指定の場合、五十音インデックスは「その他」セクションに分類する。
 
@@ -56,21 +56,21 @@ Obsidian Vault 内のコンテンツに関する仕様を定義する。frontmat
 
 ファイル名は ISBN (例: `9784873119045.md`) とする。
 
-| キー | 型 | 必須 | 説明 |
-| --- | --- | --- | --- |
-| `aliases` | string[] | 必須 | 配列の最初の要素を「メインタイトル」として表示する |
-| `authors` | string[] | 必須 | 著者 (複数可) |
-| `isbn` | string | 任意 | 指定がなければファイル名 (拡張子除く) から自動取得 |
-| `read_date` | date | 任意 | 読了日 |
-| `summary` | string | 任意 | 要約 |
-| `pubYear` | number | 任意 | 発行年 |
-| `publisher` | string | 任意 | 出版社 |
-| `tags` | string[] | 任意 | タグ |
-| `status` | enum | 任意 | 公開状態 |
-| `featured` | boolean | 任意 | Featured フラグ |
-| `cover` | string | 任意 | 書影画像パス。Vault 内パスを指定 (例: `Books/covers/9784xxx.jpg`) |
-| `created` | date | 任意 | 作成日 |
-| `updated` | date | 任意 | 更新日 |
+| キー        | 型       | 必須 | 説明                                                              |
+| ----------- | -------- | ---- | ----------------------------------------------------------------- |
+| `aliases`   | string[] | 必須 | 配列の最初の要素を「メインタイトル」として表示する                |
+| `authors`   | string[] | 必須 | 著者 (複数可)                                                     |
+| `isbn`      | string   | 任意 | 指定がなければファイル名 (拡張子除く) から自動取得                |
+| `read_date` | date     | 任意 | 読了日                                                            |
+| `summary`   | string   | 任意 | 要約                                                              |
+| `pubYear`   | number   | 任意 | 発行年                                                            |
+| `publisher` | string   | 任意 | 出版社                                                            |
+| `tags`      | string[] | 任意 | タグ                                                              |
+| `status`    | enum     | 任意 | 公開状態                                                          |
+| `featured`  | boolean  | 任意 | Featured フラグ                                                   |
+| `cover`     | string   | 任意 | 書影画像パス。Vault 内パスを指定 (例: `Books/covers/9784xxx.jpg`) |
+| `created`   | date     | 任意 | 作成日                                                            |
+| `updated`   | date     | 任意 | 更新日                                                            |
 
 ## バリデーション
 
@@ -83,11 +83,11 @@ Obsidian Vault 内のコンテンツに関する仕様を定義する。frontmat
 
 ## URL 構造
 
-| コンテンツ | URL | slug の生成元 |
-| --- | --- | --- |
-| Notes | `/notes/[slug]` | ファイル名 (拡張子除く)。日本語ファイル名はそのまま日本語 URL となる |
-| Glossary | `/glossary/[slug]` | ファイル名 (拡張子除く) |
-| Books | `/books/[isbn]` | ファイル名 (拡張子除く)。実質 ISBN |
+| コンテンツ | URL                | slug の生成元                                                        |
+| ---------- | ------------------ | -------------------------------------------------------------------- |
+| Notes      | `/notes/[slug]`    | ファイル名 (拡張子除く)。日本語ファイル名はそのまま日本語 URL となる |
+| Glossary   | `/glossary/[slug]` | ファイル名 (拡張子除く)                                              |
+| Books      | `/books/[isbn]`    | ファイル名 (拡張子除く)。実質 ISBN                                   |
 
 トレイリングスラッシュなし。Notes のサブフォルダ階層は URL に反映しない (フラットな URL とする)。同名ファイルが異なるサブフォルダに存在する場合はビルドエラーとする。
 
@@ -130,13 +130,13 @@ Obsidian の Callout 記法 (`> [!type] title\n> body`) をサポートする。
 
 サポートする種別と用途:
 
-| 種別 | 用途 |
-| --- | --- |
-| `note` | 補足説明・追加情報 |
-| `quote` | 引用 |
-| `tip` | 著者の個人的なコメント・呼びかけ |
-| `info` | 関連リンク・参考資料 |
-| `warning` | 注意喚起 |
+| 種別      | 用途                             |
+| --------- | -------------------------------- |
+| `note`    | 補足説明・追加情報               |
+| `quote`   | 引用                             |
+| `tip`     | 著者の個人的なコメント・呼びかけ |
+| `info`    | 関連リンク・参考資料             |
+| `warning` | 注意喚起                         |
 
 サポートされていない種別 (Obsidian の `abstract`、`todo` 等) は `note` として扱う。
 

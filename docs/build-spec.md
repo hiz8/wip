@@ -4,16 +4,16 @@
 
 ## ビルドコマンド
 
-| コマンド | 用途 |
-| --- | --- |
-| `npm run dev` | 開発サーバー起動 + Vault のウォッチモード (変更時に自動再ビルド) |
-| `npm run build` | 本番ビルド (静的サイト全体を生成) |
-| `npm run preview` | ビルド成果物のローカルプレビュー |
-| `npm run deploy` | `wrangler deploy` を実行して Cloudflare Workers にデプロイ |
-| `npm run lint` | oxlint によるリント |
-| `npm run format` | oxfmt によるフォーマット |
-| `npm run test` | Vitest によるテスト実行 |
-| `npm run typecheck` | TypeScript の型チェック |
+| コマンド            | 用途                                                             |
+| ------------------- | ---------------------------------------------------------------- |
+| `npm run dev`       | 開発サーバー起動 + Vault のウォッチモード (変更時に自動再ビルド) |
+| `npm run build`     | 本番ビルド (静的サイト全体を生成)                                |
+| `npm run preview`   | ビルド成果物のローカルプレビュー                                 |
+| `npm run deploy`    | `wrangler deploy` を実行して Cloudflare Workers にデプロイ       |
+| `npm run lint`      | oxlint によるリント                                              |
+| `npm run format`    | oxfmt によるフォーマット                                         |
+| `npm run test`      | Vitest によるテスト実行                                          |
+| `npm run typecheck` | TypeScript の型チェック                                          |
 
 ## ビルドパイプライン
 
@@ -57,73 +57,73 @@
 
 ```ts
 // site.config.ts
-import { defineConfig } from './src/config'
+import { defineConfig } from "./src/config";
 
 export default defineConfig({
   // サイト基本情報
   site: {
-    name: '(サイト名)',
-    description: '(サイトの説明)',
-    url: 'https://example.com',
-    locale: 'ja',
-    ogImage: '/og-default.png',
+    name: "(サイト名)",
+    description: "(サイトの説明)",
+    url: "https://example.com",
+    locale: "ja",
+    ogImage: "/og-default.png",
   },
 
   // 著者情報
   author: {
-    name: '(著者名)',
-    bio: '(簡潔な紹介)',
+    name: "(著者名)",
+    bio: "(簡潔な紹介)",
     socialLinks: [
-      { label: 'GitHub', url: 'https://github.com/...', icon: 'github' },
-      { label: 'X', url: 'https://x.com/...', icon: 'x' },
+      { label: "GitHub", url: "https://github.com/...", icon: "github" },
+      { label: "X", url: "https://x.com/...", icon: "x" },
     ],
   },
 
   // コンテンツソース
   content: {
-    vaultRoot: process.env.VAULT_ROOT,  // .env で指定
+    vaultRoot: process.env.VAULT_ROOT, // .env で指定
     notes: {
-      path: '.',  // Vault 直下
-      exclude: ['Glossary/**', 'Books/**', 'Clips/**', '_site/**'],
+      path: ".", // Vault 直下
+      exclude: ["Glossary/**", "Books/**", "Clips/**", "_site/**"],
     },
     glossary: {
-      path: 'Glossary',
+      path: "Glossary",
     },
     books: {
-      path: 'Books',
+      path: "Books",
     },
   },
 
   // サイト固有コンテンツ (ハイブリッド方式)
   pages: {
     home: {
-      introMarkdown: '_site/home.md',  // 自己紹介本文の Markdown
-      aboutMarkdown: '_site/about.md',  // サイト説明本文の Markdown
+      introMarkdown: "_site/home.md", // 自己紹介本文の Markdown
+      aboutMarkdown: "_site/about.md", // サイト説明本文の Markdown
     },
   },
 
   // ビルド設定
   build: {
-    outDir: 'dist',
-    publicDir: 'public',
-    strict: true,  // バリデーションエラーをビルドエラーにする
+    outDir: "dist",
+    publicDir: "public",
+    strict: true, // バリデーションエラーをビルドエラーにする
   },
 
   // 機能フラグ
   features: {
     rss: true,
     sitemap: true,
-    search: true,  // Pagefind 有効化
+    search: true, // Pagefind 有効化
   },
-})
+});
 ```
 
 ### 環境変数 (`.env`)
 
-| 変数名 | 用途 |
-| --- | --- |
+| 変数名       | 用途                                                  |
+| ------------ | ----------------------------------------------------- |
 | `VAULT_ROOT` | Vault のルートパス (例: `/Volumes/NAS/Obsidian/Main`) |
-| `SITE_URL` | 本番サイトの URL (本番ビルド時に使用) |
+| `SITE_URL`   | 本番サイトの URL (本番ビルド時に使用)                 |
 
 `.env.example` をリポジトリに含め、`.env` は gitignore する。
 
@@ -235,12 +235,12 @@ GitHub Actions による自動デプロイも構成可能とする。ただし N
 
 ビルド時のエラーは以下のカテゴリで分類してログ出力する。
 
-| カテゴリ | レベル | 例 |
-| --- | --- | --- |
-| 設定エラー | Error (中断) | `site.config.ts` のスキーマ違反、Vault パスが存在しない |
-| frontmatter エラー | Error (中断) | 必須フィールド欠損、型不一致 |
-| リンク解決エラー | Error (中断) | 曖昧なリンク、未解決リンク (※非公開リンクは除く) |
-| 画像参照エラー | Error (中断) | 存在しない画像への参照 |
-| 警告 | Warning (継続) | 未使用画像、空の本文など |
+| カテゴリ           | レベル         | 例                                                      |
+| ------------------ | -------------- | ------------------------------------------------------- |
+| 設定エラー         | Error (中断)   | `site.config.ts` のスキーマ違反、Vault パスが存在しない |
+| frontmatter エラー | Error (中断)   | 必須フィールド欠損、型不一致                            |
+| リンク解決エラー   | Error (中断)   | 曖昧なリンク、未解決リンク (※非公開リンクは除く)        |
+| 画像参照エラー     | Error (中断)   | 存在しない画像への参照                                  |
+| 警告               | Warning (継続) | 未使用画像、空の本文など                                |
 
 `build.strict: false` の場合は Error も Warning として継続するが、デフォルトは `strict: true`。
