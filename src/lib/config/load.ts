@@ -11,9 +11,32 @@ export interface LoadConfigOptions {
   loadEnv?: boolean;
 }
 
+export interface ResolveConfigOptions {
+  cwd?: string;
+  envPath?: string;
+  loadEnv?: boolean;
+}
+
 export async function loadConfig(options: LoadConfigOptions = {}): Promise<SiteConfigParsed> {
   const cwd = options.cwd ?? process.cwd();
   const configPath = resolve(cwd, options.configPath ?? "site.config.ts");
+
+  if (!existsSync(configPath)) {
+    throw new Error(`site config not found at ${configPath}`);
+  }
+
+  const imported: unknown = await import(pathToFileURL(configPath).href);
+  const raw = extractDefaultExport(imported);
+
+  return resolveConfig(raw, {
+    ...(options.cwd !== undefined ? { cwd: options.cwd } : {}),
+    ...(options.envPath !== undefined ? { envPath: options.envPath } : {}),
+    ...(options.loadEnv !== undefined ? { loadEnv: options.loadEnv } : {}),
+  });
+}
+
+export function resolveConfig(raw: unknown, options: ResolveConfigOptions = {}): SiteConfigParsed {
+  const cwd = options.cwd ?? process.cwd();
 
   if (options.loadEnv !== false) {
     const envPath = options.envPath ? resolve(cwd, options.envPath) : resolve(cwd, ".env");
@@ -22,12 +45,6 @@ export async function loadConfig(options: LoadConfigOptions = {}): Promise<SiteC
     }
   }
 
-  if (!existsSync(configPath)) {
-    throw new Error(`site config not found at ${configPath}`);
-  }
-
-  const imported: unknown = await import(pathToFileURL(configPath).href);
-  const raw = extractDefaultExport(imported);
   const merged = mergeEnvOverrides(raw);
   const parsed = siteConfigSchema.parse(merged);
 

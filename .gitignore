@@ -5,3 +5,9 @@ coverage/
 .env.local
 .DS_Store
 *.log
+
+# TanStack Router generated route tree
+src/routeTree.gen.ts
+
+# Vite cache
+.vite/

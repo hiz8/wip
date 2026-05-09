@@ -20,7 +20,8 @@ Obsidian Vault をソースとした個人ブランディング目的の Digital
 
 - Phase 1 (コンテンツ収集とパース、Notes のみ) **完了**
 - Phase 2 (Markdown 変換とリンク解決、Notes 限定) **完了**
-- Phase 3 以降は未着手
+- Phase 3 (TanStack Start SSG、Notes 一覧・詳細ルート) **完了**
+- Phase 4 以降は未着手
 
 完了範囲・公開 API・設計判断・次フェーズへの引き継ぎメモは `docs/implementation-log.md` に集約している。実装作業を始める前に必ず参照すること。
 
@@ -43,6 +44,15 @@ Obsidian Vault をソースとした個人ブランディング目的の Digital
 現時点で利用可能なもの:
 
 ```bash
+# 開発サーバー (vite dev)
+npm run dev
+
+# 本番ビルド (TanStack Start SSG プリレンダー)
+npm run build
+
+# ビルド成果物のローカルプレビュー (vite preview)
+npm run preview
+
 # 型チェック
 npm run typecheck
 
@@ -57,12 +67,12 @@ npm run lint
 npm run fmt
 ```
 
+`npm run dev` / `build` / `preview` は `.env` の `VAULT_ROOT` (または環境変数) で Vault パスを指定する必要がある。
+
 次のコマンドは将来の Phase で追加する予定 (現状未実装):
 
-- `npm run dev` — 開発サーバー (Vault ウォッチモード付き)
-- `npm run build` — 本番ビルド (静的サイト生成)
-- `npm run preview` — ビルド成果物のローカルプレビュー
-- `npm run deploy` — Cloudflare Workers へデプロイ (`wrangler deploy`)
+- Vault ウォッチモード (変更検知の自動再ビルド) — Phase 7 (差分ビルド整備)
+- `npm run deploy` — Cloudflare Workers へデプロイ (`wrangler deploy`) — Phase 7
 
 ## ディレクトリ構成 (要点)
 
