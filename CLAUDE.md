@@ -16,6 +16,13 @@ Obsidian Vault をソースとした個人ブランディング目的の Digital
 
 仕様に関する不明点が生じた場合、これらのドキュメントを最初に参照すること。
 
+## 現在の実装状況
+
+- Phase 1 (コンテンツ収集とパース、Notes のみ) **完了**
+- Phase 2 以降は未着手
+
+完了範囲・公開 API・設計判断・次フェーズへの引き継ぎメモは `docs/implementation-log.md` に集約している。実装作業を始める前に必ず参照すること。
+
 ## 技術スタック
 
 - **言語**: TypeScript (`strict: true` + 追加の厳格オプション)
@@ -32,31 +39,29 @@ Obsidian Vault をソースとした個人ブランディング目的の Digital
 
 ## よく使うコマンド
 
+現時点で利用可能なもの:
+
 ```bash
-# 開発サーバー起動 (Vault のウォッチモード付き)
-npm run dev
-
-# 本番ビルド
-npm run build
-
-# ビルド成果物のローカルプレビュー
-npm run preview
-
-# Cloudflare Workers にデプロイ
-npm run deploy
-
 # 型チェック
 npm run typecheck
 
-# リント
+# テスト (Vitest)
+npm run test
+npm run test:watch
+
+# リント (oxlint)
 npm run lint
 
-# フォーマット
-npm run format
-
-# テスト
-npm run test
+# フォーマット (oxfmt)
+npm run fmt
 ```
+
+次のコマンドは将来の Phase で追加する予定 (現状未実装):
+
+- `npm run dev` — 開発サーバー (Vault ウォッチモード付き)
+- `npm run build` — 本番ビルド (静的サイト生成)
+- `npm run preview` — ビルド成果物のローカルプレビュー
+- `npm run deploy` — Cloudflare Workers へデプロイ (`wrangler deploy`)
 
 ## ディレクトリ構成 (要点)
 
@@ -192,14 +197,16 @@ npm run test
 
 仕様には将来的な拡張も含まれているため、初期実装では以下を優先する:
 
-1. コンテンツ収集とパース (Notes のみで動く最小構成)
-2. Markdown 変換とリンク解決
-3. 基本的なルーティング (Notes 詳細、一覧)
-4. レイアウト (アイコンナビ、ツリー、本文表示)
-5. Glossary / Books の対応
-6. Marginalia / 目次 / バックリンク
-7. 検索 / RSS / sitemap
-8. デザインの作り込み
+1. ✅ コンテンツ収集とパース (Notes のみで動く最小構成)
+2. ⏳ Markdown 変換とリンク解決
+3. ⏳ 基本的なルーティング (Notes 詳細、一覧)
+4. ⏳ レイアウト (アイコンナビ、ツリー、本文表示)
+5. ⏳ Glossary / Books の対応
+6. ⏳ Marginalia / 目次 / バックリンク
+7. ⏳ 検索 / RSS / sitemap
+8. ⏳ デザインの作り込み
+
+各フェーズの完了状況・引き継ぎメモは `docs/implementation-log.md` を参照。
 
 差分ビルド、画像最適化、動的 OGP は将来的な拡張として扱う。
 
