@@ -1,0 +1,29 @@
+{
+  "name": "wip",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "oxlint",
+    "fmt": "oxfmt"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "gray-matter": "^4.0.3",
+    "tinyglobby": "^0.2.16",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "oxfmt": "^0.48.0",
+    "oxlint": "^1.63.0",
+    "typescript": "^6.0.3",
+    "vitest": "^3.2.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
