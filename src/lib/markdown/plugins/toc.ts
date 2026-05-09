@@ -11,11 +11,16 @@ export interface TocContext {
 export function applyToc(tree: Root, ctx: TocContext): void {
   const slugger = new GithubSlugger();
   visit(tree, "heading", (node) => {
-    if (node.depth !== 1 && node.depth !== 2 && node.depth !== 3) {
-      return;
-    }
+    if (node.depth < 1 || node.depth > 3) return;
     const text = mdastToString(node).trim();
     const id = slugger.slug(text);
+    node.data = {
+      ...node.data,
+      hProperties: {
+        ...((node.data?.hProperties ?? {}) as Record<string, unknown>),
+        id,
+      },
+    };
     if (node.depth === 2 || node.depth === 3) {
       ctx.entries.push({ depth: node.depth, text, id });
     }

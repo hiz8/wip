@@ -4,6 +4,7 @@ import type { ContentIndex } from "@/lib/linkgraph/resolve.ts";
 import { resolveLinkTarget } from "@/lib/linkgraph/resolve.ts";
 import type { OutgoingLink } from "@/types/content.ts";
 import { isImagePath } from "./image-util.ts";
+import { rewriteTextNodes } from "./wiki-link.ts";
 
 const BLOCK_EMBED_RE = /^!\[\[([^\]\n|]+)(?:\|([^\]\n]+))?\]\]$/;
 
@@ -129,25 +130,8 @@ function expandEmbed(
 }
 
 function demoteEmbedsToLinks(tree: Root): void {
-  walkText(tree, (value) => value.replaceAll("![[", "[["));
-}
-
-function walkText(parent: { children: unknown[] }, transform: (value: string) => string): void {
-  for (const child of parent.children as Array<{
-    type: string;
-    value?: string;
-    children?: unknown[];
-  }>) {
-    if (!child) continue;
-    if (child.type === "text" && typeof child.value === "string") {
-      child.value = transform(child.value);
-      continue;
-    }
-    if (child.type === "code" || child.type === "inlineCode" || child.type === "html") {
-      continue;
-    }
-    if (Array.isArray(child.children)) {
-      walkText(child as { children: unknown[] }, transform);
-    }
-  }
+  rewriteTextNodes(tree, (value) => {
+    if (!value.includes("![[")) return null;
+    return [{ type: "text", value: value.replaceAll("![[", "[[") }];
+  });
 }

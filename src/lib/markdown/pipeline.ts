@@ -25,7 +25,7 @@ import { applyFootnote } from "./plugins/footnote.ts";
 import { applyImage } from "./plugins/image.ts";
 import { applyToc, extractFirstH1 } from "./plugins/toc.ts";
 import { applyWikiLink } from "./plugins/wiki-link.ts";
-import { getShikiOptions, rehypeShiki } from "./shiki.ts";
+import { rehypeShiki, SHIKI_OPTIONS } from "./shiki.ts";
 
 export async function renderNotes(
   items: ContentItem<NotesFrontmatter>[],
@@ -34,7 +34,7 @@ export async function renderNotes(
   const index = buildContentIndex(items);
   const mdParser = unified().use(remarkParse).use(remarkGfm);
   const subRenderer = createSubRenderer();
-  const finalRenderer = await createFinalRenderer();
+  const finalRenderer = createFinalRenderer();
 
   const parsedBodies = new Map<string, Root>();
   for (const item of items) {
@@ -44,8 +44,7 @@ export async function renderNotes(
   const drafts: RenderedNoteDraft[] = [];
 
   for (const item of items) {
-    const sourceTree = parsedBodies.get(item.slug);
-    if (!sourceTree) continue;
+    const sourceTree = parsedBodies.get(item.slug)!;
     const tree = structuredClone(sourceTree) as Root;
 
     const outgoing: OutgoingLink[] = [];
@@ -114,12 +113,12 @@ export async function renderNotes(
 
 type AnyProcessor = Processor<Root, Root, Root, Root, string>;
 
-async function createFinalRenderer(): Promise<AnyProcessor> {
+function createFinalRenderer(): AnyProcessor {
   const processor = unified()
     .use(remarkGfm)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeSlug)
-    .use(rehypeShiki, getShikiOptions())
+    .use(rehypeShiki, SHIKI_OPTIONS)
     .use(rehypeStringify, { allowDangerousHtml: true });
   return processor as unknown as AnyProcessor;
 }
