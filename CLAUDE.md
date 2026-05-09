@@ -19,7 +19,8 @@ Obsidian Vault をソースとした個人ブランディング目的の Digital
 ## 現在の実装状況
 
 - Phase 1 (コンテンツ収集とパース、Notes のみ) **完了**
-- Phase 2 以降は未着手
+- Phase 2 (Markdown 変換とリンク解決、Notes 限定) **完了**
+- Phase 3 以降は未着手
 
 完了範囲・公開 API・設計判断・次フェーズへの引き継ぎメモは `docs/implementation-log.md` に集約している。実装作業を始める前に必ず参照すること。
 

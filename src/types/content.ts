@@ -41,3 +41,56 @@ export interface ContentItem<F extends BaseFrontmatter = BaseFrontmatter> {
   frontmatter: F;
   body: string;
 }
+
+export interface TocEntry {
+  depth: 2 | 3;
+  text: string;
+  id: string;
+}
+
+export interface OutgoingLink {
+  type: ContentType;
+  slug: string;
+  raw: string;
+  embedded: boolean;
+}
+
+export interface BacklinkRef {
+  type: ContentType;
+  slug: string;
+  title: string;
+  updated: string;
+}
+
+export interface FootnoteEntry {
+  id: string;
+  label: string;
+  html: string;
+}
+
+export type CalloutKind = "note" | "quote" | "tip" | "info" | "warning";
+
+export interface CalloutEntry {
+  id: string;
+  kind: CalloutKind;
+  title: string | undefined;
+  html: string;
+}
+
+export interface ImageRef {
+  rawPath: string;
+  resolvedAbsolutePath: string;
+}
+
+export interface RenderedItem<F extends BaseFrontmatter = BaseFrontmatter> extends ContentItem<F> {
+  html: string;
+  title: string;
+  toc: TocEntry[];
+  outgoingLinks: OutgoingLink[];
+  incomingLinks: BacklinkRef[];
+  footnotes: FootnoteEntry[];
+  callouts: CalloutEntry[];
+  images: ImageRef[];
+}
+
+export type RenderedNote = RenderedItem<NotesFrontmatter>;
