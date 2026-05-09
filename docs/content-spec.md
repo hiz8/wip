@@ -1,0 +1,187 @@
+# コンテンツ仕様
+
+Obsidian Vault 内のコンテンツに関する仕様を定義する。frontmatter スキーマ、Markdown 拡張記法、リンク解決ルールなど。
+
+## ソースの配置
+
+設定ファイル (`site.config.ts`) で各コンテンツタイプのフォルダパスを個別に指定する。
+
+| コンテンツタイプ | Vault 内パス | 備考 |
+| --- | --- | --- |
+| Notes | Vault 直下 | サブフォルダあり、`Glossary/`、`Books/` 等は除外する |
+| Glossary | `Glossary/` | フラット (サブフォルダなし) |
+| Books | `Books/` | フラット、ファイル名は ISBN |
+
+## frontmatter スキーマ
+
+すべてのコンテンツに共通のオプション項目として `status` を持つ。
+
+| 値 | 公開状態 |
+| --- | --- |
+| `published` (デフォルト) | 公開 |
+| `draft` | 非公開 |
+| `archived` | 非公開 |
+
+`status` を指定しない場合は `published` 扱いとする。
+
+### Notes
+
+| キー | 型 | 必須 | 説明 |
+| --- | --- | --- | --- |
+| `title` | string | 任意 | 表示タイトル。指定がなければ Markdown 内の最初の H1、それもなければファイル名 (拡張子除く) を使用する |
+| `created` | date (ISO 8601) | 必須 | 作成日 |
+| `updated` | date (ISO 8601) | 必須 | 更新日 |
+| `status` | enum | 任意 | 公開状態 (上記参照) |
+| `tags` | string[] | 任意 | タグ。階層タグ (`frontend/react` 等) サポート |
+| `summary` | string | 任意 | 一覧表示用の要約 |
+| `featured` | boolean | 任意 | `true` の場合、トップページの Featured セクションに表示 |
+
+### Glossary
+
+| キー | 型 | 必須 | 説明 |
+| --- | --- | --- | --- |
+| `term` | string | 任意 | 用語の表記。指定がなければ Markdown 内の最初の H1、それもなければファイル名 (拡張子除く) を使用する |
+| `furigana` | string | 任意 | ふりがな (例: 「アクセシビリティツリー」→「あくせしびりてぃつりー」)。五十音インデックスとソートに使用 |
+| `aliases` | string[] | 任意 | 別名・略称 |
+| `summary` | string | 任意 | 要約 |
+| `tags` | string[] | 任意 | タグ |
+| `status` | enum | 任意 | 公開状態 |
+| `featured` | boolean | 任意 | Featured フラグ |
+| `created` | date | 任意 | 作成日 |
+| `updated` | date | 任意 | 更新日 |
+
+`furigana` が未指定の場合、五十音インデックスは「その他」セクションに分類する。
+
+### Books
+
+ファイル名は ISBN (例: `9784873119045.md`) とする。
+
+| キー | 型 | 必須 | 説明 |
+| --- | --- | --- | --- |
+| `aliases` | string[] | 必須 | 配列の最初の要素を「メインタイトル」として表示する |
+| `authors` | string[] | 必須 | 著者 (複数可) |
+| `isbn` | string | 任意 | 指定がなければファイル名 (拡張子除く) から自動取得 |
+| `read_date` | date | 任意 | 読了日 |
+| `summary` | string | 任意 | 要約 |
+| `pubYear` | number | 任意 | 発行年 |
+| `publisher` | string | 任意 | 出版社 |
+| `tags` | string[] | 任意 | タグ |
+| `status` | enum | 任意 | 公開状態 |
+| `featured` | boolean | 任意 | Featured フラグ |
+| `cover` | string | 任意 | 書影画像パス。Vault 内パスを指定 (例: `Books/covers/9784xxx.jpg`) |
+| `created` | date | 任意 | 作成日 |
+| `updated` | date | 任意 | 更新日 |
+
+## バリデーション
+
+ビルド時に厳格モードでバリデーションを実行する。以下のいずれかに該当する場合はビルドエラーとする。
+
+- 必須フィールドの欠損
+- 内部リンクの解決失敗 (※リンク先が存在しないが `status: draft` 等で非公開のものはエラーではない。テキスト化される)
+- frontmatter の型不一致 (例: `tags` に文字列が指定されている)
+- 階層タグのフォーマット違反
+
+## URL 構造
+
+| コンテンツ | URL | slug の生成元 |
+| --- | --- | --- |
+| Notes | `/notes/[slug]` | ファイル名 (拡張子除く)。日本語ファイル名はそのまま日本語 URL となる |
+| Glossary | `/glossary/[slug]` | ファイル名 (拡張子除く) |
+| Books | `/books/[isbn]` | ファイル名 (拡張子除く)。実質 ISBN |
+
+トレイリングスラッシュなし。Notes のサブフォルダ階層は URL に反映しない (フラットな URL とする)。同名ファイルが異なるサブフォルダに存在する場合はビルドエラーとする。
+
+## Markdown 拡張記法
+
+### 内部リンク (`[[wiki-link]]`)
+
+Obsidian の wiki-link 記法をサポートする。
+
+- リンク先が公開対象の Notes / Glossary / Books → 該当ページへのハイパーリンクに変換
+- リンク先が非公開 (`status: draft` など) または存在しない → リンクを削除し、テキストのみ残す
+
+リンク解決の優先順位:
+
+1. ファイル名一致 (拡張子なし)
+2. `aliases` フィールドへの一致 (Books / Glossary)
+3. `term` フィールドへの一致 (Glossary)
+
+複数のコンテンツタイプで同名のファイルが存在する場合、明示的なパス指定 (`[[Notes/foo]]` のように) が必要となる。曖昧なリンクはビルドエラーとする。
+
+### Embed (`![[note]]`)
+
+Obsidian の Embed 記法をサポートする。リンク先のコンテンツを本文中にインライン展開する。
+
+- 展開は **1 階層のみ**。Embed 先のコンテンツ内にさらに Embed があっても、それはリンクに変換する
+- Embed 先が非公開または存在しない場合はテキスト化する
+
+### 脚注 (`[^1]`)
+
+Obsidian 標準の脚注記法をサポートする。サイト上では Marginalia として表示する。
+
+- デスクトップ: 該当箇所の右余白 (Marginalia 領域) に表示
+- モバイル: ページ末尾に脚注セクションとしてまとめる
+
+詳細は `docs/ui-spec.md` の Marginalia セクションを参照。
+
+### Callout
+
+Obsidian の Callout 記法 (`> [!type] title\n> body`) をサポートする。本文の特定箇所には紐づかない、著者の声・補足コメントとして扱う。
+
+サポートする種別と用途:
+
+| 種別 | 用途 |
+| --- | --- |
+| `note` | 補足説明・追加情報 |
+| `quote` | 引用 |
+| `tip` | 著者の個人的なコメント・呼びかけ |
+| `info` | 関連リンク・参考資料 |
+| `warning` | 注意喚起 |
+
+サポートされていない種別 (Obsidian の `abstract`、`todo` 等) は `note` として扱う。
+
+#### Private マーカーによる除外
+
+Callout のタイトル部に `private` を含めると、ビルド時に除外される。Obsidian 内ではメモとして残しつつ、サイトには公開しない用途で使用する。
+
+```
+> [!note] private
+> このメモはサイトには公開されない
+```
+
+### コードブロック
+
+Shiki によるシンタックスハイライトを適用する。言語指定がない場合はプレーンテキストとして扱う。
+
+### 画像 (`![[image.png]]`)
+
+Vault 内の画像ファイルを参照する。ビルド時に `public/` 配下にコピーされ、相対パスでアクセス可能になる。
+
+- 初期版は最適化処理なし (元ファイルをそのままコピー)
+- 将来的に WebP 変換、複数解像度対応を検討
+
+## タグ
+
+### 階層タグ
+
+`tags: [frontend/react, frontend/css]` のような階層タグをサポートする。
+
+- 親タグ (`frontend`) でフィルタした場合、子タグ (`frontend/react`、`frontend/css`) を持つコンテンツも結果に含める
+- タグ別ページ (`/[type]/tags/[tag]`) の URL では、`/` を `--` 等の区切り文字でエスケープする (例: `frontend/react` → `/notes/tags/frontend--react`)
+
+### タグの名前空間
+
+タグはコンテンツタイプごとに独立した名前空間を持つ。
+
+- Notes の `#react` と Books の `#react` は別のタグとして扱う
+- タグ別ページの URL も `/notes/tags/react` と `/books/tags/react` で分離
+
+## サイト固有コンテンツ
+
+トップページに表示する自己紹介・サイト説明などはハイブリッド方式で管理する。
+
+- **テキストコンテンツ** (自己紹介本文、サイト説明本文): Markdown ファイルで管理
+  - 例: `_site/home.md`、`_site/about.md` のような専用ファイルを Vault 内に配置
+- **構造化データ** (名前、SNS リンクなど): `site.config.ts` に直接記述
+
+詳細は `docs/build-spec.md` を参照。
