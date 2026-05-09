@@ -1,0 +1,64 @@
+import { existsSync, statSync } from "node:fs";
+import { pathToFileURL } from "node:url";
+import { resolve } from "node:path";
+import { config as loadDotenv } from "dotenv";
+import { siteConfigSchema, type SiteConfigParsed } from "./schema.ts";
+
+export interface LoadConfigOptions {
+  configPath?: string;
+  envPath?: string;
+  cwd?: string;
+  loadEnv?: boolean;
+}
+
+export async function loadConfig(options: LoadConfigOptions = {}): Promise<SiteConfigParsed> {
+  const cwd = options.cwd ?? process.cwd();
+  const configPath = resolve(cwd, options.configPath ?? "site.config.ts");
+
+  if (options.loadEnv !== false) {
+    const envPath = options.envPath ? resolve(cwd, options.envPath) : resolve(cwd, ".env");
+    if (existsSync(envPath)) {
+      loadDotenv({ path: envPath });
+    }
+  }
+
+  if (!existsSync(configPath)) {
+    throw new Error(`site config not found at ${configPath}`);
+  }
+
+  const imported: unknown = await import(pathToFileURL(configPath).href);
+  const raw = extractDefaultExport(imported);
+  const merged = mergeEnvOverrides(raw);
+  const parsed = siteConfigSchema.parse(merged);
+
+  const vaultRootResolved = resolve(cwd, parsed.content.vaultRoot);
+  if (!existsSync(vaultRootResolved) || !statSync(vaultRootResolved).isDirectory()) {
+    throw new Error(`content.vaultRoot does not exist or is not a directory: ${vaultRootResolved}`);
+  }
+  parsed.content.vaultRoot = vaultRootResolved;
+
+  return parsed;
+}
+
+function extractDefaultExport(imported: unknown): unknown {
+  if (imported !== null && typeof imported === "object" && "default" in imported) {
+    return (imported as { default: unknown }).default;
+  }
+  return imported;
+}
+
+function mergeEnvOverrides(raw: unknown): unknown {
+  const vaultRootEnv = process.env["VAULT_ROOT"];
+  if (!vaultRootEnv) return raw;
+  if (raw === null || typeof raw !== "object") return raw;
+
+  const obj = raw as Record<string, unknown>;
+  const content = (obj["content"] ?? {}) as Record<string, unknown>;
+  return {
+    ...obj,
+    content: {
+      ...content,
+      vaultRoot: vaultRootEnv,
+    },
+  };
+}
