@@ -1,38 +1,11 @@
-import { fileURLToPath } from "node:url";
-import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import type { SiteConfigParsed } from "@/lib/config/schema.ts";
 import {
   __resetNotesCacheForTests,
   __setConfigForTests,
   getAllNotes,
   getNoteBySlug,
 } from "@/server/notes.ts";
-
-const fixturesDir = fileURLToPath(new URL("../fixtures", import.meta.url));
-
-function makeConfig(vaultRelative: string): SiteConfigParsed {
-  return {
-    site: {
-      name: "Test",
-      description: "",
-      url: "https://example.test",
-      locale: "ja",
-    },
-    author: { name: "Tester" },
-    content: {
-      vaultRoot: resolve(fixturesDir, vaultRelative),
-      notes: {
-        path: ".",
-        exclude: ["Glossary/**", "Books/**", "Clips/**", "_site/**"],
-      },
-      glossary: { path: "Glossary" },
-      books: { path: "Books" },
-    },
-    build: { outDir: "dist", publicDir: "public", strict: true },
-    features: { rss: true, sitemap: true, search: true },
-  };
-}
+import { makeConfig } from "../helpers/makeConfig.ts";
 
 describe("server/notes data layer", () => {
   afterEach(() => {
@@ -67,7 +40,6 @@ describe("server/notes data layer", () => {
     __setConfigForTests(makeConfig("vault"));
     const a = await getAllNotes();
     const b = await getAllNotes();
-    // Same array reference means the dataset was reused, not rebuilt.
     expect(a).toBe(b);
   }, 30_000);
 });

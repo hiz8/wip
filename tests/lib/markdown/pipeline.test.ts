@@ -1,35 +1,8 @@
-import { fileURLToPath } from "node:url";
-import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { collectNotes } from "@/lib/content/index.ts";
 import { renderNotes } from "@/lib/markdown/index.ts";
 import { BuildError } from "@/lib/content/errors.ts";
-import type { SiteConfigParsed } from "@/lib/config/schema.ts";
-
-const fixturesDir = fileURLToPath(new URL("../../fixtures", import.meta.url));
-
-function makeConfig(vaultRelative: string): SiteConfigParsed {
-  return {
-    site: {
-      name: "Test",
-      description: "",
-      url: "https://example.test",
-      locale: "ja",
-    },
-    author: { name: "Tester" },
-    content: {
-      vaultRoot: resolve(fixturesDir, vaultRelative),
-      notes: {
-        path: ".",
-        exclude: ["Glossary/**", "Books/**", "Clips/**", "_site/**"],
-      },
-      glossary: { path: "Glossary" },
-      books: { path: "Books" },
-    },
-    build: { outDir: "dist", publicDir: "public", strict: true },
-    features: { rss: true, sitemap: true, search: true },
-  };
-}
+import { makeConfig } from "../../helpers/makeConfig.ts";
 
 describe("renderNotes (integration)", () => {
   it("collectNotes → renderNotes でフィクスチャをすべてレンダリングできる", async () => {

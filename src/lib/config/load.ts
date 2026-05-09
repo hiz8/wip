@@ -11,12 +11,6 @@ export interface LoadConfigOptions {
   loadEnv?: boolean;
 }
 
-export interface ResolveConfigOptions {
-  cwd?: string;
-  envPath?: string;
-  loadEnv?: boolean;
-}
-
 export async function loadConfig(options: LoadConfigOptions = {}): Promise<SiteConfigParsed> {
   const cwd = options.cwd ?? process.cwd();
   const configPath = resolve(cwd, options.configPath ?? "site.config.ts");
@@ -28,14 +22,10 @@ export async function loadConfig(options: LoadConfigOptions = {}): Promise<SiteC
   const imported: unknown = await import(pathToFileURL(configPath).href);
   const raw = extractDefaultExport(imported);
 
-  return resolveConfig(raw, {
-    ...(options.cwd !== undefined ? { cwd: options.cwd } : {}),
-    ...(options.envPath !== undefined ? { envPath: options.envPath } : {}),
-    ...(options.loadEnv !== undefined ? { loadEnv: options.loadEnv } : {}),
-  });
+  return resolveConfig(raw, options);
 }
 
-export function resolveConfig(raw: unknown, options: ResolveConfigOptions = {}): SiteConfigParsed {
+export function resolveConfig(raw: unknown, options: LoadConfigOptions = {}): SiteConfigParsed {
   const cwd = options.cwd ?? process.cwd();
 
   if (options.loadEnv !== false) {

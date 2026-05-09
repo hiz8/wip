@@ -16,18 +16,17 @@ export interface NotesDataset {
 let cached: Promise<NotesDataset> | null = null;
 let configOverride: SiteConfigParsed | null = null;
 
-function loadResolvedConfig(): SiteConfigParsed {
-  return resolveConfig(siteConfigInput);
-}
-
 async function build(): Promise<NotesDataset> {
-  const config = configOverride ?? loadResolvedConfig();
+  const config = configOverride ?? resolveConfig(siteConfigInput);
   const items = await collectNotes(config);
   const rendered = await renderNotes(items, config);
 
-  const sorted = [...rendered].sort((a, b) =>
-    a.frontmatter.updated < b.frontmatter.updated ? 1 : -1,
-  );
+  const sorted = [...rendered].sort((a, b) => {
+    if (a.frontmatter.updated === b.frontmatter.updated) {
+      return a.slug.localeCompare(b.slug);
+    }
+    return a.frontmatter.updated < b.frontmatter.updated ? 1 : -1;
+  });
 
   const bySlug = new Map<string, RenderedNote>();
   for (const note of sorted) {
@@ -39,7 +38,12 @@ async function build(): Promise<NotesDataset> {
 
 function dataset(): Promise<NotesDataset> {
   if (cached === null) {
-    cached = build();
+    const p = build();
+    cached = p;
+    // Don't poison the cache on rejection — let the next caller retry.
+    p.catch(() => {
+      if (cached === p) cached = null;
+    });
   }
   return cached;
 }
@@ -54,7 +58,6 @@ export async function getNoteBySlug(slug: string): Promise<RenderedNote | undefi
   return data.bySlug.get(slug);
 }
 
-// Test-only helpers. Production callers should rely on the cached dataset.
 export function __resetNotesCacheForTests(): void {
   cached = null;
   configOverride = null;
