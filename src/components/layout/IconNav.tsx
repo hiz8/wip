@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { Link, useMatches } from "@tanstack/react-router";
 import { colors, radius, space } from "@/styles/tokens.stylex.ts";
 import { ThemeToggle } from "@/components/common/ThemeToggle.tsx";
+import { ContentTypeIcon } from "@/components/common/ContentTypeIcon.tsx";
 
 const styles = stylex.create({
   nav: {
@@ -66,50 +67,6 @@ function HomeIcon() {
   );
 }
 
-function NotesIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M6 3h9l5 5v13H6zM15 3v5h5"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M9 13h7M9 17h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function GlossaryIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-      <path d="M5 17h14" stroke="currentColor" strokeWidth="1.6" />
-    </svg>
-  );
-}
-
-function BooksIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="4" y="4" width="5" height="16" stroke="currentColor" strokeWidth="1.6" />
-      <rect x="10" y="4" width="5" height="16" stroke="currentColor" strokeWidth="1.6" />
-      <path
-        d="M16 5l4 1-3 15-4-1z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export function IconNav() {
   const matches = useMatches();
   const path = matches.at(-1)?.pathname ?? "/";
@@ -124,18 +81,18 @@ export function IconNav() {
         <span {...stylex.props(styles.srOnly)}>Home</span>
       </Link>
       <Link to="/notes" {...stylex.props(styles.iconButton, onNotes && styles.iconButtonActive)}>
-        <NotesIcon />
+        <ContentTypeIcon type="notes" />
         <span {...stylex.props(styles.srOnly)}>Notes</span>
       </Link>
       <Link
         to="/glossary"
         {...stylex.props(styles.iconButton, onGlossary && styles.iconButtonActive)}
       >
-        <GlossaryIcon />
+        <ContentTypeIcon type="glossary" />
         <span {...stylex.props(styles.srOnly)}>Glossary</span>
       </Link>
       <Link to="/books" {...stylex.props(styles.iconButton, onBooks && styles.iconButtonActive)}>
-        <BooksIcon />
+        <ContentTypeIcon type="books" />
         <span {...stylex.props(styles.srOnly)}>Books</span>
       </Link>
       <div {...stylex.props(styles.spacer)} />
