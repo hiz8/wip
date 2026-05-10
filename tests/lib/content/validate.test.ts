@@ -1,5 +1,10 @@
-import { describe, it, expect } from "vitest";
-import { isPublished, validateNotesFrontmatter } from "@/lib/content/validate.ts";
+import { describe, expect, it } from "vitest";
+import {
+  isPublished,
+  validateBooksFrontmatter,
+  validateGlossaryFrontmatter,
+  validateNotesFrontmatter,
+} from "@/lib/content/validate.ts";
 import { BuildError } from "@/lib/content/errors.ts";
 
 describe("validateNotesFrontmatter", () => {
@@ -89,6 +94,89 @@ describe("validateNotesFrontmatter", () => {
       expect(buildErr.message).toContain("broken.md");
       expect(buildErr.message).toContain("created");
     }
+  });
+});
+
+describe("validateGlossaryFrontmatter", () => {
+  it("term / furigana / aliases をすべて任意で許容し published にする", () => {
+    const fm = validateGlossaryFrontmatter(
+      {
+        term: "アクセシビリティツリー",
+        furigana: "あくせしびりてぃつりー",
+        aliases: ["a11y tree"],
+      },
+      "Glossary/term.md",
+    );
+    expect(fm.term).toBe("アクセシビリティツリー");
+    expect(fm.furigana).toBe("あくせしびりてぃつりー");
+    expect(fm.aliases).toEqual(["a11y tree"]);
+    expect(fm.status).toBe("published");
+  });
+
+  it("空の frontmatter でも default status が補完される", () => {
+    const fm = validateGlossaryFrontmatter({}, "Glossary/empty.md");
+    expect(fm.status).toBe("published");
+    expect(fm.term).toBeUndefined();
+    expect(fm.furigana).toBeUndefined();
+  });
+
+  it("aliases が文字列単体だと BuildError", () => {
+    expect(() =>
+      validateGlossaryFrontmatter({ aliases: "single" }, "Glossary/bad.md"),
+    ).toThrowError(BuildError);
+  });
+
+  it("status が draft なら保持される", () => {
+    const fm = validateGlossaryFrontmatter({ status: "draft" }, "Glossary/draft.md");
+    expect(fm.status).toBe("draft");
+  });
+});
+
+describe("validateBooksFrontmatter", () => {
+  it("aliases / authors を必須として受け取る", () => {
+    const fm = validateBooksFrontmatter(
+      {
+        aliases: ["リファクタリング"],
+        authors: ["Martin Fowler"],
+        pubYear: 2019,
+        publisher: "O'Reilly",
+      },
+      "Books/9784873119045.md",
+    );
+    expect(fm.aliases).toEqual(["リファクタリング"]);
+    expect(fm.authors).toEqual(["Martin Fowler"]);
+    expect(fm.pubYear).toBe(2019);
+    expect(fm.status).toBe("published");
+  });
+
+  it("aliases が空配列だと BuildError", () => {
+    expect(() =>
+      validateBooksFrontmatter({ aliases: [], authors: ["A"] }, "Books/bad.md"),
+    ).toThrowError(BuildError);
+  });
+
+  it("authors が欠損だと BuildError", () => {
+    expect(() => validateBooksFrontmatter({ aliases: ["x"] }, "Books/bad.md")).toThrowError(
+      BuildError,
+    );
+  });
+
+  it("pubYear が文字列だと BuildError", () => {
+    expect(() =>
+      validateBooksFrontmatter({ aliases: ["x"], authors: ["a"], pubYear: "2019" }, "Books/bad.md"),
+    ).toThrowError(BuildError);
+  });
+
+  it("read_date は ISO 日付として保持される", () => {
+    const fm = validateBooksFrontmatter(
+      {
+        aliases: ["x"],
+        authors: ["a"],
+        read_date: new Date("2024-08-01T00:00:00Z"),
+      },
+      "Books/x.md",
+    );
+    expect(fm.read_date).toBe("2024-08-01T00:00:00.000Z");
   });
 });
 

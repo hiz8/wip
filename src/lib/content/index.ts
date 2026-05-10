@@ -1,39 +1,58 @@
-import type { ContentItem, NotesFrontmatter } from "@/types/content.ts";
+import type {
+  BooksFrontmatter,
+  ContentItem,
+  GlossaryFrontmatter,
+  NotesFrontmatter,
+} from "@/types/content.ts";
 import type { SiteConfigParsed } from "@/lib/config/schema.ts";
-import { collectNoteFiles } from "./collect.ts";
-import { parseMarkdownFile } from "./parse.ts";
-import { isPublished, validateNotesFrontmatter } from "./validate.ts";
-import { assertUniqueSlugs, deriveSlug } from "./slug.ts";
+import { collectContentItems } from "./collect.ts";
+import {
+  validateBooksFrontmatter,
+  validateGlossaryFrontmatter,
+  validateNotesFrontmatter,
+} from "./validate.ts";
 
-export { collectNoteFiles } from "./collect.ts";
+export { collectContentItems, collectMarkdownFiles, collectNoteFiles } from "./collect.ts";
+export type { CollectContentSpec, CollectOptions } from "./collect.ts";
 export { parseMarkdownFile } from "./parse.ts";
 export type { ParsedFile } from "./parse.ts";
-export { validateNotesFrontmatter, isPublished } from "./validate.ts";
-export { deriveSlug, assertUniqueSlugs } from "./slug.ts";
+export {
+  isPublished,
+  validateBooksFrontmatter,
+  validateGlossaryFrontmatter,
+  validateNotesFrontmatter,
+} from "./validate.ts";
+export { assertUniqueSlugs, deriveSlug } from "./slug.ts";
+export { pickContentTitle } from "./title.ts";
 export { BuildError, formatBuildError } from "./errors.ts";
 export type { BuildErrorCategory, BuildErrorDetails } from "./errors.ts";
 
-export async function collectNotes(
+export function collectNotes(config: SiteConfigParsed): Promise<ContentItem<NotesFrontmatter>[]> {
+  return collectContentItems<NotesFrontmatter>({
+    type: "notes",
+    vaultRoot: config.content.vaultRoot,
+    path: config.content.notes.path,
+    exclude: config.content.notes.exclude,
+    validate: validateNotesFrontmatter,
+  });
+}
+
+export function collectGlossary(
   config: SiteConfigParsed,
-): Promise<ContentItem<NotesFrontmatter>[]> {
-  const files = await collectNoteFiles(config);
-  const items: ContentItem<NotesFrontmatter>[] = [];
+): Promise<ContentItem<GlossaryFrontmatter>[]> {
+  return collectContentItems<GlossaryFrontmatter>({
+    type: "glossary",
+    vaultRoot: config.content.vaultRoot,
+    path: config.content.glossary.path,
+    validate: validateGlossaryFrontmatter,
+  });
+}
 
-  for (const absolutePath of files) {
-    const parsed = await parseMarkdownFile(absolutePath, config.content.vaultRoot);
-    const frontmatter = validateNotesFrontmatter(parsed.rawFrontmatter, parsed.filePath);
-    if (!isPublished(frontmatter)) continue;
-
-    items.push({
-      type: "notes",
-      slug: deriveSlug(parsed.filePath),
-      filePath: parsed.filePath,
-      absolutePath: parsed.absolutePath,
-      frontmatter,
-      body: parsed.body,
-    });
-  }
-
-  assertUniqueSlugs(items);
-  return items;
+export function collectBooks(config: SiteConfigParsed): Promise<ContentItem<BooksFrontmatter>[]> {
+  return collectContentItems<BooksFrontmatter>({
+    type: "books",
+    vaultRoot: config.content.vaultRoot,
+    path: config.content.books.path,
+    validate: validateBooksFrontmatter,
+  });
 }
