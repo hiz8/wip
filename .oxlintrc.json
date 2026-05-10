@@ -43,7 +43,18 @@
     // Allow the __ prefix only for explicit test-escape hatches.
     "eslint/no-underscore-dangle": [
       "warn",
-      { "allow": ["__resetNotesCacheForTests", "__setConfigForTests"] }
+      {
+        "allow": [
+          "__resetNotesCacheForTests",
+          "__setConfigForTests",
+          "__resetGlossaryCacheForTests",
+          "__setGlossaryConfigForTests",
+          "__resetBooksCacheForTests",
+          "__setBooksConfigForTests",
+          "__resetSiteDatasetForTests",
+          "__setSiteDatasetConfigForTests"
+        ]
+      }
     ],
     // Route components and exhaustive case-handling functions naturally
     // exceed the default 50-line threshold without being good refactor
