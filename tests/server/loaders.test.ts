@@ -51,6 +51,21 @@ describe("notes data layer (loader inputs)", () => {
     expect(typeof note.html).toBe("string");
     expect(Array.isArray(note.toc)).toBe(true);
     expect(Array.isArray(note.incomingLinks)).toBe(true);
+    expect(Array.isArray(note.footnotes)).toBe(true);
+    expect(Array.isArray(note.callouts)).toBe(true);
+  });
+
+  it("getNoteBySlug surfaces footnotes and non-private callouts for the detail loader", async () => {
+    __setConfigForTests(loadFixtureConfig());
+    const note = await getNoteBySlug("note-with-marginalia");
+    expect(note).toBeDefined();
+    if (!note) return;
+    expect(note.footnotes.length).toBe(2);
+    const footnoteIds = note.footnotes.map((f) => f.id);
+    expect(footnoteIds).toContain("1");
+    expect(footnoteIds).toContain("longer");
+    expect(note.callouts.length).toBe(2);
+    expect(note.callouts.map((c) => c.kind)).toEqual(["note", "warning"]);
   });
 
   it("getNoteBySlug returns undefined for an unknown slug", async () => {

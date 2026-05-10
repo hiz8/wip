@@ -8,7 +8,7 @@ import { buildGlossaryTree } from "@/lib/tree/buildGlossaryTree.ts";
 import { buildTreeFromRenderedNotes } from "@/lib/tree/buildTree.ts";
 import type { TreeNode } from "@/lib/tree/buildTree.ts";
 import type { FuriganaGroup } from "@/lib/glossary/groupByFurigana.ts";
-import type { BacklinkRef, TocEntry } from "@/types/content.ts";
+import type { BacklinkRef, CalloutEntry, FootnoteEntry, TocEntry } from "@/types/content.ts";
 
 export interface NoteListItem {
   slug: string;
@@ -29,6 +29,8 @@ export interface NoteDetail {
   html: string;
   toc: TocEntry[];
   incomingLinks: BacklinkRef[];
+  footnotes: FootnoteEntry[];
+  callouts: CalloutEntry[];
 }
 
 export interface GlossaryListItem {
@@ -55,6 +57,8 @@ export interface GlossaryDetail {
   html: string;
   toc: TocEntry[];
   incomingLinks: BacklinkRef[];
+  footnotes: FootnoteEntry[];
+  callouts: CalloutEntry[];
 }
 
 export interface BookListItem {
@@ -80,6 +84,8 @@ export interface BookDetail {
   html: string;
   toc: TocEntry[];
   incomingLinks: BacklinkRef[];
+  footnotes: FootnoteEntry[];
+  callouts: CalloutEntry[];
 }
 
 export const getNotesIndexData = createServerFn({ method: "GET" }).handler(
@@ -113,6 +119,8 @@ export const getNoteDetailData = createServerFn({ method: "GET" })
       html: note.html,
       toc: note.toc,
       incomingLinks: note.incomingLinks,
+      footnotes: note.footnotes,
+      callouts: note.callouts,
     };
   });
 
@@ -157,6 +165,8 @@ export const getGlossaryDetailData = createServerFn({ method: "GET" })
       html: term.html,
       toc: term.toc,
       incomingLinks: term.incomingLinks,
+      footnotes: term.footnotes,
+      callouts: term.callouts,
     };
   });
 
@@ -202,6 +212,8 @@ export const getBookDetailData = createServerFn({ method: "GET" })
       html: book.html,
       toc: book.toc,
       incomingLinks: book.incomingLinks,
+      footnotes: book.footnotes,
+      callouts: book.callouts,
     };
   });
 

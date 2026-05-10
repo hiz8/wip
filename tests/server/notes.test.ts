@@ -15,7 +15,13 @@ describe("server/notes data layer", () => {
   it("getAllNotes returns published notes sorted by updated desc", async () => {
     __setConfigForTests(makeConfig("vault"));
     const notes = await getAllNotes();
-    expect(notes.map((n) => n.slug)).toEqual(["nested", "note-a", "日本語ノート", "note-b"]);
+    expect(notes.map((n) => n.slug)).toEqual([
+      "note-with-marginalia",
+      "nested",
+      "note-a",
+      "日本語ノート",
+      "note-b",
+    ]);
     for (const note of notes) {
       expect(typeof note.html).toBe("string");
       expect(note.html.length).toBeGreaterThan(0);
