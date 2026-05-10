@@ -94,3 +94,5 @@ export interface RenderedItem<F extends BaseFrontmatter = BaseFrontmatter> exten
 }
 
 export type RenderedNote = RenderedItem<NotesFrontmatter>;
+export type RenderedGlossaryTerm = RenderedItem<GlossaryFrontmatter>;
+export type RenderedBook = RenderedItem<BooksFrontmatter>;
