@@ -50,6 +50,7 @@ export default defineConfig({
         failOnError: true,
       },
     }),
+    // oxlint-disable-next-line import/no-named-as-default-member -- types only ship via default
     stylex.vite({
       useCSSLayers: true,
       unstable_moduleResolution: {
