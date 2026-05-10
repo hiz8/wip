@@ -36,11 +36,6 @@ const styles = stylex.create({
     color: colors.accent,
     backgroundColor: colors.bgElevated,
   },
-  iconButtonDisabled: {
-    color: colors.textMuted,
-    cursor: "not-allowed",
-    opacity: 0.5,
-  },
   spacer: {
     flexGrow: 1,
   },
@@ -119,6 +114,8 @@ export function IconNav() {
   const matches = useMatches();
   const path = matches.at(-1)?.pathname ?? "/";
   const onNotes = path === "/notes" || path.startsWith("/notes/");
+  const onGlossary = path === "/glossary" || path.startsWith("/glossary/");
+  const onBooks = path === "/books" || path.startsWith("/books/");
 
   return (
     <nav {...stylex.props(styles.nav)} aria-label="Site sections">
@@ -130,26 +127,17 @@ export function IconNav() {
         <NotesIcon />
         <span {...stylex.props(styles.srOnly)}>Notes</span>
       </Link>
-      <button
-        type="button"
-        disabled
-        aria-disabled="true"
-        title="Glossary — Coming soon"
-        {...stylex.props(styles.iconButton, styles.iconButtonDisabled)}
+      <Link
+        to="/glossary"
+        {...stylex.props(styles.iconButton, onGlossary && styles.iconButtonActive)}
       >
         <GlossaryIcon />
-        <span {...stylex.props(styles.srOnly)}>Glossary (coming soon)</span>
-      </button>
-      <button
-        type="button"
-        disabled
-        aria-disabled="true"
-        title="Books — Coming soon"
-        {...stylex.props(styles.iconButton, styles.iconButtonDisabled)}
-      >
+        <span {...stylex.props(styles.srOnly)}>Glossary</span>
+      </Link>
+      <Link to="/books" {...stylex.props(styles.iconButton, onBooks && styles.iconButtonActive)}>
         <BooksIcon />
-        <span {...stylex.props(styles.srOnly)}>Books (coming soon)</span>
-      </button>
+        <span {...stylex.props(styles.srOnly)}>Books</span>
+      </Link>
       <div {...stylex.props(styles.spacer)} />
       <ThemeToggle />
     </nav>

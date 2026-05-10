@@ -43,6 +43,31 @@ function NoteBacklink({ slug, title }: { slug: string; title: string }) {
   );
 }
 
+function GlossaryBacklink({ slug, title }: { slug: string; title: string }) {
+  const params = useMemo(() => ({ slug }), [slug]);
+  return (
+    <Link to="/glossary/$slug" params={params} {...stylex.props(styles.link)}>
+      {title}
+    </Link>
+  );
+}
+
+function BookBacklink({ slug, title }: { slug: string; title: string }) {
+  const params = useMemo(() => ({ isbn: slug }), [slug]);
+  return (
+    <Link to="/books/$isbn" params={params} {...stylex.props(styles.link)}>
+      {title}
+    </Link>
+  );
+}
+
+function BacklinkBody({ ref }: { ref: BacklinkRef }) {
+  if (ref.type === "notes") return <NoteBacklink slug={ref.slug} title={ref.title} />;
+  if (ref.type === "glossary") return <GlossaryBacklink slug={ref.slug} title={ref.title} />;
+  if (ref.type === "books") return <BookBacklink slug={ref.slug} title={ref.title} />;
+  return <span>{ref.title}</span>;
+}
+
 export function Backlinks({ links }: BacklinksProps) {
   if (links.length === 0) return null;
   return (
@@ -51,11 +76,7 @@ export function Backlinks({ links }: BacklinksProps) {
       <ul {...stylex.props(styles.list)}>
         {links.map((ref) => (
           <li key={`${ref.type}:${ref.slug}`}>
-            {ref.type === "notes" ? (
-              <NoteBacklink slug={ref.slug} title={ref.title} />
-            ) : (
-              <span>{ref.title}</span>
-            )}
+            <BacklinkBody ref={ref} />
           </li>
         ))}
       </ul>
