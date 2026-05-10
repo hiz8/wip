@@ -1,0 +1,122 @@
+/*
+ * Phase 6 content styles.
+ *
+ * StyleX-emitted token variables use hashed names that are not stable to
+ * reference from raw CSS, so callout colors below are hardcoded mirrors of
+ * the values in src/styles/tokens.stylex.ts (light + dark). These should be
+ * replaced with token references in Phase 8 design polish.
+ */
+@layer components {
+  [data-content-body] sup {
+    font-size: 0.75em;
+    line-height: 0;
+  }
+
+  [data-content-body] a[data-footnote-ref] {
+    text-decoration: none;
+    padding-inline: 0.15em;
+  }
+
+  [data-content-body] a[data-footnote-ref]:hover,
+  [data-content-body] a[data-footnote-ref]:focus-visible {
+    text-decoration: underline;
+  }
+
+  [data-content-body] blockquote[data-callout] {
+    margin-block: 1rem;
+    padding-block: 0.75rem;
+    padding-inline: 1rem;
+    border-inline-start-width: 3px;
+    border-inline-start-style: solid;
+    border-radius: 0.5rem;
+  }
+
+  [data-content-body] blockquote[data-callout]::before {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.75rem;
+  }
+
+  [data-content-body] blockquote[data-callout="note"] {
+    background-color: #eef4fb;
+    border-inline-start-color: #5b8bc7;
+  }
+  [data-content-body] blockquote[data-callout="note"]::before {
+    content: "ⓘ Note";
+  }
+
+  [data-content-body] blockquote[data-callout="quote"] {
+    background-color: #f5f1e8;
+    border-inline-start-color: #a89464;
+  }
+  [data-content-body] blockquote[data-callout="quote"]::before {
+    content: "❝ Quote";
+  }
+
+  [data-content-body] blockquote[data-callout="tip"] {
+    background-color: #eef7ee;
+    border-inline-start-color: #6cae6e;
+  }
+  [data-content-body] blockquote[data-callout="tip"]::before {
+    content: "💡 Tip";
+  }
+
+  [data-content-body] blockquote[data-callout="info"] {
+    background-color: #eaf3f5;
+    border-inline-start-color: #5aa0ad;
+  }
+  [data-content-body] blockquote[data-callout="info"]::before {
+    content: "🔗 Info";
+  }
+
+  [data-content-body] blockquote[data-callout="warning"] {
+    background-color: #fcf3e6;
+    border-inline-start-color: #c89544;
+  }
+  [data-content-body] blockquote[data-callout="warning"]::before {
+    content: "⚠ Warning";
+  }
+
+  [data-theme-resolved="dark"] [data-content-body] blockquote[data-callout="note"] {
+    background-color: #1a2535;
+  }
+  [data-theme-resolved="dark"] [data-content-body] blockquote[data-callout="quote"] {
+    background-color: #26221a;
+  }
+  [data-theme-resolved="dark"] [data-content-body] blockquote[data-callout="tip"] {
+    background-color: #1a2a1d;
+  }
+  [data-theme-resolved="dark"] [data-content-body] blockquote[data-callout="info"] {
+    background-color: #16282d;
+  }
+  [data-theme-resolved="dark"] [data-content-body] blockquote[data-callout="warning"] {
+    background-color: #332618;
+  }
+
+  /* Responsive switching: marginalia (desktop) vs inline + trailing section
+     (mobile). Breakpoints mirror DetailLayout's `BP_DESKTOP_WIDE` (1280px)
+     and AppShell's `BP_DESKTOP` (1024px). */
+  @media (min-width: 1024px) {
+    [data-content-body] blockquote[data-callout] {
+      display: none;
+    }
+    [data-footnote-section] {
+      display: none;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    [data-marginalia-side] {
+      display: none;
+    }
+  }
+
+  @media (max-width: 1279px) {
+    [data-marginalia-side="left"] {
+      display: none;
+    }
+  }
+}
