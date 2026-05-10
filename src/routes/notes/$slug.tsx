@@ -112,11 +112,7 @@ function NoteDetail() {
             </ul>
           )}
         </header>
-        <div
-          {...stylex.props(styles.content)}
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: note.html }}
-        />
+        <div {...stylex.props(styles.content)} dangerouslySetInnerHTML={{ __html: note.html }} />
       </DetailLayout>
     </AppShell>
   );

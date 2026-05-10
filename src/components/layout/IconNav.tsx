@@ -53,7 +53,7 @@ const styles = stylex.create({
     overflow: "hidden",
     clip: "rect(0, 0, 0, 0)",
     whiteSpace: "nowrap",
-    border: 0,
+    borderWidth: 0,
   },
 });
 

@@ -22,7 +22,7 @@ const styles = stylex.create({
     fontSize: typography.fontSizeSm,
   },
   input: {
-    flex: 1,
+    flexGrow: 1,
     borderStyle: "none",
     outlineStyle: "none",
     backgroundColor: "transparent",

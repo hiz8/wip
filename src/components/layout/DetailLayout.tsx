@@ -2,43 +2,47 @@ import * as stylex from "@stylexjs/stylex";
 import type { ReactNode } from "react";
 import { space, typography } from "@/styles/tokens.stylex.ts";
 
-// Breakpoints are defined inline (not imported from a shared file) so the
-// StyleX babel plugin resolves `bp.X` to literal `@media ...` strings. Under
-// `unstable_moduleResolution.type: "custom"`, cross-file imports become
-// `var(--hash)` theme refs, which bypass `enableMediaQueryOrder` and let
-// overlapping media queries collide in source order.
-const bp = {
-  desktopWide: "@media (min-width: 1280px)",
-} as const;
-
 interface DetailLayoutProps {
   children: ReactNode;
 }
 
+// Breakpoints are kept as literal media-query strings so the
+// @stylexjs/eslint-plugin can verify keys statically, and so the StyleX babel
+// plugin emits literal `@media ...` keys (rather than `var(--hash)` theme refs
+// that would bypass `enableMediaQueryOrder`).
 const styles = stylex.create({
   wrapper: {
     display: "grid",
     gap: space.s5,
     gridTemplateColumns: {
       default: "1fr",
-      [bp.desktopWide]: "minmax(0, 12rem) minmax(0, 1fr) minmax(0, 12rem)",
+      "@media (min-width: 1280px)": "minmax(0, 12rem) minmax(0, 1fr) minmax(0, 12rem)",
     },
     gridTemplateAreas: {
       default: '"main"',
-      [bp.desktopWide]: '"left-margin main right-margin"',
+      "@media (min-width: 1280px)": '"left-margin main right-margin"',
     },
   },
   marginColumn: {
-    display: { default: "none", [bp.desktopWide]: "block" },
+    display: { default: "none", "@media (min-width: 1280px)": "block" },
   },
   leftMargin: {
-    gridArea: "left-margin",
+    gridRowStart: "left-margin",
+    gridRowEnd: "left-margin",
+    gridColumnStart: "left-margin",
+    gridColumnEnd: "left-margin",
   },
   rightMargin: {
-    gridArea: "right-margin",
+    gridRowStart: "right-margin",
+    gridRowEnd: "right-margin",
+    gridColumnStart: "right-margin",
+    gridColumnEnd: "right-margin",
   },
   main: {
-    gridArea: "main",
+    gridRowStart: "main",
+    gridRowEnd: "main",
+    gridColumnStart: "main",
+    gridColumnEnd: "main",
     minWidth: 0,
     maxWidth: "44rem",
     marginInline: "auto",

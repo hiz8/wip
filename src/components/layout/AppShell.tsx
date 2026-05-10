@@ -3,16 +3,6 @@ import type { ReactNode } from "react";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 import { IconNav } from "./IconNav.tsx";
 
-// Breakpoints are defined inline (not imported from a shared file) so the
-// StyleX babel plugin resolves `bp.X` to literal `@media ...` strings. Under
-// `unstable_moduleResolution.type: "custom"`, cross-file imports become
-// `var(--hash)` theme refs, which bypass `enableMediaQueryOrder` and let
-// overlapping media queries collide in source order.
-const bp = {
-  tablet: "@media (min-width: 768px)",
-  desktop: "@media (min-width: 1024px)",
-} as const;
-
 export type AppShellVariant = "home" | "list" | "detail";
 
 interface AppShellProps {
@@ -22,6 +12,12 @@ interface AppShellProps {
   children: ReactNode;
 }
 
+// Breakpoints are kept as literal media-query strings (not pulled through a
+// `const bp = { ... }` indirection) so the @stylexjs/eslint-plugin can verify
+// keys statically, and so the StyleX babel plugin emits literal `@media ...`
+// keys. Under `unstable_moduleResolution.type: "custom"`, cross-file imports
+// become `var(--hash)` theme refs, which bypass `enableMediaQueryOrder` and
+// let overlapping media queries collide in source order.
 const styles = stylex.create({
   root: {
     minHeight: "100vh",
@@ -42,28 +38,31 @@ const styles = stylex.create({
   bodyWithTree: {
     gridTemplateColumns: {
       default: "1fr",
-      [bp.tablet]: "minmax(220px, 16rem) 1fr",
+      "@media (min-width: 768px)": "minmax(220px, 16rem) 1fr",
     },
     gridTemplateAreas: {
       default: '"main"',
-      [bp.tablet]: '"tree main"',
+      "@media (min-width: 768px)": '"tree main"',
     },
   },
   bodyWithRight: {
     gridTemplateColumns: {
       default: "1fr",
-      [bp.tablet]: "minmax(220px, 16rem) 1fr",
-      [bp.desktop]: "minmax(220px, 16rem) minmax(0, 1fr) minmax(220px, 18rem)",
+      "@media (min-width: 768px)": "minmax(220px, 16rem) 1fr",
+      "@media (min-width: 1024px)": "minmax(220px, 16rem) minmax(0, 1fr) minmax(220px, 18rem)",
     },
     gridTemplateAreas: {
       default: '"main"',
-      [bp.tablet]: '"tree main"',
-      [bp.desktop]: '"tree main right"',
+      "@media (min-width: 768px)": '"tree main"',
+      "@media (min-width: 1024px)": '"tree main right"',
     },
   },
   treeArea: {
-    gridArea: "tree",
-    display: { default: "none", [bp.tablet]: "block" },
+    gridRowStart: "tree",
+    gridRowEnd: "tree",
+    gridColumnStart: "tree",
+    gridColumnEnd: "tree",
+    display: { default: "none", "@media (min-width: 768px)": "block" },
     borderInlineEndWidth: 1,
     borderInlineEndStyle: "solid",
     borderInlineEndColor: colors.borderSubtle,
@@ -71,14 +70,20 @@ const styles = stylex.create({
     minHeight: "100vh",
   },
   mainArea: {
-    gridArea: "main",
+    gridRowStart: "main",
+    gridRowEnd: "main",
+    gridColumnStart: "main",
+    gridColumnEnd: "main",
     minWidth: 0,
-    paddingInline: { default: space.s4, [bp.tablet]: space.s6 },
+    paddingInline: { default: space.s4, "@media (min-width: 768px)": space.s6 },
     paddingBlock: space.s5,
   },
   rightArea: {
-    gridArea: "right",
-    display: { default: "none", [bp.desktop]: "block" },
+    gridRowStart: "right",
+    gridRowEnd: "right",
+    gridColumnStart: "right",
+    gridColumnEnd: "right",
+    display: { default: "none", "@media (min-width: 1024px)": "block" },
     borderInlineStartWidth: 1,
     borderInlineStartStyle: "solid",
     borderInlineStartColor: colors.borderSubtle,
