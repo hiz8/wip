@@ -16,7 +16,7 @@ const styles = stylex.create({
     flexDirection: "column",
     fontSize: typography.fontSizeSm,
     color: colors.textPrimary,
-    outline: "none",
+    outlineStyle: "none",
   },
   empty: {
     color: colors.textMuted,
@@ -24,10 +24,11 @@ const styles = stylex.create({
     paddingBlock: space.s2,
     fontSize: typography.fontSizeSm,
   },
-  item: {
+  item: (level: number) => ({
     display: "block",
-    outline: "none",
-  },
+    outlineStyle: "none",
+    paddingInlineStart: `calc(${level} * 0.75rem + 0.25rem)`,
+  }),
   row: {
     display: "flex",
     alignItems: "center",
@@ -45,7 +46,9 @@ const styles = stylex.create({
     fontWeight: typography.weightMedium,
   },
   rowFocused: {
-    outline: `2px solid ${colors.focusRing}`,
+    outlineWidth: 2,
+    outlineStyle: "solid",
+    outlineColor: colors.focusRing,
     outlineOffset: "-2px",
   },
   toggle: {
@@ -89,10 +92,6 @@ function NoteRow({ title }: { title: string }) {
   );
 }
 
-function indentStyle(level: number) {
-  return { paddingInlineStart: `calc(${level} * 0.75rem + ${0.25}rem)` };
-}
-
 function FolderItem({
   node,
   level,
@@ -103,12 +102,7 @@ function FolderItem({
   activeSlug: string | null;
 }) {
   return (
-    <TreeItem
-      id={node.id}
-      textValue={node.name}
-      {...stylex.props(styles.item)}
-      style={indentStyle(level)}
-    >
+    <TreeItem id={node.id} textValue={node.name} {...stylex.props(styles.item(level))}>
       <TreeItemContent>
         {(renderProps) => (
           <div {...stylex.props(styles.row, renderProps.isFocusVisible && styles.rowFocused)}>
@@ -138,8 +132,7 @@ function NoteItem({
       id={node.id}
       textValue={node.title}
       href={`/notes/${node.slug}`}
-      {...stylex.props(styles.item)}
-      style={indentStyle(level)}
+      {...stylex.props(styles.item(level))}
     >
       <TreeItemContent>
         {(renderProps) => (

@@ -25,7 +25,9 @@ const styles = stylex.create({
     gap: space.s2,
     marginBottom: space.s5,
     paddingBottom: space.s4,
-    borderBottom: `1px solid ${colors.borderSubtle}`,
+    borderBlockEndWidth: 1,
+    borderBlockEndStyle: "solid",
+    borderBlockEndColor: colors.borderSubtle,
   },
   title: {
     fontSize: typography.fontSize3xl,

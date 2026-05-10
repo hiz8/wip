@@ -64,7 +64,9 @@ const styles = stylex.create({
   treeArea: {
     gridArea: "tree",
     display: { default: "none", [bp.tablet]: "block" },
-    borderRight: `1px solid ${colors.borderSubtle}`,
+    borderInlineEndWidth: 1,
+    borderInlineEndStyle: "solid",
+    borderInlineEndColor: colors.borderSubtle,
     backgroundColor: colors.bgSurface,
     minHeight: "100vh",
   },
@@ -77,7 +79,9 @@ const styles = stylex.create({
   rightArea: {
     gridArea: "right",
     display: { default: "none", [bp.desktop]: "block" },
-    borderLeft: `1px solid ${colors.borderSubtle}`,
+    borderInlineStartWidth: 1,
+    borderInlineStartStyle: "solid",
+    borderInlineStartColor: colors.borderSubtle,
     backgroundColor: colors.bgSurface,
     paddingInline: space.s4,
     paddingBlock: space.s5,

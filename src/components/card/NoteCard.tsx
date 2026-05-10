@@ -17,13 +17,12 @@ const styles = stylex.create({
     gap: space.s2,
     padding: space.s4,
     backgroundColor: colors.bgSurface,
-    border: `1px solid ${colors.borderSubtle}`,
+    borderWidth: 1,
+    borderStyle: "solid",
+    borderColor: { default: colors.borderSubtle, ":hover": colors.borderStrong },
     borderRadius: radius.md,
     transitionProperty: "border-color, transform",
     transitionDuration: "120ms",
-    ":hover": {
-      borderColor: colors.borderStrong,
-    },
   },
   title: {
     fontSize: typography.fontSizeLg,
