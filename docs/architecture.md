@@ -91,25 +91,26 @@
 │   │       └── tags/
 │   ├── components/             # UI コンポーネント
 │   │   ├── layout/
-│   │   │   ├── AppShell.tsx        # 全体シェル
+│   │   │   ├── AppShell.tsx        # 全体シェル (variant: home/list/detail)
 │   │   │   ├── IconNav.tsx         # 左端アイコンナビ
-│   │   │   ├── TreeSidebar.tsx     # ツリーサイドバー
-│   │   │   └── DetailLayout.tsx    # 詳細ページレイアウト
+│   │   │   ├── TreeSidebar.tsx     # ツリーサイドバー (filter + ContentTree)
+│   │   │   ├── DetailLayout.tsx    # 詳細ページレイアウト (Marginalia 枠予約)
+│   │   │   └── RightSidebar.tsx    # TOC + Backlinks
 │   │   ├── content/
-│   │   │   ├── MarkdownRenderer.tsx
-│   │   │   ├── Marginalia.tsx
-│   │   │   ├── Callout.tsx
-│   │   │   ├── Footnote.tsx
+│   │   │   ├── MarkdownRenderer.tsx  # Phase 6
+│   │   │   ├── Marginalia.tsx        # Phase 6
+│   │   │   ├── Callout.tsx           # Phase 6
+│   │   │   ├── Footnote.tsx          # Phase 6
 │   │   │   └── Toc.tsx
 │   │   ├── tree/
-│   │   │   ├── ContentTree.tsx
-│   │   │   └── TreeSearch.tsx
+│   │   │   ├── ContentTree.tsx       # react-aria-components Tree
+│   │   │   └── TreeSearch.tsx        # react-aria-components TextField
 │   │   ├── card/
 │   │   │   ├── NoteCard.tsx
-│   │   │   ├── BookCard.tsx
-│   │   │   └── GlossaryItem.tsx
+│   │   │   ├── BookCard.tsx          # Phase 5
+│   │   │   └── GlossaryItem.tsx      # Phase 5
 │   │   └── common/
-│   │       ├── ThemeToggle.tsx
+│   │       ├── ThemeToggle.tsx       # 3-state cycle (system/light/dark)
 │   │       └── Backlinks.tsx
 │   ├── lib/
 │   │   ├── content/            # コンテンツ収集・パース
@@ -131,15 +132,29 @@
 │   │   │   └── graph.ts
 │   │   ├── search/             # Pagefind 連携
 │   │   ├── feed/               # RSS / sitemap 生成
+│   │   ├── tree/               # ツリー構築・フィルタ (純関数)
+│   │   │   ├── buildTree.ts
+│   │   │   └── filterTree.ts
+│   │   ├── theme/              # ダークモードランタイム
+│   │   │   ├── constants.ts
+│   │   │   ├── useTheme.ts
+│   │   │   └── themeScript.ts      # FOUC 抑止用インラインスクリプト
+│   │   ├── seo/                # HEAD 補助
+│   │   │   └── title.ts
 │   │   └── config/             # 設定読み込み
-│   │       └── index.ts
+│   │       ├── index.ts
+│   │       └── static.ts           # クライアント向けの primitive ミラー
+│   ├── server/                 # サーバ専用データレイヤー
+│   │   ├── notes.ts                # getAllNotes / getNoteBySlug
+│   │   └── loaders.ts              # createServerFn ラップ
 │   ├── styles/                 # StyleX のテーマ・トークン
 │   │   ├── tokens.stylex.ts
 │   │   ├── theme.stylex.ts
 │   │   └── reset.css
 │   └── types/                  # 共有型定義
 │       ├── content.ts
-│       └── config.ts
+│       ├── config.ts
+│       └── assets.d.ts             # *.css モジュール宣言
 ├── scripts/                    # ビルド・運用スクリプト
 │   ├── build.ts
 │   └── dev.ts

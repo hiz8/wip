@@ -12,7 +12,7 @@
 | 1     | コンテンツ収集とパース (Notes 最小構成) | ✅ Done        | 2026-05-09 |
 | 2     | Markdown 変換とリンク解決 (Notes 限定)  | ✅ Done        | 2026-05-09 |
 | 3     | 基本的なルーティング (Notes 詳細・一覧) | ✅ Done        | 2026-05-09 |
-| 4     | レイアウト (アイコンナビ・ツリー・本文) | ⏳ Not started | —          |
+| 4     | レイアウト (アイコンナビ・ツリー・本文) | ✅ Done        | 2026-05-10 |
 | 5     | Glossary / Books の対応                 | ⏳ Not started | —          |
 | 6     | Marginalia / 目次 / バックリンク        | ⏳ Not started | —          |
 | 7     | 検索 / RSS / sitemap                    | ⏳ Not started | —          |
@@ -253,40 +253,149 @@ npm run fmt          # oxfmt
 
 `npm run build` は `VAULT_ROOT` 環境変数で Vault パスを指定する必要がある (例: `VAULT_ROOT=$PWD/tests/fixtures/vault npm run build`)。
 
-## Phase 4 — レイアウト (引き継ぎメモ)
+## Phase 4 — レイアウト + StyleX + react-aria-components ✅
+
+### 達成範囲
+
+- StyleX を導入 (`@stylexjs/stylex` + `@stylexjs/unplugin`)。`vite.config.ts` に `stylex.vite()` を組み込み、TypeScript の `.ts` 拡張子付き import を解決するカスタム `unstable_moduleResolution` を定義
+- デザイントークン: `src/styles/tokens.stylex.ts` に `colors` / `space` / `radius` / `typography` / `shadow` の 5 グループを `defineVars` で定義。`colors` のみ `@media (prefers-color-scheme: dark)` のデフォルトを持つ
+- ライト・ダークの override テーマ: `src/styles/theme.stylex.ts` で `lightTheme` / `darkTheme` を `createTheme` で作成し、StyleX が emit した className を `themeClasses` として export
+- ブレークポイント: 各レイアウトコンポーネントの先頭に `as const` で `bp` をインライン宣言 (StyleX の `unstable_moduleResolution.type: "custom"` 下で他ファイルから `@media` 文字列を import すると `var(--hash)` の theme ref に変換され、`enableMediaQueryOrder` を迂回して上書きが起きるため)
+- CSS リセット: `src/styles/reset.css` (`@layer reset`) を `src/router.tsx` から import
+- レイアウトコンポーネント: `AppShell` (variant: home / list / detail), `IconNav`, `TreeSidebar`, `DetailLayout`, `RightSidebar`
+- ツリー UI: `react-aria-components` の `<Tree>` / `<TreeItem>` / `<TextField>` を `ContentTree` / `TreeSearch` で活用。フィルタ入力で対象外を非表示にし、ヒットしたフォルダを自動展開
+- カード UI: `NoteCard` (タイトル / summary / tags / updated)
+- TOC: `Toc` コンポーネント (`<nav>` + ネストリスト、見出しなしなら非描画)。`IntersectionObserver` ハイライトは Phase 6
+- バックリンク: `Backlinks` コンポーネント (`BacklinkRef[]` をリスト表示、空なら非描画)
+- ダークモード: 3 状態 (`system → light → dark`) のトグルを `ThemeToggle` で実装。`useSyncExternalStore` で `localStorage` + `matchMedia` を購読し、`<html>` の className とデータ属性を切り替え
+- FOUC 抑止: `__root.tsx` の `<head>` 先頭にインライン `<script>` を注入。`themeScript.ts` が StyleX が emit した className を直接書き出すため、ペイント前にユーザー設定が反映される
+- Server isolation: `createServerFn` で `getNotesIndexData` / `getNoteDetailData` / `getNotesTreeData` をラップ。これにより client バンドルから `node:fs` 等の externalize 警告が完全に消えた (Phase 3 で残した宿題を解消)
+- ルートのローダー戻り値拡張: `/notes/$slug` のローダーが `toc` と `incomingLinks` を再び返すように
+- HEAD 動的化: `src/lib/seo/title.ts` の `makeTitle` と `src/lib/config/static.ts` のサイトメタミラーで、各ルートが `<title>` / `<meta name="description">` を上書き
+- テスト: 新規 28 件 (Phase 4 で追加) — `buildTree` / `filterTree` の純関数テスト、`useTheme` の jsdom テスト、`ThemeToggle` / `TreeSidebar` のコンポーネントテスト、`static.ts` ドリフトガード、データレイヤースモークテスト
+- ビルド: `npm run build` で `node:*` の externalize 警告ゼロ、CSS が `@layer` で適切に階層化されて出力
+
+### 公開 API
+
+`src/server/index.ts` から:
+
+- `getNotesIndexData()` — `createServerFn` ラップ、`/notes` 一覧用の trimmed projection
+- `getNoteDetailData({ data: { slug } })` — `createServerFn` + zod inputValidator、`/notes/$slug` 用 (`toc` / `incomingLinks` を含む)
+- `getNotesTreeData()` — `createServerFn` ラップ、Notes セクション用の `TreeNode[]`
+- 型: `NoteListItem`, `NoteDetail`
+
+`src/lib/tree/buildTree.ts` から:
+
+- `buildTree(notes)`, `buildTreeFromRenderedNotes(notes)` — フォルダ階層を持つ `TreeNode[]` を構築
+- `findFolderAncestors(tree, slug)` — 指定 slug の祖先フォルダ id 配列を返す
+- 型: `TreeNode`, `TreeFolderNode`, `TreeNoteNode`
+
+`src/lib/tree/filterTree.ts` から:
+
+- `filterTree(tree, query)` — 部分一致でフィルタしつつフォルダ祖先を温存
+
+`src/lib/theme/` から:
+
+- `useTheme()` — `{ preference, resolved, setPreference }` を返す。SSR セーフ
+- `themeScript: string` — `<head>` インライン用の IIFE 文字列
+- `STORAGE_KEY`, `Preference`, `nextPreference(current)`
+
+`src/lib/seo/title.ts`:
+
+- `makeTitle(pageTitle)` — `${pageTitle} | ${SITE_NAME}` を組み立て
+
+`src/lib/config/static.ts`:
+
+- `SITE_NAME`, `SITE_DESCRIPTION`, `SITE_URL`, `SITE_LOCALE`, `SITE_OG_IMAGE` — `site.config.ts` の手動ミラー (ドリフトはユニットテストで検出)
+
+### 主要ファイル
+
+```
+vite.config.ts                                   # stylex.vite() を viteReact() の前に挿入、custom resolver
+vitest.config.ts                                 # stylex プラグイン + viteReact、setupFiles
+src/styles/tokens.stylex.ts                      # colors / space / radius / typography / shadow
+src/styles/theme.stylex.ts                       # lightTheme / darkTheme + themeClasses export
+src/styles/reset.css                             # @layer reset 配下
+src/router.tsx                                   # reset.css を import
+src/routes/__root.tsx                            # 動的 head + FOUC スクリプト
+src/routes/index.tsx                             # AppShell variant="home"
+src/routes/notes/route.tsx                       # /notes/* 親ルート、tree loader
+src/routes/notes/index.tsx                       # AppShell variant="list" + NoteCard グリッド
+src/routes/notes/$slug.tsx                       # AppShell variant="detail" + DetailLayout + RightSidebar
+src/server/loaders.ts                            # createServerFn ラップ
+src/lib/theme/{constants,useTheme,themeScript}.ts
+src/lib/seo/title.ts
+src/lib/config/static.ts
+src/lib/tree/{buildTree,filterTree}.ts
+src/components/layout/{AppShell,IconNav,TreeSidebar,DetailLayout,RightSidebar}.tsx
+src/components/tree/{ContentTree,TreeSearch}.tsx
+src/components/card/NoteCard.tsx
+src/components/common/{ThemeToggle,Backlinks}.tsx
+src/components/content/Toc.tsx
+src/types/assets.d.ts                            # *.css モジュール宣言
+tests/setup.ts                                   # jest-dom + RTL cleanup
+tests/lib/tree/{buildTree,filterTree}.test.ts
+tests/lib/theme/useTheme.test.ts
+tests/lib/config/static.test.ts
+tests/components/{ThemeToggle,TreeSidebar}.test.tsx
+tests/server/loaders.test.ts
+```
+
+### 設計判断 (Phase 5 以降に影響)
+
+1. **`createServerFn` の handler は inline 必須** — TanStack Start の vite プラグインは `.handler(async () => {…})` の引数を client バンドルでは RPC スタブに置き換える。ハンドラ本体を別関数として export してから `.handler(fetchFn)` のように渡すと client バンドルに本体が残り、`node:fs` 等が externalize 警告として再発する。テストは `getAllNotes` / `getNoteBySlug` 等の primitive を直接呼ぶ
+2. **StyleX の `unstable_moduleResolution: 'custom'`** — 本プロジェクトは `verbatimModuleSyntax + allowImportingTsExtensions` で `.ts` 拡張子付き import を強制する。Node ESM の `import.meta.resolve` は `.ts` を解決しないため、ファイルシステム探索する custom resolver を `vite.config.ts` / `vitest.config.ts` の双方に置く
+3. **Breakpoints はファイル内で `as const` インライン宣言** — レイアウトコンポーネントの先頭に `const bp = { tablet: "@media (min-width: 768px)" } as const` を置く。StyleX の `unstable_moduleResolution.type: "custom"` 下で `@media` 文字列を別ファイルから import すると `var(--hash)` の theme ref に変換され、`enableMediaQueryOrder` を迂回してソース順に同じプロパティが上書きされる (例: `default` の値がモバイルメディアクエリより後に書き出され、tablet 以上で base の値が残らない)。インライン宣言なら babel-stylex が値を静的にインライン化してくれて、衝突回避が機能する。`defineConsts` を使った専用ファイル (`breakpoints.stylex.ts`) も同じ問題を踏むので採用していない
+4. **ダークモード = `defineVars` の `@media` デフォルト + `createTheme` の override 二段構え** — システム追従 (OS) はトークンの `@media` で実現、明示選択 (light / dark) は `createTheme` の className を `<html>` に付与。FOUC スクリプトは `themeClasses.{light,dark}` を空白区切りで `classList.add` できないため、token を split してから個別追加
+5. **ツリーの拡張状態は controlled** — `react-aria-components` の `<Tree expandedKeys={...} onExpandedChange={...}>` を controlled にして、アクティブ note の祖先展開と filter 入力時の自動展開を両立
+6. **HEAD 動的化** — root route が site-wide のデフォルトを emit、leaf route が `head: ({ loaderData }) => …` で title / description を上書き。`makeTitle("Foo")` で `"Foo | Digital Garden"` を生成する
+7. **Static config mirror** — `site.config.ts` を client から import すると `node:fs` 等を引きずるため、`src/lib/config/static.ts` で primitive を手動ミラー。`tests/lib/config/static.test.ts` がドリフトを検出
+8. **Vitest 4 の環境振り分け** — `environmentMatchGlobs` は v4 で削除されたので、テストファイル冒頭の `// @vitest-environment jsdom` プラグマで代用
+9. **RTL の auto-cleanup を明示有効化** — `tests/setup.ts` で `globalThis.document` 検査して `cleanup()` を `afterEach` で呼び出す。`globals: false` 構成では自動 cleanup が走らない
+10. **CSS レイヤー順序** — `reset.css` で `@layer reset, base, components, utilities;` を宣言、StyleX は `useCSSLayers: true` で `@layer` 出力するため、リセットがコンポーネントスタイルより先に評価される
+
+### Phase 4 で意図的に未実装
+
+- Marginalia (脚注 / Callout) の左右配置、TOC アクティブハイライト (IntersectionObserver) — Phase 6
+- Glossary / Books のルート・ツリー・カード — Phase 5 (IconNav には disabled プレースホルダで配置済み)
+- 検索 (Pagefind)、RSS、sitemap、画像コピー — Phase 7
+- デザインの最終形 (フォント、間隔、カラーパレットの調整) — Phase 8
+
+## Phase 5 — Glossary / Books (引き継ぎメモ)
 
 ### 想定スコープ
 
-- AppShell / IconNav / TreeSidebar / DetailLayout のレイアウトコンポーネント (`docs/ui-spec.md`「全体レイアウト」)
-- StyleX の導入 (テーマトークン、リセット CSS、ライト・ダーク双方の配色)
-- react-aria-components の Tree / Disclosure / TextField を Notes ツリーに適用
-- 詳細ページのヘッダ / 目次 (TOC) / バックリンク UI を Phase 2 のメタデータから組み立てる (情報構造のみ。Marginalia 配置は Phase 6)
-- 一覧ページのカード型 UI
+- Vault 内 `Glossary/` 配下の収集パイプライン (`collectGlossary` 等)、五十音インデックス、`furigana` ベースのソート
+- Vault 内 `Books/` 配下の収集パイプライン、ISBN slug、`aliases[0]` をメインタイトルとする運用
+- ルート: `/glossary`, `/glossary/$slug`, `/books`, `/books/$isbn`
+- IconNav の Glossary / Books ボタンを `disabled` から `<Link>` に切り替え
+- TreeSidebar のコンテキスト切り替え: コンテンツタイプに応じてツリーの構造とラベルを変える (Notes はサブフォルダ、Glossary は五十音グルーピング、Books はフラット)
+- Glossary 詳細ページのレイアウト (用語名 + furigana + 本文 + 関連語)
+- Books 詳細ページ (書影 + メタデータ + 感想本文)
+- BookCard / GlossaryItem コンポーネント
 
 ### 推奨アプローチ
 
-- **`createServerFn` または `*.server.ts` への移行を検討** — 現状は `src/server/notes.ts` がルートから直接 import されているため client バンドルにも file-IO コードが入る。レイアウトで子コンポーネントが増えるとさらに膨れる懸念がある。Phase 4 で隔離するのが望ましい
-- **ローダー戻り値の拡張** — TOC / バックリンクの UI 化に合わせて `/notes/$slug` のローダーから `toc` / `incomingLinks` を返す。Phase 3 で意図的にカットしたフィールドを順次戻す
-- **StyleX のテーマ** — `src/styles/tokens.stylex.ts` / `theme.stylex.ts` を新設。Phase 2 で Shiki が `--shiki-light` / `--shiki-dark` の CSS 変数を発行しているので、StyleX のトークンと整合させる
-- **`<head>` 動的化** — `__root.tsx` の `head` を「サイト名 / ページタイトル」に応じて切り替え。`createFileRoute` の `head` でルートごとの `<title>` / `<meta>` を上書きする
-- **CSS リセット** — `src/styles/reset.css` を導入し、`__root.tsx` から `<link rel="stylesheet" href="/reset.css">` する (もしくは StyleX の global API)
+- `src/lib/content/` の `collectNotes` を一般化して `collectGlossary` / `collectBooks` を追加。frontmatter スキーマは `src/types/content.ts` に既に存在 (`GlossaryFrontmatter` / `BooksFrontmatter`)
+- `src/server/loaders.ts` に `getGlossaryIndexData` / `getGlossaryDetailData` / `getBooksIndexData` / `getBookDetailData` / `getGlossaryTreeData` / `getBooksTreeData` を追加 (handler は必ず inline)
+- TreeSidebar に `treeKind: "notes" | "glossary" | "books"` プロパティを足し、`buildTree` をコンテンツタイプ別に派生
+- 五十音グルーピングは `furigana` の頭文字を `あかさたなはまやらわ行` のいずれかにマップする純関数 (`src/lib/glossary/groupByFurigana.ts`) として実装
+- ISBN slug は `src/lib/content/slug.ts` を拡張するか、Books 専用の slug deriver を追加
+- IconNav の disabled ボタンを `<Link to="/glossary" />` / `<Link to="/books" />` に置き換え
 
 ### 着手前の確認
 
-- `docs/ui-spec.md`「全体レイアウト」「左サイドバー」「メインコンテンツ」を再読
-- `docs/architecture.md`「ディレクトリ構成」の `src/components/` セクションを再読
-- TanStack Start の HEAD 管理仕様 (https://tanstack.com/start/latest/docs/framework/react/guide/document-head)
-- 仕様の不備があれば `CLAUDE.md`「仕様変更が必要な場合」のフロー
+- `docs/content-spec.md` の Glossary / Books 仕様 (frontmatter、URL 構造、タグ名前空間)
+- `docs/ui-spec.md` の「Glossary」「Books」セクション
+- 五十音インデックスの仕様 (どの行に分けるか、未指定 furigana の扱い)
 
-## Phase 4 〜 8 (概要のみ)
+## Phase 6 〜 8 (概要のみ)
 
-| Phase | 主な作業                                                                 | 主要参照                                                    |
-| ----- | ------------------------------------------------------------------------ | ----------------------------------------------------------- |
-| 4     | AppShell / IconNav / TreeSidebar / DetailLayout、StyleX 導入             | `docs/ui-spec.md`「全体レイアウト」                         |
-| 5     | Glossary / Books の収集・パース・ルート、五十音インデックス、ISBN slug   | `docs/content-spec.md`, `docs/ui-spec.md`「Glossary/Books」 |
-| 6     | Marginalia 配置、TOC ハイライト (IntersectionObserver)、バックリンク表示 | `docs/ui-spec.md`「Marginalia」「右サイドバー」             |
-| 7     | Pagefind、RSS、sitemap、画像コピー                                       | `docs/build-spec.md`「サイトマップ・RSS」「画像処理」       |
-| 8     | デザイントークン詰め、ダークモード、レスポンシブ調整                     | `docs/ui-spec.md`「ダークモード」「レスポンシブ」           |
+| Phase | 主な作業                                                                 | 主要参照                                              |
+| ----- | ------------------------------------------------------------------------ | ----------------------------------------------------- |
+| 6     | Marginalia 配置、TOC ハイライト (IntersectionObserver)、バックリンク表示 | `docs/ui-spec.md`「Marginalia」「右サイドバー」       |
+| 7     | Pagefind、RSS、sitemap、画像コピー                                       | `docs/build-spec.md`「サイトマップ・RSS」「画像処理」 |
+| 8     | デザイントークン詰め、ダークモード、レスポンシブ調整                     | `docs/ui-spec.md`「ダークモード」「レスポンシブ」     |
 
 差分ビルド・画像最適化・動的 OGP は本ロードマップ外 (将来課題)。
 
