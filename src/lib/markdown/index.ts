@@ -1,4 +1,13 @@
-export { renderNotes } from "./pipeline.ts";
+export {
+  pickBooksTitle,
+  pickGlossaryTitle,
+  pickNotesTitle,
+  renderBooks,
+  renderContentDrafts,
+  renderGlossary,
+  renderNotes,
+} from "./pipeline.ts";
+export type { RenderContentSpec } from "./pipeline.ts";
 export type {
   BacklinkRef,
   CalloutEntry,
@@ -6,6 +15,8 @@ export type {
   FootnoteEntry,
   ImageRef,
   OutgoingLink,
+  RenderedBook,
+  RenderedGlossaryTerm,
   RenderedItem,
   RenderedNote,
   TocEntry,
