@@ -34,38 +34,32 @@ const styles = stylex.create({
   },
 });
 
-function NoteBacklink({ slug, title }: { slug: string; title: string }) {
-  const params = useMemo(() => ({ slug }), [slug]);
-  return (
-    <Link to="/notes/$slug" params={params} {...stylex.props(styles.link)}>
-      {title}
-    </Link>
-  );
-}
-
-function GlossaryBacklink({ slug, title }: { slug: string; title: string }) {
-  const params = useMemo(() => ({ slug }), [slug]);
-  return (
-    <Link to="/glossary/$slug" params={params} {...stylex.props(styles.link)}>
-      {title}
-    </Link>
-  );
-}
-
-function BookBacklink({ slug, title }: { slug: string; title: string }) {
-  const params = useMemo(() => ({ isbn: slug }), [slug]);
-  return (
-    <Link to="/books/$isbn" params={params} {...stylex.props(styles.link)}>
-      {title}
-    </Link>
-  );
-}
-
 function BacklinkBody({ ref }: { ref: BacklinkRef }) {
-  if (ref.type === "notes") return <NoteBacklink slug={ref.slug} title={ref.title} />;
-  if (ref.type === "glossary") return <GlossaryBacklink slug={ref.slug} title={ref.title} />;
-  if (ref.type === "books") return <BookBacklink slug={ref.slug} title={ref.title} />;
-  return <span>{ref.title}</span>;
+  const { slug, title, type } = ref;
+  const slugParams = useMemo(() => ({ slug }), [slug]);
+  const isbnParams = useMemo(() => ({ isbn: slug }), [slug]);
+  if (type === "notes") {
+    return (
+      <Link to="/notes/$slug" params={slugParams} {...stylex.props(styles.link)}>
+        {title}
+      </Link>
+    );
+  }
+  if (type === "glossary") {
+    return (
+      <Link to="/glossary/$slug" params={slugParams} {...stylex.props(styles.link)}>
+        {title}
+      </Link>
+    );
+  }
+  if (type === "books") {
+    return (
+      <Link to="/books/$isbn" params={isbnParams} {...stylex.props(styles.link)}>
+        {title}
+      </Link>
+    );
+  }
+  return <span>{title}</span>;
 }
 
 export function Backlinks({ links }: BacklinksProps) {

@@ -54,6 +54,7 @@ export async function renderContentDrafts<F extends BaseFrontmatter>(
   for (const item of items) {
     parsedBodies.set(`${item.type}/${item.slug}`, mdParser.parse(item.body) as Root);
   }
+  const flatBodies = bodiesForEmbed(parsedBodies);
 
   const drafts: RenderedItemDraft<F>[] = [];
 
@@ -72,7 +73,7 @@ export async function renderContentDrafts<F extends BaseFrontmatter>(
       fromFilePath: item.filePath,
       fromSlug: item.slug,
       outgoing,
-      parsedBodies: bodiesForEmbed(parsedBodies),
+      parsedBodies: flatBodies,
     });
 
     applyImage(tree, {
@@ -207,26 +208,18 @@ async function renderSubtree(processor: AnyProcessor, tree: Root): Promise<strin
   return processor.stringify(transformed) as string;
 }
 
-export function pickNotesTitle(item: ContentItem<NotesFrontmatter>, tree: Root): string {
-  const fromFrontmatter = item.frontmatter.title?.trim();
-  if (fromFrontmatter && fromFrontmatter.length > 0) return fromFrontmatter;
-  const fromHeading = extractFirstH1(tree);
-  if (fromHeading) return fromHeading;
-  return item.slug;
+function makeTitlePicker<F extends BaseFrontmatter>(
+  get: (fm: F) => string | undefined,
+): (item: ContentItem<F>, tree: Root) => string {
+  return (item, tree) => {
+    const trimmed = get(item.frontmatter)?.trim();
+    if (trimmed && trimmed.length > 0) return trimmed;
+    const fromHeading = extractFirstH1(tree);
+    if (fromHeading) return fromHeading;
+    return item.slug;
+  };
 }
 
-export function pickGlossaryTitle(item: ContentItem<GlossaryFrontmatter>, tree: Root): string {
-  const fromFrontmatter = item.frontmatter.term?.trim();
-  if (fromFrontmatter && fromFrontmatter.length > 0) return fromFrontmatter;
-  const fromHeading = extractFirstH1(tree);
-  if (fromHeading) return fromHeading;
-  return item.slug;
-}
-
-export function pickBooksTitle(item: ContentItem<BooksFrontmatter>, tree: Root): string {
-  const first = item.frontmatter.aliases[0]?.trim();
-  if (first && first.length > 0) return first;
-  const fromHeading = extractFirstH1(tree);
-  if (fromHeading) return fromHeading;
-  return item.slug;
-}
+export const pickNotesTitle = makeTitlePicker<NotesFrontmatter>((fm) => fm.title);
+export const pickGlossaryTitle = makeTitlePicker<GlossaryFrontmatter>((fm) => fm.term);
+export const pickBooksTitle = makeTitlePicker<BooksFrontmatter>((fm) => fm.aliases[0]);
