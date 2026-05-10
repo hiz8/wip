@@ -86,7 +86,7 @@ describe("applyWikiLink", () => {
     const outgoing: OutgoingLink[] = [];
     applyWikiLink(tree, { index, fromFilePath: "src.md", outgoing, embedded: false });
     const html = await toHtml(tree);
-    const linkCount = (html.match(/<a href="\/notes\/foo">/g) ?? []).length;
+    const linkCount = (html.match(/<a href="\/notes\/foo">/gu) ?? []).length;
     expect(linkCount).toBe(1);
     expect(outgoing.length).toBe(1);
   });

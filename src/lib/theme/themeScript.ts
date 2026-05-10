@@ -1,8 +1,8 @@
 import { themeClasses } from "@/styles/theme.stylex.ts";
 import { STORAGE_KEY } from "./constants.ts";
 
-const lightTokens = themeClasses.light.split(/\s+/).filter(Boolean);
-const darkTokens = themeClasses.dark.split(/\s+/).filter(Boolean);
+const lightTokens = themeClasses.light.split(/\s+/u).filter(Boolean);
+const darkTokens = themeClasses.dark.split(/\s+/u).filter(Boolean);
 
 const SCRIPT = `(function () {
   try {

@@ -31,24 +31,24 @@ describe("ThemeToggle", () => {
 
   it("renders with the system label by default", () => {
     render(<ThemeToggle />);
-    expect(screen.getByRole("button", { name: /システム/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /システム/u })).toBeInTheDocument();
   });
 
   it("cycles through preferences on click and persists to localStorage", () => {
     render(<ThemeToggle />);
-    fireEvent.click(screen.getByRole("button", { name: /システム/ }));
+    fireEvent.click(screen.getByRole("button", { name: /システム/u }));
     expect(window.localStorage.getItem(STORAGE_KEY)).toBe("light");
-    fireEvent.click(screen.getByRole("button", { name: /ライト/ }));
+    fireEvent.click(screen.getByRole("button", { name: /ライト/u }));
     expect(window.localStorage.getItem(STORAGE_KEY)).toBe("dark");
-    fireEvent.click(screen.getByRole("button", { name: /ダーク/ }));
+    fireEvent.click(screen.getByRole("button", { name: /ダーク/u }));
     expect(window.localStorage.getItem(STORAGE_KEY)).toBe("system");
   });
 
   it("updates documentElement dataset to reflect the chosen preference", () => {
     render(<ThemeToggle />);
-    fireEvent.click(screen.getByRole("button", { name: /システム/ }));
+    fireEvent.click(screen.getByRole("button", { name: /システム/u }));
     expect(document.documentElement.dataset["theme"]).toBe("light");
-    fireEvent.click(screen.getByRole("button", { name: /ライト/ }));
+    fireEvent.click(screen.getByRole("button", { name: /ライト/u }));
     expect(document.documentElement.dataset["theme"]).toBe("dark");
   });
 });

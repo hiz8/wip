@@ -6,7 +6,7 @@ import type { OutgoingLink } from "@/types/content.ts";
 import { isImagePath } from "./image-util.ts";
 import { rewriteTextNodes } from "./wiki-link.ts";
 
-const BLOCK_EMBED_RE = /^!\[\[([^\]\n|]+)(?:\|([^\]\n]+))?\]\]$/;
+const BLOCK_EMBED_RE = /^!\[\[([^\]\n|]+)(?:\|([^\]\n]+))?\]\]$/u;
 
 export interface EmbedContext {
   index: ContentIndex;

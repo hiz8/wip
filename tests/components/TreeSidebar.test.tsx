@@ -55,7 +55,7 @@ describe("TreeSidebar", () => {
     const user = userEvent.setup();
     renderWithRouter(<TreeSidebar tree={sampleTree} activeSlug={null} />);
     await waitFor(() => expect(screen.getByText("Intro Note")).toBeInTheDocument());
-    const input = screen.getByRole("textbox", { name: /filter/i });
+    const input = screen.getByRole("textbox", { name: /filter/iu });
     await user.type(input, "intro");
     expect(screen.getByText("Intro Note")).toBeInTheDocument();
     expect(screen.queryByText("React Hooks")).not.toBeInTheDocument();
@@ -66,9 +66,9 @@ describe("TreeSidebar", () => {
     const user = userEvent.setup();
     renderWithRouter(<TreeSidebar tree={sampleTree} activeSlug={null} />);
     await waitFor(() => expect(screen.getByText("Intro Note")).toBeInTheDocument());
-    const input = screen.getByRole("textbox", { name: /filter/i }) as HTMLInputElement;
+    const input = screen.getByRole("textbox", { name: /filter/iu }) as HTMLInputElement;
     await user.type(input, "intro");
-    await user.click(screen.getByRole("button", { name: /clear/i }));
+    await user.click(screen.getByRole("button", { name: /clear/iu }));
     expect(input.value).toBe("");
   });
 });

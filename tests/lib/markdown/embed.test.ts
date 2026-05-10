@@ -46,9 +46,10 @@ describe("applyEmbed", () => {
   it("公開 Note の本文を展開し、Source リンクを付ける", async () => {
     const items = [note("host"), note("target")];
     const index = buildContentIndex(items);
-    const parsedBodies = new Map<string, Root>();
-    parsedBodies.set("host", parse("![[target]]"));
-    parsedBodies.set("target", parse("# Target\n\n本文。"));
+    const parsedBodies = new Map<string, Root>([
+      ["host", parse("![[target]]")],
+      ["target", parse("# Target\n\n本文。")],
+    ]);
 
     const tree = structuredClone(parsedBodies.get("host")!) as Root;
     const outgoing: OutgoingLink[] = [];
@@ -70,10 +71,11 @@ describe("applyEmbed", () => {
   it("Embed 内のさらなる Embed はリンクに降格される", async () => {
     const items = [note("host"), note("target"), note("grandchild")];
     const index = buildContentIndex(items);
-    const parsedBodies = new Map<string, Root>();
-    parsedBodies.set("host", parse("![[target]]"));
-    parsedBodies.set("target", parse("# Target\n\n![[grandchild]]"));
-    parsedBodies.set("grandchild", parse("# Grandchild"));
+    const parsedBodies = new Map<string, Root>([
+      ["host", parse("![[target]]")],
+      ["target", parse("# Target\n\n![[grandchild]]")],
+      ["grandchild", parse("# Grandchild")],
+    ]);
 
     const tree = structuredClone(parsedBodies.get("host")!) as Root;
     const outgoing: OutgoingLink[] = [];
@@ -100,8 +102,7 @@ describe("applyEmbed", () => {
   it("自己 Embed は BuildError", () => {
     const items = [note("host")];
     const index = buildContentIndex(items);
-    const parsedBodies = new Map<string, Root>();
-    parsedBodies.set("host", parse("![[host]]"));
+    const parsedBodies = new Map<string, Root>([["host", parse("![[host]]")]]);
 
     const tree = structuredClone(parsedBodies.get("host")!) as Root;
     expect(() =>
@@ -118,8 +119,7 @@ describe("applyEmbed", () => {
   it("未解決の Embed はテキスト化", async () => {
     const items = [note("host")];
     const index = buildContentIndex(items);
-    const parsedBodies = new Map<string, Root>();
-    parsedBodies.set("host", parse("![[ghost]]"));
+    const parsedBodies = new Map<string, Root>([["host", parse("![[ghost]]")]]);
 
     const tree = structuredClone(parsedBodies.get("host")!) as Root;
     const outgoing: OutgoingLink[] = [];
@@ -140,8 +140,7 @@ describe("applyEmbed", () => {
   it("画像拡張子の Embed は image ノードに変換", async () => {
     const items = [note("host")];
     const index = buildContentIndex(items);
-    const parsedBodies = new Map<string, Root>();
-    parsedBodies.set("host", parse("![[picture.png|代替]]"));
+    const parsedBodies = new Map<string, Root>([["host", parse("![[picture.png|代替]]")]]);
 
     const tree = structuredClone(parsedBodies.get("host")!) as Root;
     const outgoing: OutgoingLink[] = [];

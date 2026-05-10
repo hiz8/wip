@@ -28,7 +28,7 @@ function getServerSnapshot(): Preference {
 }
 
 function splitClasses(className: string): string[] {
-  return className.split(/\s+/).filter(Boolean);
+  return className.split(/\s+/u).filter(Boolean);
 }
 
 function applyPreference(pref: Preference, systemDark: boolean): Resolved {

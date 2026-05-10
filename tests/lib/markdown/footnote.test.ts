@@ -23,7 +23,7 @@ async function toHtml(tree: Root): Promise<string> {
     .stringify(transformed as never) as string;
 }
 
-const renderHtml = async (subtree: Root): Promise<string> => toHtml(subtree);
+const renderHtml = (subtree: Root): Promise<string> => Promise.resolve(toHtml(subtree));
 
 describe("applyFootnote", () => {
   it("脚注定義を抽出し、メタデータに HTML を格納する", async () => {

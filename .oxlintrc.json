@@ -34,13 +34,21 @@
     "src/routeTree.gen.ts"
   ],
   "rules": {
+    // React 19 new JSX transform doesn't need React in scope.
     "react/react-in-jsx-scope": "off",
+    // Markdown pipeline orchestrator and stateful per-item rendering
+    // (callouts/footnotes) require sequential await for deterministic
+    // output; Promise.all would lose ordering.
     "eslint/no-await-in-loop": "off",
-    "eslint/no-underscore-dangle": "off",
-    "eslint/require-unicode-regexp": "off",
+    // Allow the __ prefix only for explicit test-escape hatches.
+    "eslint/no-underscore-dangle": [
+      "warn",
+      { "allow": ["__resetNotesCacheForTests", "__setConfigForTests"] }
+    ],
+    // Route components and exhaustive case-handling functions naturally
+    // exceed the default 50-line threshold without being good refactor
+    // candidates; describe() blocks in tests inflate the count further.
     "eslint/max-lines-per-function": "off",
-    "eslint/no-negated-condition": "off",
-    "unicorn/no-negated-condition": "off",
     "import/no-unassigned-import": [
       "error",
       { "allow": ["**/*.css", "@testing-library/jest-dom/**"] }
@@ -54,10 +62,13 @@
         "vitest": true
       },
       "rules": {
+        // try/catch + expect.unreachable is the canonical pattern for
+        // asserting on thrown error properties (filePath/message);
+        // expect.unreachable already guards the no-throw failure mode.
         "vitest/no-conditional-expect": "off",
-        "vitest/no-conditional-in-test": "off",
-        "unicorn/no-immediate-mutation": "off",
-        "eslint/require-await": "off"
+        // Type-narrowing with `if (x?.kind === ...)` before expect() is a
+        // legitimate TS pattern, not real conditional logic.
+        "vitest/no-conditional-in-test": "off"
       }
     }
   ]

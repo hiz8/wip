@@ -72,7 +72,7 @@ export function buildTree(notes: readonly BuildTreeInput[]): TreeNode[] {
   const acc: FolderAccumulator = { byPath: new Map(), root: [] };
 
   for (const note of notes) {
-    const normalized = note.filePath.replace(/^\/+/, "").replaceAll("\\", "/");
+    const normalized = note.filePath.replace(/^\/+/u, "").replaceAll("\\", "/");
     const segments = normalized.split("/").filter(Boolean);
     const folderSegments = segments.slice(0, -1);
     const fileSegment = segments.at(-1) ?? note.slug;

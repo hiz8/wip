@@ -5,7 +5,7 @@ import type { ImageRef } from "@/types/content.ts";
 import { rewriteTextNodes } from "./wiki-link.ts";
 import { isImagePath } from "./image-util.ts";
 
-const INLINE_IMAGE_EMBED_RE = /!\[\[([^\]\n|]+)(?:\|([^\]\n]+))?\]\]/g;
+const INLINE_IMAGE_EMBED_RE = /!\[\[([^\]\n|]+)(?:\|([^\]\n]+))?\]\]/gu;
 
 export interface ImageContext {
   fromAbsolutePath: string;
@@ -47,7 +47,7 @@ function splitInlineImageEmbeds(value: string): PhrasingContent[] | null {
 
 function toImageRef(node: Image, ctx: ImageContext): ImageRef {
   const url = node.url;
-  if (/^https?:\/\//.test(url) || url.startsWith("data:")) {
+  if (/^https?:\/\//u.test(url) || url.startsWith("data:")) {
     return { rawPath: url, resolvedAbsolutePath: url };
   }
   if (url.startsWith("/")) {

@@ -23,7 +23,7 @@ function resolveStylexImport(importPath: string, sourceFilePath: string): string
   }
   for (const candidate of candidates) {
     if (existsSync(candidate)) return candidate;
-    const trimmed = candidate.replace(/\.(ts|tsx|js|jsx|mjs|cjs)$/, "");
+    const trimmed = candidate.replace(/\.(ts|tsx|js|jsx|mjs|cjs)$/u, "");
     for (const ext of STYLEX_EXTENSIONS) {
       const withExt = trimmed + ext;
       if (existsSync(withExt)) return withExt;

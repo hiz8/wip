@@ -42,7 +42,7 @@ function collectAllFolderIds(nodes: readonly TreeNode[]): string[] {
 export function TreeSidebar({ tree, activeSlug }: TreeSidebarProps) {
   const [query, setQuery] = useState("");
   const initialExpanded = useMemo<string[]>(() => {
-    return activeSlug !== null ? findFolderAncestors(tree, activeSlug) : [];
+    return activeSlug === null ? [] : findFolderAncestors(tree, activeSlug);
   }, [tree, activeSlug]);
   const [expandedKeys, setExpandedKeys] = useState<Set<Key>>(() => new Set<Key>(initialExpanded));
 

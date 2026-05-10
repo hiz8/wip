@@ -3,7 +3,7 @@ import type { ContentIndex } from "@/lib/linkgraph/resolve.ts";
 import { resolveLinkTarget } from "@/lib/linkgraph/resolve.ts";
 import type { OutgoingLink } from "@/types/content.ts";
 
-const WIKI_LINK_RE = /!?\[\[([^\]\n|]+)(?:\|([^\]\n]+))?\]\]/g;
+const WIKI_LINK_RE = /!?\[\[([^\]\n|]+)(?:\|([^\]\n]+))?\]\]/gu;
 
 export interface WikiLinkContext {
   index: ContentIndex;

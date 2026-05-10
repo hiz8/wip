@@ -1,7 +1,7 @@
 import type { Blockquote, Paragraph, Root, RootContent, Text } from "mdast";
 import type { CalloutEntry, CalloutKind } from "@/types/content.ts";
 
-const CALLOUT_HEAD_RE = /^\[!(\w+)\](-|\+)?\s*(.*)$/;
+const CALLOUT_HEAD_RE = /^\[!(\w+)\](-|\+)?\s*(.*)$/u;
 
 const SUPPORTED: ReadonlySet<CalloutKind> = new Set(["note", "quote", "tip", "info", "warning"]);
 
@@ -91,7 +91,7 @@ function parseCalloutHeader(node: Blockquote): {
     SUPPORTED.has(rawKind as CalloutKind) ? rawKind : "note"
   ) as CalloutKind;
   const titleRaw = (match[3] ?? "").trim();
-  const isPrivate = /\bprivate\b/i.test(titleRaw);
+  const isPrivate = /\bprivate\b/iu.test(titleRaw);
   const title = titleRaw.length > 0 ? titleRaw : undefined;
 
   return { kind, title, isPrivate };
