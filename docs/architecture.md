@@ -114,12 +114,15 @@
 │   │       └── Backlinks.tsx
 │   ├── lib/
 │   │   ├── content/            # コンテンツ収集・パース
-│   │   │   ├── collect.ts          # ファイル列挙
+│   │   │   ├── collect.ts          # ファイル列挙 + collectContentItems<F>
 │   │   │   ├── parse.ts            # frontmatter / Markdown パース
-│   │   │   ├── validate.ts         # スキーマ検証
+│   │   │   ├── validate.ts         # スキーマ検証 (Notes/Glossary/Books)
+│   │   │   ├── slug.ts             # slug 派生 + 衝突検出
+│   │   │   ├── title.ts            # cross-type pickContentTitle
+│   │   │   ├── errors.ts           # BuildError
 │   │   │   └── index.ts
 │   │   ├── markdown/           # Markdown 変換
-│   │   │   ├── pipeline.ts         # remark/rehype パイプライン
+│   │   │   ├── pipeline.ts         # renderContentDrafts<F> + 3 種ラッパー
 │   │   │   ├── plugins/
 │   │   │   │   ├── wiki-link.ts
 │   │   │   │   ├── embed.ts
@@ -128,12 +131,16 @@
 │   │   │   │   └── toc.ts
 │   │   │   └── shiki.ts
 │   │   ├── linkgraph/          # リンク解決・バックリンク
-│   │   │   ├── resolve.ts
-│   │   │   └── graph.ts
+│   │   │   ├── resolve.ts          # cross-type ContentIndex
+│   │   │   └── graph.ts            # RenderedItemDraft<F>
+│   │   ├── glossary/           # 五十音グルーピング純関数
+│   │   │   └── groupByFurigana.ts
 │   │   ├── search/             # Pagefind 連携
 │   │   ├── feed/               # RSS / sitemap 生成
 │   │   ├── tree/               # ツリー構築・フィルタ (純関数)
-│   │   │   ├── buildTree.ts
+│   │   │   ├── buildTree.ts        # Notes (フォルダ階層)
+│   │   │   ├── buildGlossaryTree.ts # 五十音 folder
+│   │   │   ├── buildBooksTree.ts   # フラット (pubYear desc)
 │   │   │   └── filterTree.ts
 │   │   ├── theme/              # ダークモードランタイム
 │   │   │   ├── constants.ts
@@ -145,8 +152,11 @@
 │   │       ├── index.ts
 │   │       └── static.ts           # クライアント向けの primitive ミラー
 │   ├── server/                 # サーバ専用データレイヤー
+│   │   ├── datasets.ts             # cross-type 統合データセット (memoize)
 │   │   ├── notes.ts                # getAllNotes / getNoteBySlug
-│   │   └── loaders.ts              # createServerFn ラップ
+│   │   ├── glossary.ts             # getAllGlossaryTerms / getGlossaryTermBySlug / getGlossaryGroupedIndex
+│   │   ├── books.ts                # getAllBooks / getBookByIsbn
+│   │   └── loaders.ts              # createServerFn ラップ (Notes / Glossary / Books)
 │   ├── styles/                 # StyleX のテーマ・トークン
 │   │   ├── tokens.stylex.ts
 │   │   ├── theme.stylex.ts

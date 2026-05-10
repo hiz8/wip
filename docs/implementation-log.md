@@ -13,7 +13,7 @@
 | 2     | Markdown 変換とリンク解決 (Notes 限定)  | ✅ Done        | 2026-05-09 |
 | 3     | 基本的なルーティング (Notes 詳細・一覧) | ✅ Done        | 2026-05-09 |
 | 4     | レイアウト (アイコンナビ・ツリー・本文) | ✅ Done        | 2026-05-10 |
-| 5     | Glossary / Books の対応                 | ⏳ Not started | —          |
+| 5     | Glossary / Books の対応                 | ✅ Done        | 2026-05-10 |
 | 6     | Marginalia / 目次 / バックリンク        | ⏳ Not started | —          |
 | 7     | 検索 / RSS / sitemap                    | ⏳ Not started | —          |
 | 8     | デザインの作り込み                      | ⏳ Not started | —          |
@@ -361,33 +361,139 @@ tests/server/loaders.test.ts
 - 検索 (Pagefind)、RSS、sitemap、画像コピー — Phase 7
 - デザインの最終形 (フォント、間隔、カラーパレットの調整) — Phase 8
 
-## Phase 5 — Glossary / Books (引き継ぎメモ)
+## Phase 5 — Glossary / Books の対応 ✅
+
+### 達成範囲
+
+- 内部共通ヘルパー `collectContentItems<F>` と各 type の薄ラッパー (`collectNotes` / `collectGlossary` / `collectBooks`) を導入。Notes 既存挙動を温存しつつ Glossary / Books の収集を追加
+- `validateGlossaryFrontmatter` / `validateBooksFrontmatter` を追加 (zod、`aliases` / `authors` 必須など)
+- 内部共通レンダー `renderContentDrafts<F>` と type 別の `pickTitle` を導入 (`pickNotesTitle` / `pickGlossaryTitle` / `pickBooksTitle`)。`renderNotes` 既存シグネチャを保ったまま `renderGlossary` / `renderBooks` を追加
+- `embed.ts` の Source ラベルを `pickContentTitle` (frontmatter のみで決まる cross-type タイトル) 経由に変更
+- `ContentIndex` を `BaseFrontmatter` ジェネリックに広げ、Glossary の `term` / `aliases` と Books の `aliases` を `byName` に登録。type prefix `[[Notes/X]]` / `[[Glossary/X]]` / `[[Books/X]]` 経由の解決に加え、ファイル名・alias・term の横断ルックアップが動作。曖昧解決のエラーメッセージは 3 種の type prefix を提案
+- `RenderedNoteDraft` を `RenderedItemDraft<F>` に汎用化 (`RenderedNoteDraft` は alias で残置)
+- 五十音グルーピング純関数 `groupByFurigana(furigana?)` を `src/lib/glossary/` に追加 (あ行〜わ行 + その他、濁音・半濁音・拗音・カタカナ → ひらがなマップ、サロゲート対応)
+- ツリー: `buildGlossaryTree` (五十音 folder + 子は furigana 昇順) / `buildBooksTree` (フラット、`pubYear` 降順、同値時は title locale ja)
+- `ContentTree` / `TreeSidebar` / `TreeSearch` に `contentType` / `treeKind` / `placeholder` を追加。empty メッセージ・aria ラベル・href プレフィクスが treeKind 別に切り替わる
+- サーバ層: `src/server/datasets.ts` で全 type を統合。`buildContentIndex` を 1 回構築し、3 種の `renderContentDrafts` を回した後 `buildBacklinks` を 1 度通すことで cross-type バックリンクを実現
+- `src/server/notes.ts` を `datasets.ts` 委譲化。`__resetNotesCacheForTests` / `__setConfigForTests` 既存 export を維持しつつ、Glossary / Books 用の互換フックを `glossary.ts` / `books.ts` に追加
+- `src/server/loaders.ts` に `getGlossaryIndexData` / `getGlossaryDetailData` / `getGlossaryTreeData` / `getBooksIndexData` / `getBookDetailData` / `getBooksTreeData` を追加 (handler は inline、zod inputValidator)
+- ルート: `/glossary` / `/glossary/$slug` / `/books` / `/books/$isbn` を追加。Glossary index は五十音セクションごとの heading + jump-link、詳細は `GlossaryHeader` (term + furigana + aliases バッジ)、Books index は `auto-fill, minmax(220px, 1fr)` のカードグリッド、詳細は `BookHeader` (左コーナーに書影プレースホルダー + メタ縦並び、デスクトップ/モバイルでレスポンシブ)
+- IconNav の Glossary / Books `disabled` プレースホルダを `<Link>` に置換、active 判定 (`onGlossary` / `onBooks`) を追加
+- Backlinks に Glossary / Books 用の type 別 Link 分岐を追加 (`/glossary/$slug`、`/books/$isbn`)
+- 既存 Notes ルート (`route.tsx` / `index.tsx` / `$slug.tsx`) の TreeSidebar 呼び出しに `treeKind="notes"` を追加
+- Books の `cover` は Phase 5 では DTO に含めず、`BookCard` / `BookHeader` ともテキストプレースホルダー固定 (Phase 7 で復活予定)
+- テスト 68 件追加 (107 → 175 件)、すべてグリーン。プリレンダー 18 ページ (Notes 6 + Glossary 5 + Books 4 + ルート 3)
+
+### 公開 API (主な追加)
+
+`src/lib/content/index.ts`:
+
+- `collectGlossary(config) → ContentItem<GlossaryFrontmatter>[]`
+- `collectBooks(config) → ContentItem<BooksFrontmatter>[]`
+- `collectContentItems<F>(spec) → ContentItem<F>[]` (汎用ヘルパー)
+- `validateGlossaryFrontmatter(raw, filePath)` / `validateBooksFrontmatter(raw, filePath)`
+- `pickContentTitle(item)` (cross-type タイトル抽出)
+
+`src/lib/markdown/index.ts`:
+
+- `renderGlossary(items, config)` / `renderBooks(items, config)`
+- `renderContentDrafts<F>(spec)` (内部用、`datasets.ts` から利用)
+- `pickNotesTitle` / `pickGlossaryTitle` / `pickBooksTitle`
+
+`src/lib/glossary/groupByFurigana.ts`:
+
+- `groupByFurigana(furigana?)` / `FuriganaGroup` / `FURIGANA_GROUP_ORDER`
+
+`src/lib/tree/`:
+
+- `buildGlossaryTree(items)` / `buildBooksTree(items)` (Notes 用 `buildTree` は不変)
+
+`src/server/`:
+
+- `getSiteDataset()` (cross-type 統合データセット)
+- `getAllGlossaryTerms` / `getGlossaryTermBySlug` / `getGlossaryGroupedIndex`
+- `getAllBooks` / `getBookByIsbn`
+- 6 種の loader server fn と DTO 型 (`GlossaryListItem` / `GlossaryDetail` / `GlossaryGroupSectionDto` / `BookListItem` / `BookDetail`)
+
+### 主要ファイル
+
+```
+src/types/content.ts                              # RenderedGlossaryTerm / RenderedBook 型エイリアス
+src/lib/content/title.ts                          # pickContentTitle
+src/lib/content/collect.ts                        # collectContentItems<F> 追加
+src/lib/content/validate.ts                       # Glossary / Books validator
+src/lib/content/index.ts                          # 公開 API 拡張
+src/lib/glossary/groupByFurigana.ts               # 五十音グルーピング純関数
+src/lib/tree/buildGlossaryTree.ts                 # 五十音 folder ツリー
+src/lib/tree/buildBooksTree.ts                    # フラットツリー (pubYear desc)
+src/lib/linkgraph/resolve.ts                      # ContentIndex の cross-type 化
+src/lib/linkgraph/graph.ts                        # RenderedItemDraft<F> 汎用化
+src/lib/markdown/pipeline.ts                      # renderContentDrafts<F> + 3 種ラッパー
+src/lib/markdown/plugins/embed.ts                 # pickContentTitle 経由化
+src/server/datasets.ts                            # cross-type 統合 + memoize
+src/server/notes.ts                               # datasets.ts へ委譲
+src/server/glossary.ts / src/server/books.ts      # primitive アクセサ
+src/server/loaders.ts                             # 6 つの新 createServerFn + DTO
+src/components/layout/IconNav.tsx                 # Glossary / Books を Link に
+src/components/layout/TreeSidebar.tsx             # treeKind prop
+src/components/tree/ContentTree.tsx               # contentType prop で href 派生
+src/components/tree/TreeSearch.tsx                # placeholder / aria-label prop
+src/components/common/Backlinks.tsx               # type 別 Link 分岐
+src/components/card/GlossaryItem.tsx              # 用語一覧カード
+src/components/card/BookCard.tsx                  # 書籍一覧カード (cover プレースホルダー)
+src/components/content/GlossaryHeader.tsx         # 用語詳細ヘッダー
+src/components/content/BookHeader.tsx             # 書籍詳細ヘッダー (レスポンシブ書影プレースホルダー + メタ)
+src/routes/glossary/{route,index,$slug}.tsx       # /glossary 系ルート
+src/routes/books/{route,index,$isbn}.tsx          # /books 系ルート
+tests/fixtures/vault/Glossary/*.md                # 4 件追加 (五十音複数行 + furigana なし + draft)
+tests/fixtures/vault/Books/*.md                   # 2 件追加 (pubYear / read_date 持ち)
+tests/lib/content/{title,glossary,books}.test.ts
+tests/lib/markdown/{renderGlossary,renderBooks}.test.ts
+tests/lib/glossary/groupByFurigana.test.ts
+tests/lib/tree/{buildGlossaryTree,buildBooksTree}.test.ts
+tests/server/{glossary,books}.test.ts
+tests/components/{IconNav,Backlinks}.test.tsx
+```
+
+### 設計判断 (Phase 6 以降に影響)
+
+1. **`buildContentIndex` は cross-type 共有が前提** — `datasets.ts` で全 type の items を結合してから 1 回だけ構築する。各 render 関数は `index` を引数で受け取り、内部で再構築しない (`renderNotes` 等のラッパーが単独で呼ばれた場合のみ Notes だけの index を組む)。新コンテンツタイプを追加するときも `datasets.ts` 1 箇所で完結する
+2. **バックリンクは全 type を 1 回で逆引き** — `renderContentDrafts<F>` は `RenderedItemDraft<F>[]` を返し、`datasets.ts` で全 type の drafts を結合 → `buildBacklinks` → `attachBacklinks` を type 別に呼ぶ。これで Notes → Glossary や Glossary → Books の cross-type backlink が正しく出る
+3. **`ContentIndex` の `byName` は slug + alias + term を同一ルックアップに通す** — 仕様書のリンク解決順序 (ファイル名 → aliases → term) を「同名候補が複数なら曖昧解決エラー」で吸収する。type prefix で書けば必ず解消できる
+4. **Glossary 五十音グループは `TreeFolderNode` で表現** — 専用の TreeNode 種別は増やさず、`id: "group:あ行"` のフォルダノードに揃えることで `filterTree` / `findFolderAncestors` をそのまま流用できる
+5. **`createServerFn` handler の inline 必須は維持** — grouping / DTO 整形は `src/server/glossary.ts` の primitive (`getGlossaryGroupedIndex` 等) に切り出し、loader はそれを呼ぶ薄い handler に保つ
+6. **datasets の memoize リセットは 1 つ** — `__resetSiteDatasetForTests` が単一の真実点で、`__resetNotesCacheForTests` / `__resetGlossaryCacheForTests` / `__resetBooksCacheForTests` は同じ実装への薄ラッパー (テスト命名整合のため別名を提供)
+7. **`cover` は Phase 5 では非表示** — DTO に含めず、`BookCard` / `BookHeader` ともテキストプレースホルダー。Phase 7 で `public/` への画像コピーを実装するときに DTO + 描画を復活させる
+8. **TreeSidebar の `treeKind` は必須プロパティ** — Notes / Glossary / Books で aria ラベル・placeholder・empty メッセージ・href プレフィクスが切り替わる。`ContentTree` の `contentType` も同様で、`<TreeItem href={"/" + contentType + "/" + slug}>` で動的に組む (TanStack Router の type-safe `to` は使わない)
+9. **同名 slug + alias の曖昧解決** — Notes に `react-fiber.md` があり、Glossary の別 item が `aliases: ["react-fiber"]` を持つと `BuildError`。仕様通りの正当な挙動 (テストで検証済み)
+10. **StyleX の `@media` ネスト** — レスポンシブ条件は per-property 条件オブジェクトで書く (`{ default: ..., [BP_DESKTOP]: ... }`)。トップレベルキーとして `[BP_DESKTOP]: { ... }` を書くと `@stylexjs/valid-styles` が拒否する
+
+### Phase 5 で意図的に未実装
+
+- タグルート (`/notes/tags`、`/glossary/tags`、`/books/tags`) — 別 Phase で 3 type 横串で対応
+- Marginalia (脚注 / Callout の左右配置)、TOC アクティブハイライト — Phase 6
+- 書影 (`cover`) の `<img>` 描画と `public/` への画像コピー — Phase 7
+- Pagefind、RSS、sitemap — Phase 7
+
+## Phase 6 — Marginalia / 目次 / バックリンク (引き継ぎメモ)
 
 ### 想定スコープ
 
-- Vault 内 `Glossary/` 配下の収集パイプライン (`collectGlossary` 等)、五十音インデックス、`furigana` ベースのソート
-- Vault 内 `Books/` 配下の収集パイプライン、ISBN slug、`aliases[0]` をメインタイトルとする運用
-- ルート: `/glossary`, `/glossary/$slug`, `/books`, `/books/$isbn`
-- IconNav の Glossary / Books ボタンを `disabled` から `<Link>` に切り替え
-- TreeSidebar のコンテキスト切り替え: コンテンツタイプに応じてツリーの構造とラベルを変える (Notes はサブフォルダ、Glossary は五十音グルーピング、Books はフラット)
-- Glossary 詳細ページのレイアウト (用語名 + furigana + 本文 + 関連語)
-- Books 詳細ページ (書影 + メタデータ + 感想本文)
-- BookCard / GlossaryItem コンポーネント
+- 脚注 (`[^1]`) の Marginalia 配置 (本文左右の余白に番号付きで表示、レスポンシブで右のみ / 末尾セクション化)
+- Callout (`> [!note]` 等) の Marginalia 配置 (種別アイコン + スタイル、private は非表示、すでに `data-callout` 属性で抽出済み)
+- TOC のアクティブハイライト (IntersectionObserver で現在表示中の H2/H3 を検出)
+- バックリンク UI の見た目調整 (Phase 5 で実装済みの type 別 Link を視覚的に差別化)
 
 ### 推奨アプローチ
 
-- `src/lib/content/` の `collectNotes` を一般化して `collectGlossary` / `collectBooks` を追加。frontmatter スキーマは `src/types/content.ts` に既に存在 (`GlossaryFrontmatter` / `BooksFrontmatter`)
-- `src/server/loaders.ts` に `getGlossaryIndexData` / `getGlossaryDetailData` / `getBooksIndexData` / `getBookDetailData` / `getGlossaryTreeData` / `getBooksTreeData` を追加 (handler は必ず inline)
-- TreeSidebar に `treeKind: "notes" | "glossary" | "books"` プロパティを足し、`buildTree` をコンテンツタイプ別に派生
-- 五十音グルーピングは `furigana` の頭文字を `あかさたなはまやらわ行` のいずれかにマップする純関数 (`src/lib/glossary/groupByFurigana.ts`) として実装
-- ISBN slug は `src/lib/content/slug.ts` を拡張するか、Books 専用の slug deriver を追加
-- IconNav の disabled ボタンを `<Link to="/glossary" />` / `<Link to="/books" />` に置き換え
+- `RenderedItem<F>` には既に `footnotes` / `callouts` / `toc` がある (Phase 2 / 4 整備済み)。本文 HTML への注入位置をどう決めるかが Phase 6 の鍵
+- 既存の `data-callout` / `data-embed` / footnote の参照マーカー (本文中) と定義 (`footnotes` フィールド) を組み合わせ、クライアント側で位置計算する案 (アクセシビリティ的にもサーバ HTML が完結している方が良いので、Marginalia をサーバ側で抽出 + クライアント側で位置調整するハイブリッド)
+- StyleX の `@container` クエリでレスポンシブ切り替えを試す価値あり (本文の幅に応じた配置切り替え)
 
 ### 着手前の確認
 
-- `docs/content-spec.md` の Glossary / Books 仕様 (frontmatter、URL 構造、タグ名前空間)
-- `docs/ui-spec.md` の「Glossary」「Books」セクション
-- 五十音インデックスの仕様 (どの行に分けるか、未指定 furigana の扱い)
+- `docs/ui-spec.md`「Marginalia」「右サイドバー」セクション
+- 既存の `RenderedItem.footnotes` / `callouts` / `toc` の構造
 
 ## Phase 6 〜 8 (概要のみ)
 
