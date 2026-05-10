@@ -5,6 +5,7 @@ import { createInterface } from "node:readline";
 
 const SUPPORTED_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
 
+// oxlint-disable-next-line no-unused-vars -- kept for ad-hoc debugging
 function debugLog(message) {
   if (process.env.DEBUG) {
     console.error(message);
