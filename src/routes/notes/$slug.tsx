@@ -80,6 +80,8 @@ function NoteDetail() {
       tags={note.tags}
       html={note.html}
       header={header}
+      footnotes={note.footnotes}
+      callouts={note.callouts}
     />
   );
 }

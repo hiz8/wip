@@ -47,6 +47,8 @@ function GlossaryDetail() {
       tags={term.tags}
       html={term.html}
       header={header}
+      footnotes={term.footnotes}
+      callouts={term.callouts}
     />
   );
 }
