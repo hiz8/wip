@@ -71,3 +71,16 @@ describe("attachBacklinks", () => {
     expect(a?.incomingLinks).toEqual([]);
   });
 });
+
+describe("buildBacklinks (cross-type)", () => {
+  it("Notes から Glossary / Books へのリンクが逆引きできる", () => {
+    const noteDraft: RenderedNoteDraft = draft("note-a", "2025-04-10T00:00:00+09:00", [
+      { type: "glossary", slug: "react-fiber", raw: "React Fiber", embedded: false },
+      { type: "books", slug: "9784873119045", raw: "リファクタリング", embedded: false },
+    ]);
+    const map = buildBacklinks([noteDraft]);
+    expect(map.get("glossary:react-fiber")?.[0]?.slug).toBe("note-a");
+    expect(map.get("books/9784873119045")).toBeUndefined();
+    expect(map.get("books:9784873119045")?.[0]?.slug).toBe("note-a");
+  });
+});

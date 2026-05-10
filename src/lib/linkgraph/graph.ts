@@ -1,8 +1,22 @@
-import type { BacklinkRef, RenderedNote } from "@/types/content.ts";
+import type {
+  BacklinkRef,
+  BaseFrontmatter,
+  NotesFrontmatter,
+  RenderedItem,
+  RenderedNote,
+} from "@/types/content.ts";
 
-export type RenderedNoteDraft = Omit<RenderedNote, "incomingLinks">;
+export type RenderedItemDraft<F extends BaseFrontmatter = BaseFrontmatter> = Omit<
+  RenderedItem<F>,
+  "incomingLinks"
+>;
 
-export function buildBacklinks(drafts: RenderedNoteDraft[]): Map<string, BacklinkRef[]> {
+// Backwards-compatible alias used by existing tests and consumers.
+export type RenderedNoteDraft = RenderedItemDraft<NotesFrontmatter>;
+
+export function buildBacklinks(
+  drafts: readonly RenderedItemDraft<BaseFrontmatter>[],
+): Map<string, BacklinkRef[]> {
   const result = new Map<string, BacklinkRef[]>();
 
   for (const source of drafts) {
@@ -35,18 +49,27 @@ export function buildBacklinks(drafts: RenderedNoteDraft[]): Map<string, Backlin
   return result;
 }
 
-export function attachBacklinks(
-  drafts: RenderedNoteDraft[],
+export function attachBacklinks<F extends BaseFrontmatter>(
+  drafts: readonly RenderedItemDraft<F>[],
   backlinks: Map<string, BacklinkRef[]>,
-): RenderedNote[] {
+): RenderedItem<F>[] {
   return drafts.map((draft) => {
     const key = `${draft.type}:${draft.slug}`;
     const incoming = backlinks.get(key) ?? [];
     return {
       ...draft,
       incomingLinks: incoming,
-    } satisfies RenderedNote;
+    } as RenderedItem<F>;
   });
+}
+
+// Backwards-compatible specialization to support existing call sites that
+// expect the Notes-specific types.
+export function attachBacklinksToNotes(
+  drafts: readonly RenderedNoteDraft[],
+  backlinks: Map<string, BacklinkRef[]>,
+): RenderedNote[] {
+  return attachBacklinks<NotesFrontmatter>(drafts, backlinks);
 }
 
 function compareUpdatedDesc(a: BacklinkRef, b: BacklinkRef): number {

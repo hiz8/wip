@@ -1,5 +1,6 @@
 import type { Blockquote, Link, Paragraph, Root, RootContent, Text } from "mdast";
 import { BuildError } from "@/lib/content/errors.ts";
+import { pickContentTitle } from "@/lib/content/title.ts";
 import type { ContentIndex } from "@/lib/linkgraph/resolve.ts";
 import { resolveLinkTarget } from "@/lib/linkgraph/resolve.ts";
 import type { OutgoingLink } from "@/types/content.ts";
@@ -110,7 +111,7 @@ function expandEmbed(
     children: [
       {
         type: "text",
-        value: resolved.item.frontmatter.title ?? resolved.item.slug,
+        value: pickContentTitle(resolved.item),
       },
     ],
   };

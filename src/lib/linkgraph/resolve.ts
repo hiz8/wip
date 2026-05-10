@@ -1,13 +1,19 @@
-import type { ContentItem, ContentType, NotesFrontmatter } from "@/types/content.ts";
+import type {
+  BaseFrontmatter,
+  BooksFrontmatter,
+  ContentItem,
+  ContentType,
+  GlossaryFrontmatter,
+} from "@/types/content.ts";
 import { BuildError } from "@/lib/content/errors.ts";
 
 export interface ContentIndex {
-  byName: Map<string, ContentItem<NotesFrontmatter>[]>;
-  byTypeName: Map<string, ContentItem<NotesFrontmatter>>;
+  byName: Map<string, ContentItem<BaseFrontmatter>[]>;
+  byTypeName: Map<string, ContentItem<BaseFrontmatter>>;
 }
 
 export interface ResolvedTarget {
-  item: ContentItem<NotesFrontmatter>;
+  item: ContentItem<BaseFrontmatter>;
   type: ContentType;
 }
 
@@ -16,24 +22,59 @@ export interface ResolveOptions {
   rawTarget: string;
 }
 
-export function buildContentIndex(items: ContentItem<NotesFrontmatter>[]): ContentIndex {
-  const byName = new Map<string, ContentItem<NotesFrontmatter>[]>();
-  const byTypeName = new Map<string, ContentItem<NotesFrontmatter>>();
+export function buildContentIndex(items: readonly ContentItem<BaseFrontmatter>[]): ContentIndex {
+  const byName = new Map<string, ContentItem<BaseFrontmatter>[]>();
+  const byTypeName = new Map<string, ContentItem<BaseFrontmatter>>();
 
   for (const item of items) {
-    const key = item.slug.toLowerCase();
-    const existing = byName.get(key);
-    if (existing) {
-      existing.push(item);
-    } else {
-      byName.set(key, [item]);
-    }
-
+    addByName(byName, item.slug, item);
+    indexExtraNames(byName, item);
     const typeKey = `${item.type}/${item.slug.toLowerCase()}`;
     byTypeName.set(typeKey, item);
   }
 
   return { byName, byTypeName };
+}
+
+function indexExtraNames(
+  byName: Map<string, ContentItem<BaseFrontmatter>[]>,
+  item: ContentItem<BaseFrontmatter>,
+): void {
+  if (item.type === "glossary") {
+    const fm = item.frontmatter as GlossaryFrontmatter;
+    if (fm.term && fm.term.trim().length > 0) addByName(byName, fm.term, item);
+    addAliases(byName, fm.aliases, item);
+  } else if (item.type === "books") {
+    const fm = item.frontmatter as BooksFrontmatter;
+    addAliases(byName, fm.aliases, item);
+  }
+}
+
+function addAliases(
+  byName: Map<string, ContentItem<BaseFrontmatter>[]>,
+  aliases: readonly string[] | undefined,
+  item: ContentItem<BaseFrontmatter>,
+): void {
+  if (!aliases) return;
+  for (const alias of aliases) {
+    if (alias.trim().length > 0) addByName(byName, alias, item);
+  }
+}
+
+function addByName(
+  byName: Map<string, ContentItem<BaseFrontmatter>[]>,
+  rawKey: string,
+  item: ContentItem<BaseFrontmatter>,
+): void {
+  const key = rawKey.toLowerCase();
+  const existing = byName.get(key);
+  if (existing) {
+    if (!existing.some((entry) => entry === item)) {
+      existing.push(item);
+    }
+  } else {
+    byName.set(key, [item]);
+  }
 }
 
 export function resolveLinkTarget(
@@ -57,11 +98,13 @@ export function resolveLinkTarget(
     return { item, type: item.type };
   }
 
-  const list = candidates.map((c) => c.filePath).join(", ");
+  const list = candidates.map((c) => `${c.type}/${c.slug}`).join(", ");
   throw new BuildError({
     category: "link-resolution",
     filePath: options.fromFilePath,
-    message: `Ambiguous wiki-link "${options.rawTarget}" matches multiple files: ${list}. Use an explicit type prefix like [[Notes/${target}]].`,
+    message:
+      `Ambiguous wiki-link "${options.rawTarget}" matches multiple items: ${list}. ` +
+      `Use an explicit type prefix like [[Notes/${target}]], [[Glossary/${target}]], or [[Books/${target}]].`,
   });
 }
 
