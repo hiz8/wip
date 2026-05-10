@@ -97,11 +97,14 @@
 │   │   │   ├── DetailLayout.tsx    # 詳細ページレイアウト (Marginalia 枠予約)
 │   │   │   └── RightSidebar.tsx    # TOC + Backlinks
 │   │   ├── content/
-│   │   │   ├── MarkdownRenderer.tsx  # Phase 6
-│   │   │   ├── Marginalia.tsx        # Phase 6
-│   │   │   ├── Callout.tsx           # Phase 6
-│   │   │   ├── Footnote.tsx          # Phase 6
-│   │   │   └── Toc.tsx
+│   │   │   ├── Toc.tsx
+│   │   │   ├── useTocActive.ts          # Phase 6 (IntersectionObserver hook)
+│   │   │   ├── Marginalia.tsx           # Phase 6 (client placement)
+│   │   │   ├── MarginaliaItem.tsx       # Phase 6 (footnote / callout body)
+│   │   │   ├── FootnoteSection.tsx      # Phase 6 (mobile trailing list)
+│   │   │   ├── CalloutKindIcon.tsx      # Phase 6 (5-kind SVG)
+│   │   │   ├── GlossaryHeader.tsx       # Phase 5
+│   │   │   └── BookHeader.tsx           # Phase 5
 │   │   ├── tree/
 │   │   │   ├── ContentTree.tsx       # react-aria-components Tree
 │   │   │   └── TreeSearch.tsx        # react-aria-components TextField
@@ -111,6 +114,7 @@
 │   │   │   └── GlossaryItem.tsx      # Phase 5
 │   │   └── common/
 │   │       ├── ThemeToggle.tsx       # 3-state cycle (system/light/dark)
+│   │       ├── ContentTypeIcon.tsx   # Phase 6 (shared notes/glossary/books SVG)
 │   │       └── Backlinks.tsx
 │   ├── lib/
 │   │   ├── content/            # コンテンツ収集・パース
@@ -135,6 +139,9 @@
 │   │   │   └── graph.ts            # RenderedItemDraft<F>
 │   │   ├── glossary/           # 五十音グルーピング純関数
 │   │   │   └── groupByFurigana.ts
+│   │   ├── marginalia/         # Phase 6 純関数 (位置計算 + 重なり対策)
+│   │   │   ├── placements.ts
+│   │   │   └── index.ts
 │   │   ├── search/             # Pagefind 連携
 │   │   ├── feed/               # RSS / sitemap 生成
 │   │   ├── tree/               # ツリー構築・フィルタ (純関数)
@@ -157,10 +164,11 @@
 │   │   ├── glossary.ts             # getAllGlossaryTerms / getGlossaryTermBySlug / getGlossaryGroupedIndex
 │   │   ├── books.ts                # getAllBooks / getBookByIsbn
 │   │   └── loaders.ts              # createServerFn ラップ (Notes / Glossary / Books)
-│   ├── styles/                 # StyleX のテーマ・トークン
+│   ├── styles/                 # StyleX のテーマ・トークン + ベース CSS
 │   │   ├── tokens.stylex.ts
 │   │   ├── theme.stylex.ts
-│   │   └── reset.css
+│   │   ├── reset.css
+│   │   └── content.css             # Phase 6 (marginalia / inline callout / footnote section の表示切替)
 │   └── types/                  # 共有型定義
 │       ├── content.ts
 │       ├── config.ts

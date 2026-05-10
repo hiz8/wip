@@ -14,7 +14,7 @@
 | 3     | 基本的なルーティング (Notes 詳細・一覧) | ✅ Done        | 2026-05-09 |
 | 4     | レイアウト (アイコンナビ・ツリー・本文) | ✅ Done        | 2026-05-10 |
 | 5     | Glossary / Books の対応                 | ✅ Done        | 2026-05-10 |
-| 6     | Marginalia / 目次 / バックリンク        | ⏳ Not started | —          |
+| 6     | Marginalia / 目次 / バックリンク        | ✅ Done        | 2026-05-11 |
 | 7     | 検索 / RSS / sitemap                    | ⏳ Not started | —          |
 | 8     | デザインの作り込み                      | ⏳ Not started | —          |
 
@@ -475,33 +475,132 @@ tests/components/{IconNav,Backlinks}.test.tsx
 - 書影 (`cover`) の `<img>` 描画と `public/` への画像コピー — Phase 7
 - Pagefind、RSS、sitemap — Phase 7
 
-## Phase 6 — Marginalia / 目次 / バックリンク (引き継ぎメモ)
+## Phase 6 — Marginalia / 目次 / バックリンク ✅
+
+### 達成範囲
+
+- `NoteDetail` / `GlossaryDetail` / `BookDetail` に `footnotes: FootnoteEntry[]` と `callouts: CalloutEntry[]` を追加 (loaders.ts)。3 つの handler は inline の制約を維持
+- 純関数 `computeMarginaliaPlacements` を `src/lib/marginalia/placements.ts` に追加。重なり対策 (gap 確保、入力の安定ソート) を `tests/lib/marginalia/placements.test.ts` で網羅 (5 件)
+- 共通アイコン:
+  - `ContentTypeIcon` (`src/components/common/ContentTypeIcon.tsx`) を新設、Notes / Glossary / Books の SVG を `IconNav` から流用しつつ Backlinks にも展開
+  - `CalloutKindIcon` (`src/components/content/CalloutKindIcon.tsx`) で 5 種 (note / quote / tip / info / warning) を切り替え。Marginalia ヘッダで使用
+- Marginalia コンポーネント (`src/components/content/Marginalia.tsx` + `MarginaliaItem.tsx`) を実装
+  - クライアント側で `useEffect` + `requestAnimationFrame` + `ResizeObserver` + `MutationObserver` を組み合わせ、本文 ref 内のマーカー (`a[data-footnote-ref]` / `blockquote[data-callout]#callout-N`) の `getBoundingClientRect` を測定 → `computeMarginaliaPlacements` で重なり対策 → absolute 配置で side ごとに描画
+  - footnote / callout を時系列順に並べ、index 偶数 → right, 奇数 → left の zigzag 配分。中サイズ (1024–1279px) では左 Marginalia を CSS で非表示にしているため自然と右のみが残る
+  - SSR セーフ (`typeof window === "undefined"` ガード)
+- `FootnoteSection` (`src/components/content/FootnoteSection.tsx`) を新設し、サーバ HTML で `<aside data-footnote-section>` + `<ol><li id="user-content-fn-${id}">` を出力。本文中の `<sup>` の `href="#user-content-fn-X"` がそのまま機能する。デスクトップでは CSS で非表示
+- メディアクエリでの表示切替を `src/styles/content.css` (`@layer components`) に集約
+  - `@media (>= 1024px)`: 本文中の `blockquote[data-callout]` と末尾 `[data-footnote-section]` を `display: none`
+  - `@media (<= 1023px)`: `[data-marginalia-side]` を `display: none`
+  - `@media (<= 1279px)`: `[data-marginalia-side="left"]` を `display: none`
+  - モバイル時の inline callout の装飾 (種別ごとの背景色 + ボーダー + `::before` の Unicode アイコン)。色は tokens.stylex.ts の値を手書きでミラー (StyleX が emit する hashed CSS variable はプレーン CSS から参照不能なため。Phase 8 で見直し)
+- `DetailLayout` を 3 段階の grid (`default` / `BP_DESKTOP` / `BP_DESKTOP_WIDE`) に拡張し、`leftMargin` / `rightMargin` ノードを slot として受け取れるように
+- `DetailShell` に `footnotes` / `callouts` prop を追加し、本文 div に `data-content-body` を付与、Marginalia (left/right) と `FootnoteSection` をレイアウト内に配置。3 ルート (`notes/$slug` / `glossary/$slug` / `books/$isbn`) を更新
+- `Toc` (`src/components/content/Toc.tsx`) を `useTocActive` フック (`useTocActive.ts`) と連携。IntersectionObserver の `rootMargin: "0px 0px -75% 0px"` で上端 25% に入った最深見出しを active にし、`aria-current="location"` + StyleX の accent スタイルでハイライト。CSS の `scroll-behavior: smooth` を `reset.css` に追加 (`prefers-reduced-motion: reduce` で auto)
+- `Backlinks` (`src/components/common/Backlinks.tsx`) に `ContentTypeIcon` を 14px サイズで title の左に配置
+- フィクスチャ追加: `tests/fixtures/vault/note-with-marginalia.md` (footnote 2 件 + 異なる種別の Callout、`private` マーカーで除外される Callout を含む)
+- テスト 17 件追加 (175 → 192 件、すべてグリーン)
+- ビルド: `VAULT_ROOT=$PWD/tests/fixtures/vault npm run build` で `node:*` 警告ゼロ、19 ページプリレンダー (Notes 5 + Glossary 4 + Books 3 + ルート 4 + ホーム 3 — 既存 18 + note-with-marginalia 1)
+
+### 公開 API (主な追加)
+
+`src/lib/marginalia/index.ts`:
+
+- `computeMarginaliaPlacements(measurements, options?)` / `MarginaliaMeasurement` / `MarginaliaPlacement` / `ComputeMarginaliaOptions`
+
+`src/components/`:
+
+- `Marginalia` / `MarginaliaSide` (`content/Marginalia.tsx`)
+- `MarginaliaFootnote` / `MarginaliaCallout` (`content/MarginaliaItem.tsx`)
+- `FootnoteSection` (`content/FootnoteSection.tsx`)
+- `CalloutKindIcon` (`content/CalloutKindIcon.tsx`)
+- `useTocActive` (`content/useTocActive.ts`)
+- `ContentTypeIcon` (`common/ContentTypeIcon.tsx`)
+
+`src/server/loaders.ts` (DTO 拡張):
+
+- `NoteDetail` / `GlossaryDetail` / `BookDetail` に `footnotes: FootnoteEntry[]` / `callouts: CalloutEntry[]` を追加
+
+### 主要ファイル
+
+```
+src/lib/marginalia/placements.ts                # 純関数 (重なり対策)
+src/lib/marginalia/index.ts                     # 公開 API
+src/components/content/CalloutKindIcon.tsx
+src/components/content/Marginalia.tsx           # クライアント計測 + 配置
+src/components/content/MarginaliaItem.tsx       # footnote / callout 個別表示
+src/components/content/FootnoteSection.tsx      # モバイル末尾セクション
+src/components/content/Toc.tsx                  # active highlight 統合
+src/components/content/useTocActive.ts          # IntersectionObserver hook
+src/components/common/ContentTypeIcon.tsx       # IconNav + Backlinks 共有
+src/components/common/Backlinks.tsx             # type icon 表示
+src/components/layout/DetailLayout.tsx          # 3 段階 grid + margin slot
+src/components/layout/DetailShell.tsx           # footnotes / callouts 受け取り、Marginalia + FootnoteSection 配置
+src/components/layout/IconNav.tsx               # ContentTypeIcon に移行
+src/server/loaders.ts                           # DTO に footnotes / callouts
+src/styles/content.css                          # marginalia / inline callout / footnote section の表示切替
+src/styles/reset.css                            # scroll-behavior: smooth
+src/router.tsx                                  # content.css を import
+src/routes/notes/$slug.tsx                      # DetailShell に渡す
+src/routes/glossary/$slug.tsx
+src/routes/books/$isbn.tsx
+tests/fixtures/vault/note-with-marginalia.md    # フィクスチャ
+tests/lib/marginalia/placements.test.ts
+tests/components/CalloutKindIcon.test.tsx
+tests/components/Toc.test.tsx
+tests/components/Marginalia.test.tsx
+tests/components/Backlinks.test.tsx             # type icon 検証を追加
+tests/server/loaders.test.ts                    # DTO に footnotes / callouts smoke
+tests/server/notes.test.ts                      # フィクスチャ追加に伴う期待値更新
+```
+
+### 設計判断 (Phase 7 以降に影響)
+
+1. **Marginalia は SSR + クライアント計測のハイブリッド** — サーバ HTML は脚注末尾セクションも含めて完結 (no-JS / プリレンダー時点で読める)。デスクトップでは CSS でモバイル要素を hide、本文 ref 内のマーカー位置をクライアントで測ってマージナリアを absolute 配置する。SSR 描画後にハイドレートで Marginalia が現れる UX
+2. **Marginalia の side 分配は zigzag (順番ベース)** — 全 footnote / callout を時系列順に並べ、index 偶数 → right、奇数 → left。1024–1279px では左を CSS で非表示にするので、結果的に右に集約される。Phase 8 で「全件右」「左右均等」など別ロジックに切り替えるなら `pickSide` のみ差し替えれば済む
+3. **位置計算は純関数 (`computeMarginaliaPlacements`)** — 入力は `{ id, top, height }[]` (DOMRect 由来)、出力は `{ id, top }[]` (重なり解消済み)。jsdom + 単体テストで網羅、UI コンポーネントは「DOM 計測 → 純関数呼び出し → React state」のシン薄ラッパー
+4. **DTO 拡張は 3 タイプとも対応** — Notes / Glossary / Books の DTO すべてに `footnotes` / `callouts` を載せた。Glossary / Books でもユーザーが Markdown を書いた時点で footnote / callout が現れうるため、`note-with-marginalia` の挙動を全タイプで継承する
+5. **本文中 `[data-callout]` の表示切替は CSS の data-属性スコープ** — `dangerouslySetInnerHTML` で挿入される本文 HTML は StyleX のスコープ外なので、`src/styles/content.css` で `[data-content-body] blockquote[data-callout]` のような子孫セレクタを使う。本文 div に `data-content-body` 属性を付ければ scoped に保てる
+6. **CSS 変数の StyleX 連携問題** — StyleX の `defineVars` は hashed name の CSS variable を emit する (`--xK0aB_calloutNoteBg` のような)。プレーン CSS からは参照名が安定しないため、`content.css` のインライン callout 装飾は token と同じ HEX 値を二重定義している (Phase 8 で `:root` に名前付き variable を別途流すか、CSS-in-JS でやり直す)
+7. **`useTocActive` の rootMargin** — `"0px 0px -75% 0px"` で「ビューポート上端から 25% に入った見出し」を active 候補にし、複数ある場合は最後 (= 最深) を選ぶ。スムーズスクロール中も自然に追従する
+8. **`DetailLayout` を 3 段階レスポンシブに拡張** — `default` / `BP_DESKTOP` (1024px = main + right) / `BP_DESKTOP_WIDE` (1280px = left + main + right) の 3 段階 grid。Phase 4 では 2 段階 (default / wide) だったので、中サイズで右 Marginalia を出すために 1024px の中段を追加
+9. **インラインスタイルの限定許可** — Marginalia 各アイテムの `top: <px>` は実行時計算なので StyleX で表現できず、`useMemo({ top: ... })` で安定参照を作りインライン `style` に渡す。これは Phase 4 の「インラインスタイル原則禁止」例外として、コメントで理由を明記
+10. **ContentTypeIcon の抽出は IconNav を巻き込む小さなリファクタ** — IconNav 内で重複していた SVG path を共通コンポーネント化。Backlinks の type 別アイコン要件と合わせて、3 タイプ表現の単一ソース化を実現
+
+### Phase 6 で意図的に未実装
+
+- 検索 (Pagefind)、RSS、sitemap、画像コピー / 書影 (`cover`) の `<img>` 描画 — Phase 7
+- タグルート (`/notes/tags` / `/glossary/tags` / `/books/tags`) — 別 Phase で 3 タイプ横串
+- StyleX の hashed CSS variable と `content.css` の color 重複定義の解消、フォント / 間隔 / カラーパレットの最終調整 — Phase 8
+
+## Phase 7 — 検索 / RSS / sitemap / 画像 (引き継ぎメモ)
 
 ### 想定スコープ
 
-- 脚注 (`[^1]`) の Marginalia 配置 (本文左右の余白に番号付きで表示、レスポンシブで右のみ / 末尾セクション化)
-- Callout (`> [!note]` 等) の Marginalia 配置 (種別アイコン + スタイル、private は非表示、すでに `data-callout` 属性で抽出済み)
-- TOC のアクティブハイライト (IntersectionObserver で現在表示中の H2/H3 を検出)
-- バックリンク UI の見た目調整 (Phase 5 で実装済みの type 別 Link を視覚的に差別化)
-
-### 推奨アプローチ
-
-- `RenderedItem<F>` には既に `footnotes` / `callouts` / `toc` がある (Phase 2 / 4 整備済み)。本文 HTML への注入位置をどう決めるかが Phase 6 の鍵
-- 既存の `data-callout` / `data-embed` / footnote の参照マーカー (本文中) と定義 (`footnotes` フィールド) を組み合わせ、クライアント側で位置計算する案 (アクセシビリティ的にもサーバ HTML が完結している方が良いので、Marginalia をサーバ側で抽出 + クライアント側で位置調整するハイブリッド)
-- StyleX の `@container` クエリでレスポンシブ切り替えを試す価値あり (本文の幅に応じた配置切り替え)
+- Pagefind (`pagefind` パッケージ + `dist/` スキャン) によるクライアント全文検索
+- `sitemap.xml` (公開全コンテンツ列挙) + `feed.xml` (RSS) の生成パイプライン
+- 画像コピー: `applyImage` で収集済みの `images: ImageRef[]` を build 後に `public/` 直下にコピーし、本文 `<img>` を相対パスに書き換え
+- Books の `cover` を DTO に復活させ、`BookCard` / `BookHeader` に `<img>` を描画 (`public/` への画像コピーが入った後)
+- Cloudflare Workers の Static Assets 配信 (出力フラット化、`@cloudflare/vite-plugin`、`wrangler.jsonc`)、`npm run deploy` (`wrangler deploy`) の追加
 
 ### 着手前の確認
 
-- `docs/ui-spec.md`「Marginalia」「右サイドバー」セクション
-- 既存の `RenderedItem.footnotes` / `callouts` / `toc` の構造
+- `docs/build-spec.md`「サイトマップ・RSS」「画像処理」セクション
+- 既存の `RenderedItem.images: ImageRef[]` の構造 (`rawPath` / `resolvedAbsolutePath`)
+- Pagefind が想定するインデックス対象セレクタ (タイトル + summary + tags + 本文)
 
-## Phase 6 〜 8 (概要のみ)
+### 既存資産
 
-| Phase | 主な作業                                                                 | 主要参照                                              |
-| ----- | ------------------------------------------------------------------------ | ----------------------------------------------------- |
-| 6     | Marginalia 配置、TOC ハイライト (IntersectionObserver)、バックリンク表示 | `docs/ui-spec.md`「Marginalia」「右サイドバー」       |
-| 7     | Pagefind、RSS、sitemap、画像コピー                                       | `docs/build-spec.md`「サイトマップ・RSS」「画像処理」 |
-| 8     | デザイントークン詰め、ダークモード、レスポンシブ調整                     | `docs/ui-spec.md`「ダークモード」「レスポンシブ」     |
+- `src/lib/feed/`, `src/lib/search/` ディレクトリは architecture.md にあるが空 (Phase 7 で実装)
+- `RenderedItem.images` は既に Phase 2 で収集済み — Phase 7 ではコピー + path 書き換えのみ
+- `src/server/datasets.ts` の `getSiteDataset()` で全 type の rendered items が取れるので、sitemap / RSS / Pagefind index 生成はここを起点にできる
+
+## Phase 7 〜 8 (概要のみ)
+
+| Phase | 主な作業                                             | 主要参照                                              |
+| ----- | ---------------------------------------------------- | ----------------------------------------------------- |
+| 7     | Pagefind、RSS、sitemap、画像コピー                   | `docs/build-spec.md`「サイトマップ・RSS」「画像処理」 |
+| 8     | デザイントークン詰め、ダークモード、レスポンシブ調整 | `docs/ui-spec.md`「ダークモード」「レスポンシブ」     |
 
 差分ビルド・画像最適化・動的 OGP は本ロードマップ外 (将来課題)。
 
