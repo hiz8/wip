@@ -8,6 +8,8 @@ import {
   SITE_URL,
 } from "@/lib/config/static.ts";
 
+const THEME_SCRIPT_HTML = { __html: themeScript };
+
 export const Route = createRootRoute({
   head: () => ({
     meta: [
@@ -40,7 +42,7 @@ function RootDocument() {
   return (
     <html lang={SITE_LOCALE}>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={THEME_SCRIPT_HTML} />
         <HeadContent />
       </head>
       <body>

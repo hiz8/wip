@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
 import { createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell.tsx";
@@ -34,9 +35,10 @@ export const Route = createFileRoute("/notes/")({
 function NotesIndex() {
   const notes = Route.useLoaderData();
   const tree = useLoaderData({ from: "/notes" });
+  const treeSidebar = useMemo(() => <TreeSidebar tree={tree} activeSlug={null} />, [tree]);
 
   return (
-    <AppShell variant="list" treeSidebar={<TreeSidebar tree={tree} activeSlug={null} />}>
+    <AppShell variant="list" treeSidebar={treeSidebar}>
       <h1 {...stylex.props(styles.heading)}>Notes</h1>
       <ul {...stylex.props(styles.grid)} role="list">
         {notes.map((note) => (

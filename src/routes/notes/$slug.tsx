@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
 import { Link, createFileRoute, notFound, useLoaderData } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell.tsx";
@@ -84,13 +85,18 @@ export const Route = createFileRoute("/notes/$slug")({
 function NoteDetail() {
   const note = Route.useLoaderData();
   const tree = useLoaderData({ from: "/notes" });
+  const treeSidebar = useMemo(
+    () => <TreeSidebar tree={tree} activeSlug={note.slug} />,
+    [tree, note.slug],
+  );
+  const rightSidebar = useMemo(
+    () => <RightSidebar toc={note.toc} backlinks={note.incomingLinks} />,
+    [note.toc, note.incomingLinks],
+  );
+  const contentHtml = useMemo(() => ({ __html: note.html }), [note.html]);
 
   return (
-    <AppShell
-      variant="detail"
-      treeSidebar={<TreeSidebar tree={tree} activeSlug={note.slug} />}
-      rightSidebar={<RightSidebar toc={note.toc} backlinks={note.incomingLinks} />}
-    >
+    <AppShell variant="detail" treeSidebar={treeSidebar} rightSidebar={rightSidebar}>
       <DetailLayout>
         <Link to="/notes" {...stylex.props(styles.back)}>
           ← Notes
@@ -112,7 +118,7 @@ function NoteDetail() {
             </ul>
           )}
         </header>
-        <div {...stylex.props(styles.content)} dangerouslySetInnerHTML={{ __html: note.html }} />
+        <div {...stylex.props(styles.content)} dangerouslySetInnerHTML={contentHtml} />
       </DetailLayout>
     </AppShell>
   );

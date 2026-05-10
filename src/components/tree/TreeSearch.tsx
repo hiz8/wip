@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import * as stylex from "@stylexjs/stylex";
 import { Button, Input, TextField } from "react-aria-components";
 import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
@@ -37,6 +38,7 @@ const styles = stylex.create({
 });
 
 export function TreeSearch({ value, onChange }: TreeSearchProps) {
+  const handleClear = useCallback(() => onChange(""), [onChange]);
   return (
     <TextField value={value} onChange={onChange} aria-label="Filter notes">
       <div {...stylex.props(styles.field)}>
@@ -45,7 +47,7 @@ export function TreeSearch({ value, onChange }: TreeSearchProps) {
           <Button
             slot={null}
             aria-label="Clear filter"
-            onPress={() => onChange("")}
+            onPress={handleClear}
             {...stylex.props(styles.clear)}
           >
             ✕

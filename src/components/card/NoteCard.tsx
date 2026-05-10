@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
 import { Link } from "@tanstack/react-router";
 import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
@@ -63,9 +64,10 @@ const styles = stylex.create({
 });
 
 export function NoteCard({ slug, title, summary, tags, updated }: NoteCardProps) {
+  const params = useMemo(() => ({ slug }), [slug]);
   return (
     <article {...stylex.props(styles.card)}>
-      <Link to="/notes/$slug" params={{ slug }} {...stylex.props(styles.title)}>
+      <Link to="/notes/$slug" params={params} {...stylex.props(styles.title)}>
         {title}
       </Link>
       {summary !== null && summary.trim() !== "" && (

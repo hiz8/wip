@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import * as stylex from "@stylexjs/stylex";
 import { colors, radius } from "@/styles/tokens.stylex.ts";
 import { useTheme } from "@/lib/theme/useTheme.ts";
@@ -84,12 +85,15 @@ function Icon({ preference }: { preference: Preference }) {
 
 export function ThemeToggle() {
   const { preference, setPreference } = useTheme();
+  const handleClick = useCallback(() => {
+    setPreference(nextPreference(preference));
+  }, [preference, setPreference]);
   return (
     <button
       type="button"
       aria-label={LABEL[preference]}
       title={LABEL[preference]}
-      onClick={() => setPreference(nextPreference(preference))}
+      onClick={handleClick}
       {...stylex.props(styles.button)}
     >
       <Icon preference={preference} />

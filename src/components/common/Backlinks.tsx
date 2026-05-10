@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
 import { Link } from "@tanstack/react-router";
 import type { BacklinkRef } from "@/types/content.ts";
@@ -33,6 +34,15 @@ const styles = stylex.create({
   },
 });
 
+function NoteBacklink({ slug, title }: { slug: string; title: string }) {
+  const params = useMemo(() => ({ slug }), [slug]);
+  return (
+    <Link to="/notes/$slug" params={params} {...stylex.props(styles.link)}>
+      {title}
+    </Link>
+  );
+}
+
 export function Backlinks({ links }: BacklinksProps) {
   if (links.length === 0) return null;
   return (
@@ -42,9 +52,7 @@ export function Backlinks({ links }: BacklinksProps) {
         {links.map((ref) => (
           <li key={`${ref.type}:${ref.slug}`}>
             {ref.type === "notes" ? (
-              <Link to="/notes/$slug" params={{ slug: ref.slug }} {...stylex.props(styles.link)}>
-                {ref.title}
-              </Link>
+              <NoteBacklink slug={ref.slug} title={ref.title} />
             ) : (
               <span>{ref.title}</span>
             )}

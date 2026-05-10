@@ -1,6 +1,17 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["typescript", "unicorn", "oxc", "react", "jsx-a11y", "vitest"],
+  "plugins": [
+    "typescript",
+    "unicorn",
+    "oxc",
+    "react",
+    "jsx-a11y",
+    "vitest",
+    "react-perf",
+    "promise",
+    "node",
+    "import"
+  ],
   "categories": {
     "correctness": "error",
     "suspicious": "error",
@@ -29,7 +40,10 @@
     "eslint/require-unicode-regexp": "off",
     "eslint/max-lines-per-function": "off",
     "eslint/no-negated-condition": "off",
-    "unicorn/no-negated-condition": "off"
+    "unicorn/no-negated-condition": "off",
+    "import/no-named-as-default-member": "off",
+    "import/no-unassigned-import": "off",
+    "import/max-dependencies": "off"
   },
   "overrides": [
     {
