@@ -35,7 +35,10 @@ export const Route = createFileRoute("/notes/")({
 function NotesIndex() {
   const notes = Route.useLoaderData();
   const tree = useLoaderData({ from: "/notes" });
-  const treeSidebar = useMemo(() => <TreeSidebar tree={tree} activeSlug={null} />, [tree]);
+  const treeSidebar = useMemo(
+    () => <TreeSidebar tree={tree} activeSlug={null} treeKind="notes" />,
+    [tree],
+  );
 
   return (
     <AppShell variant="list" treeSidebar={treeSidebar}>

@@ -41,19 +41,19 @@ function renderWithRouter(ui: ReactNode) {
 
 describe("TreeSidebar", () => {
   it("renders nested folder hierarchy", async () => {
-    renderWithRouter(<TreeSidebar tree={sampleTree} activeSlug={null} />);
+    renderWithRouter(<TreeSidebar tree={sampleTree} activeSlug={null} treeKind="notes" />);
     await waitFor(() => expect(screen.getByText("Intro Note")).toBeInTheDocument());
     expect(screen.getByText("frontend")).toBeInTheDocument();
   });
 
   it("expands ancestors of the active note", async () => {
-    renderWithRouter(<TreeSidebar tree={sampleTree} activeSlug="react" />);
+    renderWithRouter(<TreeSidebar tree={sampleTree} activeSlug="react" treeKind="notes" />);
     await waitFor(() => expect(screen.getByText("React Hooks")).toBeInTheDocument());
   });
 
   it("filters notes by the search input value", async () => {
     const user = userEvent.setup();
-    renderWithRouter(<TreeSidebar tree={sampleTree} activeSlug={null} />);
+    renderWithRouter(<TreeSidebar tree={sampleTree} activeSlug={null} treeKind="notes" />);
     await waitFor(() => expect(screen.getByText("Intro Note")).toBeInTheDocument());
     const input = screen.getByRole("textbox", { name: /filter/iu });
     await user.type(input, "intro");
@@ -64,7 +64,7 @@ describe("TreeSidebar", () => {
 
   it("clears the filter via the clear button", async () => {
     const user = userEvent.setup();
-    renderWithRouter(<TreeSidebar tree={sampleTree} activeSlug={null} />);
+    renderWithRouter(<TreeSidebar tree={sampleTree} activeSlug={null} treeKind="notes" />);
     await waitFor(() => expect(screen.getByText("Intro Note")).toBeInTheDocument());
     const input = screen.getByRole("textbox", { name: /filter/iu }) as HTMLInputElement;
     await user.type(input, "intro");

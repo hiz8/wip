@@ -7,11 +7,41 @@ import { filterTree } from "@/lib/tree/filterTree.ts";
 import { ContentTree } from "@/components/tree/ContentTree.tsx";
 import { TreeSearch } from "@/components/tree/TreeSearch.tsx";
 import { space } from "@/styles/tokens.stylex.ts";
+import type { ContentType } from "@/types/content.ts";
 
 interface TreeSidebarProps {
   tree: readonly TreeNode[];
   activeSlug: string | null;
+  treeKind: ContentType;
 }
+
+interface TreeKindCopy {
+  ariaLabel: string;
+  searchPlaceholder: string;
+  searchAriaLabel: string;
+  emptyMessage: string;
+}
+
+const COPY: Record<ContentType, TreeKindCopy> = {
+  notes: {
+    ariaLabel: "Notes",
+    searchPlaceholder: "Filter notes…",
+    searchAriaLabel: "Filter notes",
+    emptyMessage: "No notes match.",
+  },
+  glossary: {
+    ariaLabel: "Glossary",
+    searchPlaceholder: "Filter terms…",
+    searchAriaLabel: "Filter glossary terms",
+    emptyMessage: "No terms match.",
+  },
+  books: {
+    ariaLabel: "Books",
+    searchPlaceholder: "Filter books…",
+    searchAriaLabel: "Filter books",
+    emptyMessage: "No books match.",
+  },
+};
 
 const styles = stylex.create({
   root: {
@@ -39,7 +69,8 @@ function collectAllFolderIds(nodes: readonly TreeNode[]): string[] {
   return out;
 }
 
-export function TreeSidebar({ tree, activeSlug }: TreeSidebarProps) {
+export function TreeSidebar({ tree, activeSlug, treeKind }: TreeSidebarProps) {
+  const copy = COPY[treeKind];
   const [query, setQuery] = useState("");
   const initialExpanded = useMemo<string[]>(() => {
     return activeSlug === null ? [] : findFolderAncestors(tree, activeSlug);
@@ -70,12 +101,20 @@ export function TreeSidebar({ tree, activeSlug }: TreeSidebarProps) {
 
   return (
     <div {...stylex.props(styles.root)}>
-      <TreeSearch value={query} onChange={setQuery} />
+      <TreeSearch
+        value={query}
+        onChange={setQuery}
+        placeholder={copy.searchPlaceholder}
+        ariaLabel={copy.searchAriaLabel}
+      />
       <ContentTree
         tree={filteredTree}
         expandedKeys={expandedKeys}
         onExpandedChange={setExpandedKeys}
         activeSlug={activeSlug}
+        contentType={treeKind}
+        ariaLabel={copy.ariaLabel}
+        emptyMessage={copy.emptyMessage}
       />
     </div>
   );

@@ -6,6 +6,8 @@ import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
 interface TreeSearchProps {
   value: string;
   onChange: (next: string) => void;
+  placeholder?: string;
+  ariaLabel?: string;
 }
 
 const styles = stylex.create({
@@ -37,12 +39,17 @@ const styles = stylex.create({
   },
 });
 
-export function TreeSearch({ value, onChange }: TreeSearchProps) {
+export function TreeSearch({
+  value,
+  onChange,
+  placeholder = "Filter…",
+  ariaLabel = "Filter",
+}: TreeSearchProps) {
   const handleClear = useCallback(() => onChange(""), [onChange]);
   return (
-    <TextField value={value} onChange={onChange} aria-label="Filter notes">
+    <TextField value={value} onChange={onChange} aria-label={ariaLabel}>
       <div {...stylex.props(styles.field)}>
-        <Input placeholder="Filter…" {...stylex.props(styles.input)} />
+        <Input placeholder={placeholder} {...stylex.props(styles.input)} />
         {value !== "" && (
           <Button
             slot={null}

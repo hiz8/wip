@@ -2,12 +2,16 @@ import * as stylex from "@stylexjs/stylex";
 import { Collection, Tree, TreeItem, TreeItemContent, type Key } from "react-aria-components";
 import type { TreeNode } from "@/lib/tree/buildTree.ts";
 import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
+import type { ContentType } from "@/types/content.ts";
 
 interface ContentTreeProps {
   tree: readonly TreeNode[];
   expandedKeys: ReadonlySet<Key>;
   onExpandedChange: (keys: Set<Key>) => void;
   activeSlug: string | null;
+  contentType: ContentType;
+  ariaLabel: string;
+  emptyMessage: string;
 }
 
 const styles = stylex.create({
@@ -70,6 +74,7 @@ interface RenderNodeProps {
   node: TreeNode;
   level: number;
   activeSlug: string | null;
+  contentType: ContentType;
 }
 
 function FolderRow({ name, isExpanded }: { name: string; isExpanded: boolean }) {
@@ -96,10 +101,12 @@ function FolderItem({
   node,
   level,
   activeSlug,
+  contentType,
 }: {
   node: Extract<TreeNode, { kind: "folder" }>;
   level: number;
   activeSlug: string | null;
+  contentType: ContentType;
 }) {
   return (
     <TreeItem id={node.id} textValue={node.name} {...stylex.props(styles.item(level))}>
@@ -111,7 +118,14 @@ function FolderItem({
         )}
       </TreeItemContent>
       <Collection items={node.children}>
-        {(child) => <RenderNode node={child} level={level + 1} activeSlug={activeSlug} />}
+        {(child) => (
+          <RenderNode
+            node={child}
+            level={level + 1}
+            activeSlug={activeSlug}
+            contentType={contentType}
+          />
+        )}
       </Collection>
     </TreeItem>
   );
@@ -121,17 +135,19 @@ function NoteItem({
   node,
   level,
   activeSlug,
+  contentType,
 }: {
   node: Extract<TreeNode, { kind: "note" }>;
   level: number;
   activeSlug: string | null;
+  contentType: ContentType;
 }) {
   const isActive = activeSlug === node.slug;
   return (
     <TreeItem
       id={node.id}
       textValue={node.title}
-      href={`/notes/${node.slug}`}
+      href={`/${contentType}/${node.slug}`}
       {...stylex.props(styles.item(level))}
     >
       <TreeItemContent>
@@ -151,11 +167,11 @@ function NoteItem({
   );
 }
 
-function RenderNode({ node, level, activeSlug }: RenderNodeProps) {
+function RenderNode({ node, level, activeSlug, contentType }: RenderNodeProps) {
   return node.kind === "folder" ? (
-    <FolderItem node={node} level={level} activeSlug={activeSlug} />
+    <FolderItem node={node} level={level} activeSlug={activeSlug} contentType={contentType} />
   ) : (
-    <NoteItem node={node} level={level} activeSlug={activeSlug} />
+    <NoteItem node={node} level={level} activeSlug={activeSlug} contentType={contentType} />
   );
 }
 
@@ -164,20 +180,25 @@ export function ContentTree({
   expandedKeys,
   onExpandedChange,
   activeSlug,
+  contentType,
+  ariaLabel,
+  emptyMessage,
 }: ContentTreeProps) {
   if (tree.length === 0) {
-    return <p {...stylex.props(styles.empty)}>No notes match.</p>;
+    return <p {...stylex.props(styles.empty)}>{emptyMessage}</p>;
   }
   return (
     <Tree
-      aria-label="Notes"
+      aria-label={ariaLabel}
       items={tree}
       expandedKeys={expandedKeys as Set<Key>}
       onExpandedChange={onExpandedChange}
       selectionMode="none"
       {...stylex.props(styles.tree)}
     >
-      {(node) => <RenderNode node={node} level={0} activeSlug={activeSlug} />}
+      {(node) => (
+        <RenderNode node={node} level={0} activeSlug={activeSlug} contentType={contentType} />
+      )}
     </Tree>
   );
 }

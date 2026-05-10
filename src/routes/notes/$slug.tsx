@@ -86,7 +86,7 @@ function NoteDetail() {
   const note = Route.useLoaderData();
   const tree = useLoaderData({ from: "/notes" });
   const treeSidebar = useMemo(
-    () => <TreeSidebar tree={tree} activeSlug={note.slug} />,
+    () => <TreeSidebar tree={tree} activeSlug={note.slug} treeKind="notes" />,
     [tree, note.slug],
   );
   const rightSidebar = useMemo(
