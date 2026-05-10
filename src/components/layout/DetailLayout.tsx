@@ -6,25 +6,25 @@ interface DetailLayoutProps {
   children: ReactNode;
 }
 
-// Breakpoints are kept as literal media-query strings so the
-// @stylexjs/eslint-plugin can verify keys statically, and so the StyleX babel
-// plugin emits literal `@media ...` keys (rather than `var(--hash)` theme refs
-// that would bypass `enableMediaQueryOrder`).
+// See AppShell.tsx for why breakpoints are flat string consts in the same
+// file (defineConsts cross-file refs bypass `enableMediaQueryOrder`).
+const BP_DESKTOP_WIDE = "@media (min-width: 1280px)";
+
 const styles = stylex.create({
   wrapper: {
     display: "grid",
     gap: space.s5,
     gridTemplateColumns: {
       default: "1fr",
-      "@media (min-width: 1280px)": "minmax(0, 12rem) minmax(0, 1fr) minmax(0, 12rem)",
+      [BP_DESKTOP_WIDE]: "minmax(0, 12rem) minmax(0, 1fr) minmax(0, 12rem)",
     },
     gridTemplateAreas: {
       default: '"main"',
-      "@media (min-width: 1280px)": '"left-margin main right-margin"',
+      [BP_DESKTOP_WIDE]: '"left-margin main right-margin"',
     },
   },
   marginColumn: {
-    display: { default: "none", "@media (min-width: 1280px)": "block" },
+    display: { default: "none", [BP_DESKTOP_WIDE]: "block" },
   },
   leftMargin: {
     gridRowStart: "left-margin",

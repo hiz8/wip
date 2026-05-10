@@ -12,12 +12,17 @@ interface AppShellProps {
   children: ReactNode;
 }
 
-// Breakpoints are kept as literal media-query strings (not pulled through a
-// `const bp = { ... }` indirection) so the @stylexjs/eslint-plugin can verify
-// keys statically, and so the StyleX babel plugin emits literal `@media ...`
-// keys. Under `unstable_moduleResolution.type: "custom"`, cross-file imports
-// become `var(--hash)` theme refs, which bypass `enableMediaQueryOrder` and
-// let overlapping media queries collide in source order.
+// Breakpoints live as flat string consts in the same file (not as
+// `defineConsts` in a `.stylex.ts` file). Cross-file media-query consts get
+// emitted as `var(--hash)` refs under `unstable_moduleResolution.type:
+// "custom"`, which bypass `enableMediaQueryOrder` and let overlapping queries
+// collide in source order. Same-file string consts are inlined statically by
+// the StyleX babel plugin and resolved by `@stylexjs/eslint-plugin`'s
+// identifier evaluator (which does not follow `MemberExpression`, ruling out
+// the previous `as const bp = { ... }` object pattern).
+const BP_TABLET = "@media (min-width: 768px)";
+const BP_DESKTOP = "@media (min-width: 1024px)";
+
 const styles = stylex.create({
   root: {
     minHeight: "100vh",
@@ -38,23 +43,23 @@ const styles = stylex.create({
   bodyWithTree: {
     gridTemplateColumns: {
       default: "1fr",
-      "@media (min-width: 768px)": "minmax(220px, 16rem) 1fr",
+      [BP_TABLET]: "minmax(220px, 16rem) 1fr",
     },
     gridTemplateAreas: {
       default: '"main"',
-      "@media (min-width: 768px)": '"tree main"',
+      [BP_TABLET]: '"tree main"',
     },
   },
   bodyWithRight: {
     gridTemplateColumns: {
       default: "1fr",
-      "@media (min-width: 768px)": "minmax(220px, 16rem) 1fr",
-      "@media (min-width: 1024px)": "minmax(220px, 16rem) minmax(0, 1fr) minmax(220px, 18rem)",
+      [BP_TABLET]: "minmax(220px, 16rem) 1fr",
+      [BP_DESKTOP]: "minmax(220px, 16rem) minmax(0, 1fr) minmax(220px, 18rem)",
     },
     gridTemplateAreas: {
       default: '"main"',
-      "@media (min-width: 768px)": '"tree main"',
-      "@media (min-width: 1024px)": '"tree main right"',
+      [BP_TABLET]: '"tree main"',
+      [BP_DESKTOP]: '"tree main right"',
     },
   },
   treeArea: {
@@ -62,7 +67,7 @@ const styles = stylex.create({
     gridRowEnd: "tree",
     gridColumnStart: "tree",
     gridColumnEnd: "tree",
-    display: { default: "none", "@media (min-width: 768px)": "block" },
+    display: { default: "none", [BP_TABLET]: "block" },
     borderInlineEndWidth: 1,
     borderInlineEndStyle: "solid",
     borderInlineEndColor: colors.borderSubtle,
@@ -75,7 +80,7 @@ const styles = stylex.create({
     gridColumnStart: "main",
     gridColumnEnd: "main",
     minWidth: 0,
-    paddingInline: { default: space.s4, "@media (min-width: 768px)": space.s6 },
+    paddingInline: { default: space.s4, [BP_TABLET]: space.s6 },
     paddingBlock: space.s5,
   },
   rightArea: {
@@ -83,7 +88,7 @@ const styles = stylex.create({
     gridRowEnd: "right",
     gridColumnStart: "right",
     gridColumnEnd: "right",
-    display: { default: "none", "@media (min-width: 1024px)": "block" },
+    display: { default: "none", [BP_DESKTOP]: "block" },
     borderInlineStartWidth: 1,
     borderInlineStartStyle: "solid",
     borderInlineStartColor: colors.borderSubtle,
