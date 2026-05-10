@@ -21,7 +21,7 @@ async function build(): Promise<NotesDataset> {
   const items = await collectNotes(config);
   const rendered = await renderNotes(items, config);
 
-  const sorted = [...rendered].sort((a, b) => {
+  const sorted = rendered.toSorted((a, b) => {
     if (a.frontmatter.updated === b.frontmatter.updated) {
       return a.slug.localeCompare(b.slug);
     }

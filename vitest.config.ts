@@ -1,12 +1,11 @@
 import { defineConfig } from "vitest/config";
 import { existsSync } from "node:fs";
 import { dirname, isAbsolute, resolve as resolvePath } from "node:path";
-import { fileURLToPath } from "node:url";
 import stylex from "@stylexjs/unplugin";
 import viteReact from "@vitejs/plugin-react";
 
-const projectRoot = fileURLToPath(new URL(".", import.meta.url));
-const srcRoot = fileURLToPath(new URL("./src/", import.meta.url));
+const projectRoot = `${import.meta.dirname}/`;
+const srcRoot = `${import.meta.dirname}/src/`;
 const STYLEX_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
 
 function resolveStylexImport(importPath: string, sourceFilePath: string): string | undefined {
@@ -43,7 +42,7 @@ export default defineConfig({
           const rel = filePath.startsWith(projectRoot)
             ? filePath.slice(projectRoot.length)
             : filePath;
-          return rel.replace(/\\/g, "/");
+          return rel.replaceAll("\\", "/");
         },
       },
     }),
@@ -58,7 +57,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": fileURLToPath(new URL("./src", import.meta.url)),
+      "@": `${import.meta.dirname}/src`,
     },
   },
 });

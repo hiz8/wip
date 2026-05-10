@@ -51,7 +51,7 @@ describe("applyWikiLink", () => {
     const html = await toHtml(tree);
     expect(html).toContain('<a href="/notes/foo">foo</a>');
     expect(html).toContain('<a href="/notes/link-target">link-target</a>');
-    expect(outgoing.map((o) => o.slug).sort()).toEqual(["foo", "link-target"]);
+    expect(outgoing.map((o) => o.slug).toSorted()).toEqual(["foo", "link-target"]);
     expect(outgoing.every((o) => o.embedded === false)).toBe(true);
   });
 

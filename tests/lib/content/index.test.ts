@@ -6,7 +6,7 @@ import { makeConfig } from "../../helpers/makeConfig.ts";
 describe("collectNotes", () => {
   it("vault から公開済み Notes のみを収集する", async () => {
     const items = await collectNotes(makeConfig("vault"));
-    const slugs = items.map((i) => i.slug).sort();
+    const slugs = items.map((i) => i.slug).toSorted();
 
     // 公開: note-a, note-b, frontend/nested → "nested", 日本語ノート
     expect(slugs).toContain("note-a");

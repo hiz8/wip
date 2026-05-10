@@ -1,16 +1,8 @@
 import { z } from "zod";
 
-const urlString = z.string().refine(
-  (value) => {
-    try {
-      new URL(value);
-      return true;
-    } catch {
-      return false;
-    }
-  },
-  { message: "must be a valid URL" },
-);
+const urlString = z
+  .string()
+  .refine((value) => URL.canParse(value), { message: "must be a valid URL" });
 
 const socialLinkSchema = z.object({
   label: z.string().min(1),

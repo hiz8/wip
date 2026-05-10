@@ -14,7 +14,7 @@ describe("collectMarkdownFiles", () => {
       exclude: ["Glossary/**", "Books/**", "Clips/**", "_site/**"],
     });
 
-    const relPaths = files.map((p) => relative(vaultRoot, p)).sort();
+    const relPaths = files.map((p) => relative(vaultRoot, p)).toSorted();
 
     expect(relPaths).toContain("note-a.md");
     expect(relPaths).toContain("note-b.md");

@@ -1,0 +1,48 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "react", "jsx-a11y", "vitest"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "error",
+    "pedantic": "warn"
+  },
+  "env": {
+    "builtin": true,
+    "browser": true,
+    "node": true,
+    "es2024": true
+  },
+  "ignorePatterns": [
+    "node_modules",
+    "dist",
+    ".output",
+    ".tanstack",
+    ".vinxi",
+    ".claude",
+    "src/routeTree.gen.ts"
+  ],
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "eslint/no-await-in-loop": "off",
+    "eslint/no-underscore-dangle": "off",
+    "eslint/require-unicode-regexp": "off",
+    "eslint/max-lines-per-function": "off",
+    "eslint/no-negated-condition": "off",
+    "unicorn/no-negated-condition": "off"
+  },
+  "overrides": [
+    {
+      "files": ["tests/**/*.{ts,tsx}", "**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
+      "env": {
+        "vitest": true
+      },
+      "rules": {
+        "vitest/no-conditional-expect": "off",
+        "vitest/no-conditional-in-test": "off",
+        "unicorn/no-immediate-mutation": "off",
+        "eslint/require-await": "off"
+      }
+    }
+  ]
+}

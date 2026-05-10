@@ -117,7 +117,7 @@ function BooksIcon() {
 
 export function IconNav() {
   const matches = useMatches();
-  const path = matches[matches.length - 1]?.pathname ?? "/";
+  const path = matches.at(-1)?.pathname ?? "/";
   const onNotes = path === "/notes" || path.startsWith("/notes/");
 
   return (

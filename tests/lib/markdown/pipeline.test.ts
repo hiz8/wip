@@ -19,7 +19,7 @@ describe("renderNotes (integration)", () => {
     const source = rendered.find((r) => r.slug === "link-source");
     expect(source).toBeDefined();
     expect(source!.html).toContain('href="/notes/link-target"');
-    expect(source!.outgoingLinks.map((o) => o.slug).sort()).toEqual([
+    expect(source!.outgoingLinks.map((o) => o.slug).toSorted()).toEqual([
       "link-target",
       "link-target",
       "link-target",
@@ -92,7 +92,7 @@ describe("renderNotes (integration)", () => {
     const rendered = await renderNotes(items, makeConfig("vault-markdown"));
 
     const i = rendered.find((r) => r.slug === "images");
-    expect(i?.images.map((x) => x.rawPath).sort()).toEqual([
+    expect(i?.images.map((x) => x.rawPath).toSorted()).toEqual([
       "assets/embedded.png",
       "assets/picture.jpg",
     ]);

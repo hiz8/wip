@@ -25,7 +25,7 @@ function renderWithRouter(ui: ReactNode) {
   const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/",
-    component: () => <>{ui}</>,
+    component: () => ui,
   });
   const slugRoute = createRoute({
     getParentRoute: () => rootRoute,

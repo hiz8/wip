@@ -8,7 +8,7 @@ export interface CollectOptions {
   exclude: string[];
 }
 
-export async function collectNoteFiles(config: SiteConfigParsed): Promise<string[]> {
+export function collectNoteFiles(config: SiteConfigParsed): Promise<string[]> {
   return collectMarkdownFiles({
     vaultRoot: config.content.vaultRoot,
     path: config.content.notes.path,
@@ -25,5 +25,5 @@ export async function collectMarkdownFiles(options: CollectOptions): Promise<str
     dot: false,
     onlyFiles: true,
   });
-  return matches.sort();
+  return matches.toSorted();
 }
