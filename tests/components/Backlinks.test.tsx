@@ -59,4 +59,13 @@ describe("Backlinks", () => {
     expect(document.querySelector('a[href="/glossary/react-fiber"]')).not.toBeNull();
     expect(document.querySelector('a[href="/books/9784873119045"]')).not.toBeNull();
   });
+
+  it("renders a content-type icon for each backlink", async () => {
+    renderWithRouter(<Backlinks links={ALL_LINKS} />);
+    await waitFor(() => expect(screen.getByText("Note A")).toBeInTheDocument());
+    const icons = document.querySelectorAll('svg[role="img"]');
+    expect(icons.length).toBe(ALL_LINKS.length);
+    const labels = Array.from(icons).map((node) => node.getAttribute("aria-label"));
+    expect(labels).toEqual(["Note", "Glossary", "Book"]);
+  });
 });

@@ -3,6 +3,7 @@ import * as stylex from "@stylexjs/stylex";
 import { Link } from "@tanstack/react-router";
 import type { BacklinkRef } from "@/types/content.ts";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
+import { ContentTypeIcon } from "./ContentTypeIcon.tsx";
 
 interface BacklinksProps {
   links: readonly BacklinkRef[];
@@ -27,6 +28,17 @@ const styles = stylex.create({
     display: "flex",
     flexDirection: "column",
     gap: space.s2,
+  },
+  item: {
+    display: "flex",
+    alignItems: "center",
+    gap: space.s2,
+    color: colors.textSecondary,
+  },
+  iconWrapper: {
+    color: colors.textMuted,
+    flexShrink: 0,
+    display: "inline-flex",
   },
   link: {
     color: colors.link,
@@ -69,7 +81,10 @@ export function Backlinks({ links }: BacklinksProps) {
       <h2 {...stylex.props(styles.heading)}>Backlinks</h2>
       <ul {...stylex.props(styles.list)}>
         {links.map((ref) => (
-          <li key={`${ref.type}:${ref.slug}`}>
+          <li key={`${ref.type}:${ref.slug}`} {...stylex.props(styles.item)}>
+            <span {...stylex.props(styles.iconWrapper)} aria-hidden="true">
+              <ContentTypeIcon type={ref.type} size={14} />
+            </span>
             <BacklinkBody ref={ref} />
           </li>
         ))}
