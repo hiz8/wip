@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+function MockPagefindUI() {
+  // no-op
+}
+
+vi.mock("/pagefind/pagefind-ui.js", () => ({ PagefindUI: MockPagefindUI }));
 import {
   Outlet,
   RouterProvider,
@@ -88,5 +95,13 @@ describe("IconNav", () => {
     renderAtPath("/books/9784000000000");
     await waitFor(() => expect(screen.getByText("Books")).toBeInTheDocument());
     expect(document.querySelector('a[href="/books"]')).not.toBeNull();
+  });
+
+  it("includes a Search button that opens the search dialog", async () => {
+    const user = userEvent.setup();
+    renderAtPath("/");
+    const searchButton = await screen.findByRole("button", { name: /search/iu });
+    await user.click(searchButton);
+    expect(await screen.findByRole("dialog", { name: "サイト内検索" })).toBeInTheDocument();
   });
 });

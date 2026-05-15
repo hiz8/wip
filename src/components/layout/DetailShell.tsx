@@ -131,6 +131,7 @@ export function DetailShell({
         <div
           ref={contentRef}
           data-content-body
+          data-pagefind-body
           {...stylex.props(styles.content)}
           dangerouslySetInnerHTML={contentHtml}
         />

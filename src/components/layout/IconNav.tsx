@@ -1,8 +1,12 @@
+import { useCallback, useEffect, useState } from "react";
 import * as stylex from "@stylexjs/stylex";
 import { Link, useMatches } from "@tanstack/react-router";
 import { colors, radius, space } from "@/styles/tokens.stylex.ts";
 import { ThemeToggle } from "@/components/common/ThemeToggle.tsx";
 import { ContentTypeIcon } from "@/components/common/ContentTypeIcon.tsx";
+import { SearchIcon } from "@/components/common/SearchIcon.tsx";
+import { SearchDialog } from "@/components/common/SearchDialog.tsx";
+import { bindSlashShortcut } from "@/lib/search/slashShortcut.ts";
 
 const styles = stylex.create({
   nav: {
@@ -74,29 +78,45 @@ export function IconNav() {
   const onGlossary = path === "/glossary" || path.startsWith("/glossary/");
   const onBooks = path === "/books" || path.startsWith("/books/");
 
+  const [searchOpen, setSearchOpen] = useState(false);
+  const openSearch = useCallback(() => setSearchOpen(true), []);
+  useEffect(() => bindSlashShortcut(openSearch), [openSearch]);
+
   return (
-    <nav {...stylex.props(styles.nav)} aria-label="Site sections">
-      <Link to="/" {...stylex.props(styles.iconButton, path === "/" && styles.iconButtonActive)}>
-        <HomeIcon />
-        <span {...stylex.props(styles.srOnly)}>Home</span>
-      </Link>
-      <Link to="/notes" {...stylex.props(styles.iconButton, onNotes && styles.iconButtonActive)}>
-        <ContentTypeIcon type="notes" />
-        <span {...stylex.props(styles.srOnly)}>Notes</span>
-      </Link>
-      <Link
-        to="/glossary"
-        {...stylex.props(styles.iconButton, onGlossary && styles.iconButtonActive)}
-      >
-        <ContentTypeIcon type="glossary" />
-        <span {...stylex.props(styles.srOnly)}>Glossary</span>
-      </Link>
-      <Link to="/books" {...stylex.props(styles.iconButton, onBooks && styles.iconButtonActive)}>
-        <ContentTypeIcon type="books" />
-        <span {...stylex.props(styles.srOnly)}>Books</span>
-      </Link>
-      <div {...stylex.props(styles.spacer)} />
-      <ThemeToggle />
-    </nav>
+    <>
+      <nav {...stylex.props(styles.nav)} aria-label="Site sections">
+        <button
+          type="button"
+          onClick={openSearch}
+          aria-label="Search (press /)"
+          {...stylex.props(styles.iconButton)}
+        >
+          <SearchIcon />
+          <span {...stylex.props(styles.srOnly)}>Search</span>
+        </button>
+        <Link to="/" {...stylex.props(styles.iconButton, path === "/" && styles.iconButtonActive)}>
+          <HomeIcon />
+          <span {...stylex.props(styles.srOnly)}>Home</span>
+        </Link>
+        <Link to="/notes" {...stylex.props(styles.iconButton, onNotes && styles.iconButtonActive)}>
+          <ContentTypeIcon type="notes" />
+          <span {...stylex.props(styles.srOnly)}>Notes</span>
+        </Link>
+        <Link
+          to="/glossary"
+          {...stylex.props(styles.iconButton, onGlossary && styles.iconButtonActive)}
+        >
+          <ContentTypeIcon type="glossary" />
+          <span {...stylex.props(styles.srOnly)}>Glossary</span>
+        </Link>
+        <Link to="/books" {...stylex.props(styles.iconButton, onBooks && styles.iconButtonActive)}>
+          <ContentTypeIcon type="books" />
+          <span {...stylex.props(styles.srOnly)}>Books</span>
+        </Link>
+        <div {...stylex.props(styles.spacer)} />
+        <ThemeToggle />
+      </nav>
+      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+    </>
   );
 }
