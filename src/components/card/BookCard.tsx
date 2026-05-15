@@ -10,6 +10,7 @@ interface BookCardProps {
   pubYear: number | null;
   summary: string | null;
   tags: readonly string[];
+  coverUrl: string | null;
 }
 
 const styles = stylex.create({
@@ -39,6 +40,15 @@ const styles = stylex.create({
     paddingInline: space.s2,
     paddingBlock: space.s2,
     overflow: "hidden",
+  },
+  coverImage: {
+    aspectRatio: "3 / 4",
+    width: "100%",
+    height: "auto",
+    objectFit: "cover",
+    backgroundColor: colors.bgElevated,
+    borderRadius: radius.sm,
+    display: "block",
   },
   title: {
     fontSize: typography.fontSizeLg,
@@ -82,13 +92,31 @@ const styles = stylex.create({
   },
 });
 
-export function BookCard({ slug, title, authors, pubYear, summary, tags }: BookCardProps) {
+export function BookCard({
+  slug,
+  title,
+  authors,
+  pubYear,
+  summary,
+  tags,
+  coverUrl,
+}: BookCardProps) {
   const params = useMemo(() => ({ isbn: slug }), [slug]);
   return (
     <article {...stylex.props(styles.card)}>
-      <div {...stylex.props(styles.coverPlaceholder)} aria-hidden="true">
-        {title}
-      </div>
+      {coverUrl === null ? (
+        <div {...stylex.props(styles.coverPlaceholder)} aria-hidden="true">
+          {title}
+        </div>
+      ) : (
+        <img
+          src={coverUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          {...stylex.props(styles.coverImage)}
+        />
+      )}
       <Link to="/books/$isbn" params={params} {...stylex.props(styles.title)}>
         {title}
       </Link>

@@ -62,6 +62,7 @@ function BooksIndex() {
                 pubYear={book.pubYear}
                 summary={book.summary}
                 tags={book.tags}
+                coverUrl={book.coverUrl}
               />
             </li>
           ))}

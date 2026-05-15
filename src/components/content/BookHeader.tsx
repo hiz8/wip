@@ -10,6 +10,7 @@ interface BookHeaderProps {
   pubYear: number | null;
   publisher: string | null;
   readDate: string | null;
+  coverUrl: string | null;
 }
 
 const styles = stylex.create({
@@ -36,6 +37,17 @@ const styles = stylex.create({
     paddingInline: space.s3,
     paddingBlock: space.s3,
     maxWidth: { default: "12rem", [BP_DESKTOP]: "100%" },
+    marginInline: { default: "auto", [BP_DESKTOP]: 0 },
+  },
+  coverImage: {
+    aspectRatio: "3 / 4",
+    width: { default: "auto", [BP_DESKTOP]: "100%" },
+    maxWidth: { default: "12rem", [BP_DESKTOP]: "100%" },
+    height: "auto",
+    objectFit: "cover",
+    backgroundColor: colors.bgElevated,
+    borderRadius: radius.sm,
+    display: "block",
     marginInline: { default: "auto", [BP_DESKTOP]: 0 },
   },
   meta: {
@@ -67,12 +79,23 @@ export function BookHeader({
   pubYear,
   publisher,
   readDate,
+  coverUrl,
 }: BookHeaderProps) {
   return (
     <header {...stylex.props(styles.header)}>
-      <div {...stylex.props(styles.coverPlaceholder)} aria-hidden="true">
-        {title}
-      </div>
+      {coverUrl === null ? (
+        <div {...stylex.props(styles.coverPlaceholder)} aria-hidden="true">
+          {title}
+        </div>
+      ) : (
+        <img
+          src={coverUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          {...stylex.props(styles.coverImage)}
+        />
+      )}
       <div {...stylex.props(styles.meta)}>
         <h1 {...stylex.props(styles.title)}>{title}</h1>
         {authors.length > 0 && (

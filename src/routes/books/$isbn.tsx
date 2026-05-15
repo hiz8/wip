@@ -40,9 +40,18 @@ function BookDetail() {
         pubYear={book.pubYear}
         publisher={book.publisher}
         readDate={book.readDate}
+        coverUrl={book.coverUrl}
       />
     ),
-    [book.title, book.authors, book.isbn, book.pubYear, book.publisher, book.readDate],
+    [
+      book.title,
+      book.authors,
+      book.isbn,
+      book.pubYear,
+      book.publisher,
+      book.readDate,
+      book.coverUrl,
+    ],
   );
 
   return (
