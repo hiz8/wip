@@ -34,6 +34,15 @@ export const Route = createRootRoute({
         content: "#0e1014",
       },
     ],
+    links: [
+      {
+        rel: "alternate",
+        type: "application/atom+xml",
+        title: SITE_NAME,
+        href: `${SITE_URL}/feed.xml`,
+      },
+      { rel: "sitemap", type: "application/xml", href: `${SITE_URL}/sitemap.xml` },
+    ],
   }),
   component: RootDocument,
 });
