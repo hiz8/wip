@@ -1,4 +1,9 @@
-import type { RenderedBook, RenderedGlossaryTerm, RenderedNote } from "@/types/content.ts";
+import type {
+  ImageRef,
+  RenderedBook,
+  RenderedGlossaryTerm,
+  RenderedNote,
+} from "@/types/content.ts";
 import type { SiteConfigParsed } from "@/lib/config/schema.ts";
 import { resolveConfig } from "@/lib/config/index.ts";
 import { collectBooks, collectGlossary, collectNotes } from "@/lib/content/index.ts";
@@ -10,6 +15,13 @@ import {
 } from "@/lib/markdown/pipeline.ts";
 import { buildContentIndex } from "@/lib/linkgraph/resolve.ts";
 import { attachBacklinks, buildBacklinks } from "@/lib/linkgraph/graph.ts";
+import {
+  buildImageMapping,
+  buildResolvedToPublicMap,
+  bookCoverToImageRef,
+  lookupBookCoverUrl,
+  type ImageMappingEntry,
+} from "@/lib/images/index.ts";
 // Static import so the bundler embeds the config in the SSR bundle.
 import siteConfigInput from "../../site.config.ts";
 import {
@@ -27,6 +39,8 @@ export interface SiteDataset {
     glossary: Map<string, RenderedGlossaryTerm>;
     books: Map<string, RenderedBook>;
   };
+  imageMapping: readonly ImageMappingEntry[];
+  coverBySlug: ReadonlyMap<string, string>;
 }
 
 let cached: Promise<SiteDataset> | null = null;
@@ -70,6 +84,13 @@ async function build(): Promise<SiteDataset> {
   const glossary = sortGlossary(attachBacklinks(glossaryDrafts, backlinks));
   const books = sortBooks(attachBacklinks(booksDrafts, backlinks));
 
+  const { imageMapping, coverBySlug } = computeImageArtifacts(
+    notes,
+    glossary,
+    books,
+    config.content.vaultRoot,
+  );
+
   return {
     notes,
     glossary,
@@ -79,7 +100,47 @@ async function build(): Promise<SiteDataset> {
       glossary: indexBySlug(glossary),
       books: indexBySlug(books),
     },
+    imageMapping,
+    coverBySlug,
   };
+}
+
+function computeImageArtifacts(
+  notes: readonly RenderedNote[],
+  glossary: readonly RenderedGlossaryTerm[],
+  books: readonly RenderedBook[],
+  vaultRoot: string,
+): { imageMapping: readonly ImageMappingEntry[]; coverBySlug: ReadonlyMap<string, string> } {
+  const refs: ImageRef[] = [];
+  for (const item of notes) refs.push(...item.images);
+  for (const item of glossary) refs.push(...item.images);
+  for (const item of books) refs.push(...item.images);
+  for (const book of books) {
+    const cover = book.frontmatter.cover;
+    if (cover === undefined) continue;
+    const ref = bookCoverToImageRef({
+      cover,
+      bookAbsolutePath: book.absolutePath,
+      vaultRoot,
+    });
+    if (ref !== null) refs.push(ref);
+  }
+
+  const { entries } = buildImageMapping(refs);
+  const resolvedToPublic = buildResolvedToPublicMap(entries);
+
+  const coverBySlug = new Map<string, string>();
+  for (const book of books) {
+    const cover = book.frontmatter.cover;
+    if (cover === undefined) continue;
+    const url = lookupBookCoverUrl(
+      { cover, bookAbsolutePath: book.absolutePath, vaultRoot },
+      resolvedToPublic,
+    );
+    if (url !== null) coverBySlug.set(book.slug, url);
+  }
+
+  return { imageMapping: entries, coverBySlug };
 }
 
 function indexBySlug<T extends { slug: string }>(items: readonly T[]): Map<string, T> {

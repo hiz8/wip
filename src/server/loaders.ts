@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getAllNotes, getNoteBySlug } from "./notes.ts";
 import { getAllGlossaryTerms, getGlossaryGroupedIndex, getGlossaryTermBySlug } from "./glossary.ts";
-import { getAllBooks, getBookByIsbn } from "./books.ts";
+import { getAllBooks, getBookByIsbn, getBookCoverMap } from "./books.ts";
 import { buildBooksTree } from "@/lib/tree/buildBooksTree.ts";
 import { buildGlossaryTree } from "@/lib/tree/buildGlossaryTree.ts";
 import { buildTreeFromRenderedNotes } from "@/lib/tree/buildTree.ts";
@@ -69,6 +69,7 @@ export interface BookListItem {
   publisher: string | null;
   summary: string | null;
   tags: string[];
+  coverUrl: string | null;
 }
 
 export interface BookDetail {
@@ -81,6 +82,7 @@ export interface BookDetail {
   readDate: string | null;
   summary: string | null;
   tags: string[];
+  coverUrl: string | null;
   html: string;
   toc: TocEntry[];
   incomingLinks: BacklinkRef[];
@@ -180,6 +182,7 @@ export const getGlossaryTreeData = createServerFn({ method: "GET" }).handler(
 export const getBooksIndexData = createServerFn({ method: "GET" }).handler(
   async (): Promise<BookListItem[]> => {
     const books = await getAllBooks();
+    const covers = await getBookCoverMap();
     return books.map((book) => ({
       slug: book.slug,
       title: book.title,
@@ -188,6 +191,7 @@ export const getBooksIndexData = createServerFn({ method: "GET" }).handler(
       publisher: book.frontmatter.publisher ?? null,
       summary: book.frontmatter.summary ?? null,
       tags: book.frontmatter.tags ?? [],
+      coverUrl: covers.get(book.slug) ?? null,
     }));
   },
 );
@@ -199,6 +203,7 @@ export const getBookDetailData = createServerFn({ method: "GET" })
   .handler(async ({ data }): Promise<BookDetail | null> => {
     const book = await getBookByIsbn(data.isbn);
     if (!book) return null;
+    const covers = await getBookCoverMap();
     return {
       slug: book.slug,
       isbn: book.frontmatter.isbn ?? book.slug,
@@ -209,6 +214,7 @@ export const getBookDetailData = createServerFn({ method: "GET" })
       readDate: book.frontmatter.read_date ?? null,
       summary: book.frontmatter.summary ?? null,
       tags: book.frontmatter.tags ?? [],
+      coverUrl: covers.get(book.slug) ?? null,
       html: book.html,
       toc: book.toc,
       incomingLinks: book.incomingLinks,

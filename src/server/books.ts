@@ -16,6 +16,11 @@ export async function getBookByIsbn(isbn: string): Promise<RenderedBook | undefi
   return data.bySlug.books.get(isbn);
 }
 
+export async function getBookCoverMap(): Promise<ReadonlyMap<string, string>> {
+  const data = await getSiteDataset();
+  return data.coverBySlug;
+}
+
 export function __resetBooksCacheForTests(): void {
   __resetSiteDatasetForTests();
 }

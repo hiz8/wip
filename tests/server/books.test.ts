@@ -4,6 +4,7 @@ import {
   __setBooksConfigForTests,
   getAllBooks,
   getBookByIsbn,
+  getBookCoverMap,
 } from "@/server/books.ts";
 import { makeConfig } from "../helpers/makeConfig.ts";
 
@@ -30,5 +31,12 @@ describe("server/books data layer", () => {
     __setBooksConfigForTests(makeConfig("vault"));
     const book = await getBookByIsbn("9999999999999");
     expect(book).toBeUndefined();
+  }, 30_000);
+
+  it("getBookCoverMap resolves the fixture book cover to /images/sample-cover.png", async () => {
+    __setBooksConfigForTests(makeConfig("vault"));
+    const covers = await getBookCoverMap();
+    expect(covers.get("9784873119045")).toBe("/images/sample-cover.png");
+    expect(covers.get("9784000000000")).toBeUndefined();
   }, 30_000);
 });
