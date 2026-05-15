@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type { CalloutKind } from "@/types/content.ts";
 
 interface CalloutKindIconProps {
@@ -13,7 +14,16 @@ const LABELS: Record<CalloutKind, string> = {
   warning: "Warning",
 };
 
+const PATHS: Record<CalloutKind, () => ReactElement> = {
+  note: NotePath,
+  quote: QuotePath,
+  tip: TipPath,
+  info: InfoPath,
+  warning: WarningPath,
+};
+
 export function CalloutKindIcon({ kind, size = 16 }: CalloutKindIconProps) {
+  const Path = PATHS[kind];
   return (
     <svg
       width={size}
@@ -23,11 +33,7 @@ export function CalloutKindIcon({ kind, size = 16 }: CalloutKindIconProps) {
       role="img"
       aria-label={LABELS[kind]}
     >
-      {kind === "note" ? <NotePath /> : null}
-      {kind === "quote" ? <QuotePath /> : null}
-      {kind === "tip" ? <TipPath /> : null}
-      {kind === "info" ? <InfoPath /> : null}
-      {kind === "warning" ? <WarningPath /> : null}
+      <Path />
     </svg>
   );
 }

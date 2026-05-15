@@ -79,7 +79,10 @@ export function DetailShell({
   callouts,
 }: DetailShellProps) {
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const hasMarginaliaItems = footnotes.length > 0 || callouts.length > 0;
 
+  // useMemo wrappers below keep JSX/object prop identities stable for the
+  // project's react-perf lint rules (jsx-no-jsx-as-prop, jsx-no-new-object-as-prop).
   const treeSidebar = useMemo(
     () => <TreeSidebar tree={tree} activeSlug={activeSlug} treeKind={treeKind} />,
     [tree, activeSlug, treeKind],
@@ -88,20 +91,26 @@ export function DetailShell({
     () => <RightSidebar toc={toc} backlinks={backlinks} />,
     [toc, backlinks],
   );
-  const contentHtml = useMemo(() => ({ __html: html }), [html]);
-
   const leftMargin = useMemo(
-    () => (
-      <Marginalia side="left" contentRef={contentRef} footnotes={footnotes} callouts={callouts} />
-    ),
-    [footnotes, callouts],
+    () =>
+      hasMarginaliaItems ? (
+        <Marginalia side="left" contentRef={contentRef} footnotes={footnotes} callouts={callouts} />
+      ) : null,
+    [hasMarginaliaItems, footnotes, callouts],
   );
   const rightMargin = useMemo(
-    () => (
-      <Marginalia side="right" contentRef={contentRef} footnotes={footnotes} callouts={callouts} />
-    ),
-    [footnotes, callouts],
+    () =>
+      hasMarginaliaItems ? (
+        <Marginalia
+          side="right"
+          contentRef={contentRef}
+          footnotes={footnotes}
+          callouts={callouts}
+        />
+      ) : null,
+    [hasMarginaliaItems, footnotes, callouts],
   );
+  const contentHtml = useMemo(() => ({ __html: html }), [html]);
 
   return (
     <AppShell variant="detail" treeSidebar={treeSidebar} rightSidebar={rightSidebar}>

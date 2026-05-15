@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type { ContentType } from "@/types/content.ts";
 
 interface ContentTypeIconProps {
@@ -11,13 +12,24 @@ const LABELS: Record<ContentType, string> = {
   books: "Book",
 };
 
+const PATHS: Record<ContentType, () => ReactElement> = {
+  notes: NotesPath,
+  glossary: GlossaryPath,
+  books: BooksPath,
+};
+
 export function ContentTypeIcon({ type, size = 20 }: ContentTypeIconProps) {
-  const label = LABELS[type];
+  const Path = PATHS[type];
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" role="img" aria-label={label}>
-      {type === "notes" ? <NotesPath /> : null}
-      {type === "glossary" ? <GlossaryPath /> : null}
-      {type === "books" ? <BooksPath /> : null}
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      role="img"
+      aria-label={LABELS[type]}
+    >
+      <Path />
     </svg>
   );
 }

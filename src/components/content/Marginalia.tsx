@@ -16,16 +16,15 @@ interface MarginaliaProps {
 
 interface ResolvedMarginaliaItem {
   key: string;
-  side: MarginaliaSide;
   top: number;
   node: ReactNode;
 }
 
-interface PendingItem {
+interface MarginaliaSource {
   key: string;
-  side: MarginaliaSide;
-  measure: { id: string; top: number; height: number };
-  node: ReactNode;
+  measureId: string;
+  findTarget: (content: HTMLElement) => HTMLElement | null;
+  buildNode: (displayIndex: number) => ReactNode;
 }
 
 const styles = stylex.create({
@@ -55,16 +54,8 @@ export function Marginalia({ side, contentRef, footnotes, callouts }: Marginalia
 
     const recompute = () => {
       if (cancelled) return;
-      const pending = collectPending(content, footnotes, callouts, side);
-      const placed = computeMarginaliaPlacements(pending.map((p) => p.measure));
-      const map = new Map(placed.map((p) => [p.id, p.top]));
-      const next: ResolvedMarginaliaItem[] = [];
-      for (const item of pending) {
-        const top = map.get(item.measure.id);
-        if (top === undefined) continue;
-        next.push({ key: item.key, side: item.side, top, node: item.node });
-      }
-      setItems(next);
+      const next = collectItems(content, footnotes, callouts, side);
+      setItems((prev) => (sameItems(prev, next) ? prev : next));
     };
 
     const schedule = () => {
@@ -78,7 +69,7 @@ export function Marginalia({ side, contentRef, footnotes, callouts }: Marginalia
     ro.observe(content);
 
     const mo = new MutationObserver(schedule);
-    mo.observe(content, { childList: true, subtree: true, attributes: true });
+    mo.observe(content, { childList: true, subtree: true });
 
     window.addEventListener("resize", schedule);
 
@@ -116,6 +107,7 @@ interface MarginaliaSlotProps {
 function MarginaliaSlot({ top, children }: MarginaliaSlotProps) {
   // Dynamic top is computed from the live position of in-body markers, so it
   // cannot be expressed in StyleX (compile-time) and falls back to inline.
+  // useMemo keeps the style object stable for the project's react-perf lint rule.
   const style = useMemo(() => ({ top: `${top}px` }), [top]);
   return (
     <div {...stylex.props(styles.item)} style={style}>
@@ -124,55 +116,79 @@ function MarginaliaSlot({ top, children }: MarginaliaSlotProps) {
   );
 }
 
-function collectPending(
+function collectItems(
   content: HTMLElement,
   footnotes: readonly FootnoteEntry[],
   callouts: readonly CalloutEntry[],
   side: MarginaliaSide,
-): PendingItem[] {
+): ResolvedMarginaliaItem[] {
+  const sources = buildSources(footnotes, callouts);
   const containerTop = content.getBoundingClientRect().top;
-  const pending: PendingItem[] = [];
-  let order = 0;
+  const measurements: { id: string; top: number; height: number }[] = [];
+  const sideItems: { key: string; measureId: string; node: ReactNode }[] = [];
+  let visibleIndex = 0;
+
+  for (const src of sources) {
+    const target = src.findTarget(content);
+    if (!target) continue;
+    const rect = target.getBoundingClientRect();
+    measurements.push({ id: src.measureId, top: rect.top - containerTop, height: rect.height });
+    const order = visibleIndex;
+    visibleIndex += 1;
+    if (pickSide(order) !== side) continue;
+    sideItems.push({ key: src.key, measureId: src.measureId, node: src.buildNode(order + 1) });
+  }
+
+  const placements = computeMarginaliaPlacements(measurements);
+  const placementById = new Map(placements.map((p) => [p.id, p.top]));
+  const resolved: ResolvedMarginaliaItem[] = [];
+  for (const item of sideItems) {
+    const top = placementById.get(item.measureId);
+    if (top === undefined) continue;
+    resolved.push({ key: item.key, top, node: item.node });
+  }
+  return resolved;
+}
+
+function buildSources(
+  footnotes: readonly FootnoteEntry[],
+  callouts: readonly CalloutEntry[],
+): MarginaliaSource[] {
+  const sources: MarginaliaSource[] = [];
 
   for (const fn of footnotes) {
-    const target = findFootnoteRef(content, fn.id);
-    if (!target) continue;
-    const itemSide = pickSide(order);
-    order += 1;
-    if (itemSide !== side) continue;
-    const rect = target.getBoundingClientRect();
-    pending.push({
+    const labelNumber = Number.parseInt(fn.label, 10);
+    sources.push({
       key: `fn-${fn.id}`,
-      side: itemSide,
-      measure: {
-        id: `fn-${fn.id}`,
-        top: rect.top - containerTop,
-        height: rect.height,
-      },
-      node: <MarginaliaFootnote index={Number(fn.label) || order} footnote={fn} />,
+      measureId: `fn-${fn.id}`,
+      findTarget: (content) => findFootnoteRef(content, fn.id),
+      buildNode: (displayIndex) => (
+        <MarginaliaFootnote
+          index={Number.isFinite(labelNumber) ? labelNumber : displayIndex}
+          footnote={fn}
+        />
+      ),
     });
   }
 
   for (const callout of callouts) {
-    const target = content.querySelector<HTMLElement>(`#${cssEscape(callout.id)}`);
-    if (!target) continue;
-    const itemSide = pickSide(order);
-    order += 1;
-    if (itemSide !== side) continue;
-    const rect = target.getBoundingClientRect();
-    pending.push({
+    sources.push({
       key: callout.id,
-      side: itemSide,
-      measure: {
-        id: callout.id,
-        top: rect.top - containerTop,
-        height: rect.height,
-      },
-      node: <MarginaliaCallout callout={callout} />,
+      measureId: callout.id,
+      findTarget: (content) => content.querySelector<HTMLElement>(`#${cssEscape(callout.id)}`),
+      buildNode: () => <MarginaliaCallout callout={callout} />,
     });
   }
 
-  return pending;
+  return sources;
+}
+
+function sameItems(a: readonly ResolvedMarginaliaItem[], b: readonly ResolvedMarginaliaItem[]) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i]?.key !== b[i]?.key || a[i]?.top !== b[i]?.top) return false;
+  }
+  return true;
 }
 
 function findFootnoteRef(content: HTMLElement, id: string): HTMLElement | null {
@@ -181,8 +197,7 @@ function findFootnoteRef(content: HTMLElement, id: string): HTMLElement | null {
     `a[data-footnote-ref][href="#user-content-fn-${escaped}"]`,
   );
   if (byHref) return byHref;
-  const byId = content.querySelector<HTMLElement>(`#user-content-fnref-${escaped}`);
-  return byId;
+  return content.querySelector<HTMLElement>(`#user-content-fnref-${escaped}`);
 }
 
 function pickSide(index: number): MarginaliaSide {

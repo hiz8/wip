@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
 import type { TocEntry } from "@/types/content.ts";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
@@ -44,8 +43,7 @@ const styles = stylex.create({
 });
 
 export function Toc({ entries }: TocProps) {
-  const headingIds = useMemo(() => entries.map((entry) => entry.id), [entries]);
-  const activeId = useTocActive(headingIds);
+  const activeId = useTocActive(entries.map((entry) => entry.id));
 
   if (entries.length === 0) return null;
   return (

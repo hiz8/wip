@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
 import { CalloutKindIcon } from "./CalloutKindIcon.tsx";
-import type { CalloutEntry, FootnoteEntry } from "@/types/content.ts";
+import type { CalloutEntry, CalloutKind, FootnoteEntry } from "@/types/content.ts";
 import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
 
 interface FootnoteItemProps {
@@ -74,6 +74,14 @@ const styles = stylex.create({
   },
 });
 
+const ACCENT_STYLES: Record<CalloutKind, stylex.StyleXStyles> = {
+  note: styles.noteAccent,
+  quote: styles.quoteAccent,
+  tip: styles.tipAccent,
+  info: styles.infoAccent,
+  warning: styles.warningAccent,
+};
+
 export function MarginaliaFootnote({ index, footnote }: FootnoteItemProps) {
   const html = useMemo(() => ({ __html: footnote.html }), [footnote.html]);
   return (
@@ -90,19 +98,8 @@ export function MarginaliaFootnote({ index, footnote }: FootnoteItemProps) {
 
 export function MarginaliaCallout({ callout }: CalloutItemProps) {
   const html = useMemo(() => ({ __html: callout.html }), [callout.html]);
-  const { kind } = callout;
   return (
-    <aside
-      {...stylex.props(
-        styles.root,
-        styles.callout,
-        kind === "note" && styles.noteAccent,
-        kind === "quote" && styles.quoteAccent,
-        kind === "tip" && styles.tipAccent,
-        kind === "info" && styles.infoAccent,
-        kind === "warning" && styles.warningAccent,
-      )}
-    >
+    <aside {...stylex.props(styles.root, styles.callout, ACCENT_STYLES[callout.kind])}>
       <header {...stylex.props(styles.calloutHeader)}>
         <CalloutKindIcon kind={callout.kind} size={14} />
         {callout.title ? <span>{callout.title}</span> : null}

@@ -1,10 +1,7 @@
 /*
- * Phase 6 content styles.
- *
  * StyleX-emitted token variables use hashed names that are not stable to
  * reference from raw CSS, so callout colors below are hardcoded mirrors of
- * the values in src/styles/tokens.stylex.ts (light + dark). These should be
- * replaced with token references in Phase 8 design polish.
+ * the values in src/styles/tokens.stylex.ts (light + dark).
  */
 @layer components {
   [data-content-body] sup {

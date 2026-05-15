@@ -14,18 +14,23 @@ export function useTocActive(
   options: UseTocActiveOptions = {},
 ): string | null {
   const [activeId, setActiveId] = useState<string | null>(null);
+  // Join into a single key so callers passing a freshly-mapped array each
+  // render do not retrigger the effect when ids are unchanged.
+  const idsKey = headingIds.join("\n");
+  const rootMargin = options.rootMargin ?? DEFAULT_ROOT_MARGIN;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (headingIds.length === 0) {
+    if (typeof IntersectionObserver === "undefined") return;
+    const ids = idsKey === "" ? [] : idsKey.split("\n");
+    if (ids.length === 0) {
       setActiveId(null);
       return;
     }
-    if (typeof IntersectionObserver === "undefined") return;
 
     const elements: HTMLElement[] = [];
-    for (const id of headingIds) {
-      const el = document.getElementById(id);
+    for (const id of ids) {
+      const el = document.querySelector<HTMLElement>(`#${escapeIdSelector(id)}`);
       if (el) elements.push(el);
     }
     if (elements.length === 0) {
@@ -43,13 +48,20 @@ export function useTocActive(
         if (!last) return;
         setActiveId(last.target.id || null);
       },
-      { rootMargin: options.rootMargin ?? DEFAULT_ROOT_MARGIN, threshold: 0 },
+      { rootMargin, threshold: 0 },
     );
 
     for (const el of elements) observer.observe(el);
 
     return () => observer.disconnect();
-  }, [headingIds, options.rootMargin]);
+  }, [idsKey, rootMargin]);
 
   return activeId;
+}
+
+function escapeIdSelector(value: string): string {
+  if (typeof CSS !== "undefined" && typeof CSS.escape === "function") {
+    return CSS.escape(value);
+  }
+  return value.replaceAll(/[^a-zA-Z0-9_-]/gu, "\\$&");
 }
