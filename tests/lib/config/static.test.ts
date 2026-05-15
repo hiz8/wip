@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { resolveConfig } from "@/lib/config/index.ts";
 import siteConfigInput from "../../../site.config.ts";
 import {
+  FEED_MAX_ITEMS,
   SITE_DESCRIPTION,
   SITE_LOCALE,
   SITE_NAME,
@@ -25,5 +26,10 @@ describe("static config mirror", () => {
       if (original === undefined) delete process.env["VAULT_ROOT"];
       else process.env["VAULT_ROOT"] = original;
     }
+  });
+
+  it("exposes feed configuration constants", () => {
+    expect(typeof FEED_MAX_ITEMS).toBe("number");
+    expect(FEED_MAX_ITEMS).toBeGreaterThan(0);
   });
 });

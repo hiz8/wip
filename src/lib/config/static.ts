@@ -6,3 +6,7 @@ export const SITE_DESCRIPTION = "個人ブランディング目的の Digital Ga
 export const SITE_URL = "https://example.com";
 export const SITE_LOCALE = "ja";
 export const SITE_OG_IMAGE = "/og-default.png";
+
+// Feed configuration shared between the post-build script and any future
+// preview surface. Not mirrored from site.config.ts yet.
+export const FEED_MAX_ITEMS = 20;
