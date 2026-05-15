@@ -1,5 +1,6 @@
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { spawn } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { loadConfig } from "@/lib/config/load.ts";
 import {
@@ -43,8 +44,23 @@ async function main(): Promise<void> {
   await rewriteHtmlFiles(dataset);
   await writeSitemap(dataset);
   await writeFeed(dataset);
+  await runPagefind();
 
-  console.log("[post-build] images, sitemap, feed written under dist/client/");
+  console.log("[post-build] images, sitemap, feed, pagefind index written under dist/client/");
+}
+
+function runPagefind(): Promise<void> {
+  return new Promise((resolveProcess, rejectProcess) => {
+    const child = spawn("npx", ["pagefind", "--site", DIST_DIR], {
+      stdio: "inherit",
+      shell: false,
+    });
+    child.on("error", rejectProcess);
+    child.on("exit", (code) => {
+      if (code === 0) resolveProcess();
+      else rejectProcess(new Error(`pagefind exited with code ${code ?? "null"}`));
+    });
+  });
 }
 
 async function copyImages(entries: readonly ImageMappingEntry[]): Promise<void> {
