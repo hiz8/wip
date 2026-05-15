@@ -115,6 +115,8 @@
 │   │   └── common/
 │   │       ├── ThemeToggle.tsx       # 3-state cycle (system/light/dark)
 │   │       ├── ContentTypeIcon.tsx   # Phase 6 (shared notes/glossary/books SVG)
+│   │       ├── SearchIcon.tsx        # Phase 7 (magnifier SVG)
+│   │       ├── SearchDialog.tsx     # Phase 7 (react-aria Modal + lazy Pagefind UI)
 │   │       └── Backlinks.tsx
 │   ├── lib/
 │   │   ├── content/            # コンテンツ収集・パース
@@ -142,8 +144,21 @@
 │   │   ├── marginalia/         # Phase 6 純関数 (位置計算 + 重なり対策)
 │   │   │   ├── placements.ts
 │   │   │   └── index.ts
-│   │   ├── search/             # Pagefind 連携
-│   │   ├── feed/               # RSS / sitemap 生成
+│   │   ├── images/             # Phase 7 純関数 (画像 path mapping / HTML 書換 / cover 解決)
+│   │   │   ├── resolve.ts
+│   │   │   ├── rewrite.ts
+│   │   │   ├── cover.ts
+│   │   │   └── index.ts
+│   │   ├── feed/               # Phase 7 (Atom feed / sitemap 生成、純関数)
+│   │   │   ├── atom.ts
+│   │   │   ├── sitemap.ts
+│   │   │   ├── summary.ts
+│   │   │   ├── url.ts
+│   │   │   └── index.ts
+│   │   ├── search/             # Phase 7 (Pagefind UI オプション + slash ショートカット)
+│   │   │   ├── pagefindOptions.ts
+│   │   │   ├── slashShortcut.ts
+│   │   │   └── index.ts
 │   │   ├── tree/               # ツリー構築・フィルタ (純関数)
 │   │   │   ├── buildTree.ts        # Notes (フォルダ階層)
 │   │   │   ├── buildGlossaryTree.ts # 五十音 folder
@@ -174,8 +189,7 @@
 │       ├── config.ts
 │       └── assets.d.ts             # *.css モジュール宣言
 ├── scripts/                    # ビルド・運用スクリプト
-│   ├── build.ts
-│   └── dev.ts
+│   └── post-build.ts           # Phase 7 (画像コピー / HTML 書換 / sitemap / feed / pagefind index)
 ├── tests/                      # テスト
 │   ├── fixtures/                   # モック Vault
 │   └── lib/

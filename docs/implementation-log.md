@@ -15,7 +15,7 @@
 | 4     | レイアウト (アイコンナビ・ツリー・本文) | ✅ Done        | 2026-05-10 |
 | 5     | Glossary / Books の対応                 | ✅ Done        | 2026-05-10 |
 | 6     | Marginalia / 目次 / バックリンク        | ✅ Done        | 2026-05-11 |
-| 7     | 検索 / RSS / sitemap                    | ⏳ Not started | —          |
+| 7     | 検索 / RSS / sitemap / 画像 / デプロイ  | ✅ Done        | 2026-05-16 |
 | 8     | デザインの作り込み                      | ⏳ Not started | —          |
 
 ## Phase 1 — コンテンツ収集とパース ✅
@@ -573,36 +573,133 @@ tests/server/notes.test.ts                      # フィクスチャ追加に伴
 - タグルート (`/notes/tags` / `/glossary/tags` / `/books/tags`) — 別 Phase で 3 タイプ横串
 - StyleX の hashed CSS variable と `content.css` の color 重複定義の解消、フォント / 間隔 / カラーパレットの最終調整 — Phase 8
 
-## Phase 7 — 検索 / RSS / sitemap / 画像 (引き継ぎメモ)
+## Phase 7 — 検索 / RSS / sitemap / 画像 / デプロイ ✅
+
+### 達成範囲
+
+- 画像処理パイプラインを Phase 2 の `RenderedItem.images` を起点に追加。`src/lib/images/` に純関数 (`buildImageMapping` / `rewriteImgSrcInHtml` / `bookCoverToImageRef` / `lookupBookCoverUrl`) を実装。basename 衝突時のみ sha1 8 文字をサフィックスとして付与。外部 URL (`http(s):` / `data:`) はコピーも書換もしない
+- `SiteDataset` に `imageMapping: ImageMappingEntry[]` と `coverBySlug: Map<bookSlug, publicPath>` を載せ、`getSiteDataset()` 一回で全成果物が出るよう拡張。`getBookCoverMap()` プリミティブを `src/server/books.ts` に追加し、loaders で `BookListItem.coverUrl` / `BookDetail.coverUrl` を返すように
+- `BookCard` / `BookHeader` を `coverUrl !== null` で `<img>` 描画、`null` のときは Phase 5 のテキストプレースホルダーを継続。aspect-ratio 3/4、`object-fit: cover`、`loading="lazy"`、`alt=""`
+- `scripts/post-build.ts` (`tsx` で `postbuild` npm hook) を追加。`loadConfig()` で `VAULT_ROOT` を honor し、`__setSiteDatasetConfigForTests` で新規 build を強制してから:
+  1. `dist/client/images/` に画像コピー (欠損は `image-reference` 相当のエラー)
+  2. `dist/client/notes|glossary|books/$slug/index.html` を per-item mapping (rawPath → publicPath) で書換
+  3. `dist/client/sitemap.xml` を `buildSitemapEntries` + `renderSitemapXml` で生成
+  4. `dist/client/feed.xml` (Atom 1.0) を `buildAtomEntries` + `renderAtomXml` で生成。`SITE_LOCALE` を `xml:lang` に注入
+  5. `npx pagefind --site dist/client` を子プロセスで実行し `dist/client/pagefind/` を生成
+- Atom feed は Notes / Glossary / Books 横断、`updated` 降順、`FEED_MAX_ITEMS = 20` 件。`extractFeedSummary` で frontmatter.summary を優先、なければ html を strip + whitespace 正規化 + 200 grapheme で truncate (`…` を付加)
+- sitemap は 4 ルート (`/`, `/notes`, `/glossary`, `/books`) + 各 detail。`lastmod` は frontmatter.updated を持つときのみ。非 ASCII slug は `encodeURIComponent`
+- `src/lib/search/` に Pagefind UI オプション (`makePagefindUIOptions`) と `/` キーショートカット (`bindSlashShortcut`、テキスト input 内では発火しない) を実装。`SearchIcon` + `SearchDialog` (react-aria `ModalOverlay` + `Modal` + `Dialog`) を `IconNav` 先頭に組み込み。`pagefind-ui.js` は初回 open 時に `await import(URL)` で遅延ロード、`pagefind-ui.css` は `<link rel="stylesheet">` を `<head>` に一度だけ注入
+- `DetailShell` の本文 div に `data-pagefind-body` を追加 → Pagefind がインデックス対象を本文に限定 (12 detail ページ / 113 単語)
+- `__root.tsx` の HEAD に `<link rel="alternate" type="application/atom+xml" href={SITE_URL + "/feed.xml"}>` と `<link rel="sitemap">` を追加
+- `wrangler.jsonc` を新設 (`assets.directory=./dist/client`, `not_found_handling=404-page`)、`npm run deploy` / `deploy:dry` / `deploy:preview` を `package.json` に追加。`@cloudflare/vite-plugin` / Worker entry は導入しない (フル SSG)
+- `FEED_MAX_ITEMS` を `src/lib/config/static.ts` に追加、drift-guard テストを拡張
+- フィクスチャ: `tests/fixtures/vault/_assets/sample-cover.png` (1×1 PNG、約 70 B、git に commit) を追加し `Books/9784873119045.md` の frontmatter に `cover: /_assets/sample-cover.png` を設定
+- テスト 50 件追加 (220 → 270 件、全グリーン)。画像 path mapping / HTML rewrite / cover resolve / Atom / sitemap / summary / URL ヘルパー / slash shortcut / SearchDialog (Pagefind UI mock) / IconNav search button / BookCard / BookHeader / static drift / books cover
+
+### 公開 API (主な追加)
+
+`src/lib/images/index.ts`:
+
+- `buildImageMapping(refs) → { entries, conflicts }`、`buildResolvedToPublicMap(entries)`、`hashSuffix(path)`、`isExternalImagePath(value)`
+- `rewriteImgSrcInHtml(html, rawToPublic)`
+- `bookCoverToImageRef(ctx)`、`lookupBookCoverUrl(ctx, resolvedToPublic)`
+- 型: `ImageMappingEntry`、`ImageMappingResult`、`BookCoverContext`
+
+`src/lib/feed/index.ts`:
+
+- `extractFeedSummary(item, maxLength?)`、`stripHtmlTags(html)`、`DEFAULT_SUMMARY_LENGTH`
+- `buildSitemapEntries(input, siteUrl)`、`renderSitemapXml(entries)`
+- `buildAtomEntries(input, siteUrl, maxItems)`、`renderAtomXml(site, entries)`
+- `joinSiteUrl(siteUrl, path)`、`escapeXml(value)`
+- 型: `SitemapEntry`、`SitemapInput`、`FeedEntry`、`FeedInput`、`FeedSiteInfo`
+
+`src/lib/search/index.ts`:
+
+- `PAGEFIND_BUNDLE_PATH`、`PAGEFIND_CSS_HREF`、`makePagefindUIOptions(element)`
+- `bindSlashShortcut(onOpen) → () => void`、`isSlashShortcutTarget(target)`
+
+`src/lib/config/static.ts`:
+
+- `FEED_MAX_ITEMS = 20`
+
+`src/server/`:
+
+- `SiteDataset.imageMapping`、`SiteDataset.coverBySlug` を追加
+- `getBookCoverMap()`
+- `BookListItem.coverUrl: string | null`、`BookDetail.coverUrl: string | null`
+
+### 主要ファイル
+
+```
+src/lib/images/{resolve,rewrite,cover,index}.ts
+src/lib/feed/{atom,sitemap,summary,url,index}.ts
+src/lib/search/{pagefindOptions,slashShortcut,index}.ts
+src/components/common/{SearchIcon,SearchDialog}.tsx
+src/components/card/BookCard.tsx                # <img> 描画
+src/components/content/BookHeader.tsx           # <img> 描画
+src/components/layout/IconNav.tsx               # search button + dialog
+src/components/layout/DetailShell.tsx           # data-pagefind-body
+src/server/datasets.ts                          # imageMapping / coverBySlug
+src/server/books.ts                             # getBookCoverMap
+src/server/loaders.ts                           # coverUrl 追加
+src/lib/config/static.ts                        # FEED_MAX_ITEMS
+src/routes/__root.tsx                           # <link rel="alternate" / "sitemap">
+scripts/post-build.ts                           # images / sitemap / feed / pagefind 順
+wrangler.jsonc                                  # Static Assets only
+tests/fixtures/vault/_assets/sample-cover.png   # 1x1 PNG fixture
+tests/lib/images/{resolve,rewrite,cover}.test.ts
+tests/lib/feed/{atom,sitemap,summary,url}.test.ts
+tests/lib/search/slashShortcut.test.ts
+tests/components/{BookCard,BookHeader,SearchDialog}.test.tsx
+tests/components/IconNav.test.tsx               # search button assertions
+tests/server/books.test.ts                      # getBookCoverMap
+tests/lib/config/static.test.ts                 # FEED_MAX_ITEMS drift
+```
+
+### 設計判断 (Phase 8 以降に影響)
+
+1. **画像コピーは post-build スクリプト + per-item HTML 書換** — Phase 2 の Markdown パイプラインを変更せず、`scripts/post-build.ts` が `dist/client/` を読んで書き戻すだけ。HTML 内の `<img src>` 曖昧性 (同じ rawPath が別の resolvedAbsolutePath に解決されるケース) を per-RenderedItem mapping で解消。Vite の build 経路を汚さない一方、`npm run dev` 中の `<img>` は Vault 絶対パスのまま (Phase 8 で dev middleware を検討)
+2. **画像 publicPath は basename フラット + 衝突時のみ sha1 8 文字付与** — `/images/<basename>.<ext>` が大半、`/images/<stem>-<hash>.<ext>` が衝突時のみ。Vault 内ディレクトリ構造を URL に出さない方針 (将来 Vault を再編しても URL が安定)
+3. **書影は `ImageRef` として `images` に混ぜず別経路で resolve** — `applyImage` (Markdown 経由) を通さない `BooksFrontmatter.cover` 専用の `bookCoverToImageRef` を作り、buildImageMapping の入力に追加。`coverBySlug` は `SiteDataset` に持たせる
+4. **Atom 1.0 採用、全 3 type 横断、20 件** — frontmatter の YAML 日付が ISO 8601 と相性が良く、`<id>` / `<link rel="self">` / `xml:lang` を含められる。仕様 (build-spec.md「Notes のみ」) ではなくユーザー指示 (3 type 横断) を採用
+5. **`<summary>` は frontmatter.summary 優先 → 本文 200 grapheme 切り出し** — `Array.from(string)` でサロゲートペアと絵文字を 1 grapheme として数える。`length` ベースだとサロゲート分割で `…` 前後が破綻する
+6. **Pagefind は CLI (`npx pagefind`) を子プロセスで起動** — Node API より破壊的変更が少なく、`data-pagefind-body` スコープ指定が自然に効く。`spawn(..., { stdio: "inherit" })` でログを通過
+7. **Pagefind UI は `import(URL)` で遅延ロード、CSS は `<link>` で一度だけ注入** — 初回 `/` 押下まで読み込まれない。`pagefindModulePromise` をモジュールスコープで singleton 化、stylesheet は DOM 上の存在を毎回 query して重複注入を回避 (`pagefindCssInjected` フラグは外した、テストでの再 mount に耐える)
+8. **Cloudflare Workers は Static Assets のみ** — `wrangler.jsonc` 最小構成 (`assets.directory` + `not_found_handling`)、Worker entry を書かない。`@cloudflare/vite-plugin` は導入せず、Vite と wrangler のライフサイクルは独立。`deploy:preview` (`wrangler dev`) でローカル検証用
+9. **`createServerFn` handler の inline 制約は維持** — `BookListItem.coverUrl` / `BookDetail.coverUrl` 追加でも handler 内で `getBookCoverMap()` を呼ぶ薄いラッパー構成に留め、Phase 4〜6 の制約を継承
+10. **画像存在検証は post-build 内で完結** — `BuildError` (`image-reference`) を post-build スクリプトが console.error + `throw` で再現 (Markdown レンダー時の検証はしない、Vault 内に存在しなくても build は通り、post-build で初めて落ちる)。差分ビルド導入時に検証段階の再配置を検討
+
+### Phase 7 で意図的に未実装
+
+- 画像最適化 (WebP / 複数解像度 / `<picture>`) — Phase 8 以降
+- 動的 OGP 画像生成 — Phase 8 以降
+- 差分ビルド (ハッシュ計算ベース) — 将来課題
+- タグルート (`/notes/tags` / `/glossary/tags` / `/books/tags`) — 別 Phase
+- StyleX-emitted CSS variable と `content.css` の HEX 値重複定義の解消 — Phase 8
+- フォント / カラーパレット / 間隔の最終調整 — Phase 8
+- `npm run dev` 中の `<img>` を Vault から提供する dev middleware — Phase 8 で検討
+
+## Phase 8 (引き継ぎメモ)
 
 ### 想定スコープ
 
-- Pagefind (`pagefind` パッケージ + `dist/` スキャン) によるクライアント全文検索
-- `sitemap.xml` (公開全コンテンツ列挙) + `feed.xml` (RSS) の生成パイプライン
-- 画像コピー: `applyImage` で収集済みの `images: ImageRef[]` を build 後に `public/` 直下にコピーし、本文 `<img>` を相対パスに書き換え
-- Books の `cover` を DTO に復活させ、`BookCard` / `BookHeader` に `<img>` を描画 (`public/` への画像コピーが入った後)
-- Cloudflare Workers の Static Assets 配信 (出力フラット化、`@cloudflare/vite-plugin`、`wrangler.jsonc`)、`npm run deploy` (`wrangler deploy`) の追加
+- StyleX の hashed CSS variable と `content.css` の HEX ハードコードを解消 (`:root` に名前付き variable を流すか、`content.css` を StyleX 化)
+- フォント (Inter / Hiragino Kaku Gothic ProN / Source Serif 4 の適用範囲)、間隔、カラーパレットの最終調整
+- レスポンシブの微調整 (ブレークポイント値、Marginalia の zigzag → 別ロジック切替、検索 Dialog のモバイル幅)
+- ダークモードの可読性 (検索結果 highlight、callout 配色、code block コントラスト)
+- 画像最適化 (WebP 変換、`<picture>` srcset)、動的 OGP の検討
+- `npm run dev` 中の画像参照を Vault から提供する Vite middleware (`/images/...` → resolved path)
 
 ### 着手前の確認
 
-- `docs/build-spec.md`「サイトマップ・RSS」「画像処理」セクション
-- 既存の `RenderedItem.images: ImageRef[]` の構造 (`rawPath` / `resolvedAbsolutePath`)
-- Pagefind が想定するインデックス対象セレクタ (タイトル + summary + tags + 本文)
+- Phase 7 で導入した `dist/client/images/` の URL 規約
+- `src/styles/content.css` の `@layer components` 内のハードコード HEX (callout 5 種)
+- `tests/components/SearchDialog.test.tsx` の Pagefind mock パターン (UI スタイル変更時にレイアウト崩れがないか視認)
 
 ### 既存資産
 
-- `src/lib/feed/`, `src/lib/search/` ディレクトリは architecture.md にあるが空 (Phase 7 で実装)
-- `RenderedItem.images` は既に Phase 2 で収集済み — Phase 7 ではコピー + path 書き換えのみ
-- `src/server/datasets.ts` の `getSiteDataset()` で全 type の rendered items が取れるので、sitemap / RSS / Pagefind index 生成はここを起点にできる
-
-## Phase 7 〜 8 (概要のみ)
-
-| Phase | 主な作業                                             | 主要参照                                              |
-| ----- | ---------------------------------------------------- | ----------------------------------------------------- |
-| 7     | Pagefind、RSS、sitemap、画像コピー                   | `docs/build-spec.md`「サイトマップ・RSS」「画像処理」 |
-| 8     | デザイントークン詰め、ダークモード、レスポンシブ調整 | `docs/ui-spec.md`「ダークモード」「レスポンシブ」     |
-
-差分ビルド・画像最適化・動的 OGP は本ロードマップ外 (将来課題)。
+- 画像コピー / HTML 書換ロジックは `scripts/post-build.ts` 内で完結。dev middleware はここを参考に Vite plugin 化できる
+- `SearchDialog` の Pagefind UI 内部 DOM は Pagefind 標準 CSS で塗られている。Modular UI に切り替える場合は `src/lib/search/pagefindOptions.ts` の API を差し替える
 
 ## ログ更新ルール
 

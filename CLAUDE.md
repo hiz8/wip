@@ -24,7 +24,8 @@ Obsidian Vault をソースとした個人ブランディング目的の Digital
 - Phase 4 (レイアウト + StyleX + react-aria-components + ダークモード) **完了**
 - Phase 5 (Glossary / Books の対応、五十音インデックス、cross-type リンク解決) **完了**
 - Phase 6 (Marginalia / TOC アクティブハイライト / バックリンクの type アイコン) **完了**
-- Phase 7 以降は未着手
+- Phase 7 (画像コピー / 書影 / sitemap / Atom feed / Pagefind / Cloudflare Workers デプロイ) **完了**
+- Phase 8 以降は未着手
 
 完了範囲・公開 API・設計判断・次フェーズへの引き継ぎメモは `docs/implementation-log.md` に集約している。実装作業を始める前に必ず参照すること。
 
@@ -50,11 +51,16 @@ Obsidian Vault をソースとした個人ブランディング目的の Digital
 # 開発サーバー (vite dev)
 npm run dev
 
-# 本番ビルド (TanStack Start SSG プリレンダー)
+# 本番ビルド (TanStack Start SSG プリレンダー + 画像コピー / sitemap / feed / pagefind)
 npm run build
 
 # ビルド成果物のローカルプレビュー (vite preview)
 npm run preview
+
+# Cloudflare Workers にデプロイ
+npm run deploy
+npm run deploy:dry       # wrangler deploy --dry-run
+npm run deploy:preview   # wrangler dev で Workers Static Assets を再現
 
 # 型チェック
 npm run typecheck
@@ -72,10 +78,10 @@ npm run fmt
 
 `npm run dev` / `build` / `preview` は `.env` の `VAULT_ROOT` (または環境変数) で Vault パスを指定する必要がある。
 
-次のコマンドは将来の Phase で追加する予定 (現状未実装):
+将来の Phase で扱う予定の項目 (Phase 7 では未対応):
 
-- Vault ウォッチモード (変更検知の自動再ビルド) — Phase 7 (差分ビルド整備)
-- `npm run deploy` — Cloudflare Workers へデプロイ (`wrangler deploy`) — Phase 7
+- Vault ウォッチモード (変更検知の自動再ビルド) — 差分ビルド整備
+- デザインの作り込み (フォント・間隔・カラーパレット・StyleX/CSS の二重定義解消) — Phase 8
 
 ## ディレクトリ構成 (要点)
 
