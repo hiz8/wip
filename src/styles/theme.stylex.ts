@@ -15,8 +15,6 @@ export const lightTheme = stylex.createTheme(colors, {
   accent: "#7a3b1c",
   accentMuted: "#b06e44",
   focusRing: "#0a5dad",
-  codeBg: "#f4f1ea",
-  codeBorder: "#dad6c8",
   selection: "#fde8c4",
 });
 
@@ -34,8 +32,6 @@ export const darkTheme = stylex.createTheme(colors, {
   accent: "#d68a5c",
   accentMuted: "#a06642",
   focusRing: "#7cb1e8",
-  codeBg: "#13161e",
-  codeBorder: "#262a36",
   selection: "#3a4358",
 });
 

@@ -12,6 +12,40 @@
     font-family: var(--font-mono);
   }
 
+  [data-content-body] pre {
+    background-color: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: 0.5rem;
+    padding-block: 0.75rem;
+    padding-inline: 1rem;
+    margin-block: 1rem;
+    overflow-x: auto;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  /* Shiki emits per-token colors as --shiki-light / --shiki-dark CSS
+     variables (see shiki.ts: defaultColor: false). Map them to the active
+     theme so syntax highlighting actually renders. */
+  [data-content-body] pre code,
+  [data-content-body] pre code span {
+    color: var(--shiki-light);
+    background-color: transparent;
+  }
+
+  [data-theme-resolved="dark"] [data-content-body] pre code,
+  [data-theme-resolved="dark"] [data-content-body] pre code span {
+    color: var(--shiki-dark);
+  }
+
+  [data-content-body] :not(pre) > code {
+    background-color: var(--code-bg);
+    border-radius: 0.25rem;
+    padding-inline: 0.35em;
+    padding-block: 0.1em;
+    font-size: 0.95em;
+  }
+
   [data-content-body] sup {
     font-size: 0.75em;
     line-height: 0;

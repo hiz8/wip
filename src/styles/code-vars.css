@@ -1,0 +1,20 @@
+/*
+ * Named CSS variables for code blocks. Same pattern as callout-vars.css:
+ * raw CSS (content.css) and StyleX tokens (tokens.stylex.ts) both reference
+ * --code-bg and --code-border, so the values live in one place.
+ *
+ * Border colors were picked to clear WCAG 2.2 SC 1.4.11 (3:1) against
+ * both the surrounding page background and the code-block background in
+ * each theme. See scripts/check-contrast.ts.
+ */
+@layer base {
+  :root {
+    --code-bg: #f4f1ea;
+    --code-border: #918a7a;
+  }
+
+  [data-theme-resolved="dark"] {
+    --code-bg: #13161e;
+    --code-border: #7a8090;
+  }
+}
