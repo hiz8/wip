@@ -1,7 +1,7 @@
 /*
- * StyleX-emitted token variables use hashed names that are not stable to
- * reference from raw CSS, so callout colors below are hardcoded mirrors of
- * the values in src/styles/tokens.stylex.ts (light + dark).
+ * Callout colors come from src/styles/callout-vars.css. Both this file and
+ * the StyleX tokens in tokens.stylex.ts reference the same --callout-* CSS
+ * variables, so there is a single source of truth for the colors.
  */
 @layer components {
   [data-content-body] sup {
@@ -38,59 +38,43 @@
   }
 
   [data-content-body] blockquote[data-callout="note"] {
-    background-color: #eef4fb;
-    border-inline-start-color: #5b8bc7;
+    background-color: var(--callout-note-bg);
+    border-inline-start-color: var(--callout-note-border);
   }
   [data-content-body] blockquote[data-callout="note"]::before {
     content: "ⓘ Note";
   }
 
   [data-content-body] blockquote[data-callout="quote"] {
-    background-color: #f5f1e8;
-    border-inline-start-color: #a89464;
+    background-color: var(--callout-quote-bg);
+    border-inline-start-color: var(--callout-quote-border);
   }
   [data-content-body] blockquote[data-callout="quote"]::before {
     content: "❝ Quote";
   }
 
   [data-content-body] blockquote[data-callout="tip"] {
-    background-color: #eef7ee;
-    border-inline-start-color: #6cae6e;
+    background-color: var(--callout-tip-bg);
+    border-inline-start-color: var(--callout-tip-border);
   }
   [data-content-body] blockquote[data-callout="tip"]::before {
     content: "💡 Tip";
   }
 
   [data-content-body] blockquote[data-callout="info"] {
-    background-color: #eaf3f5;
-    border-inline-start-color: #5aa0ad;
+    background-color: var(--callout-info-bg);
+    border-inline-start-color: var(--callout-info-border);
   }
   [data-content-body] blockquote[data-callout="info"]::before {
     content: "🔗 Info";
   }
 
   [data-content-body] blockquote[data-callout="warning"] {
-    background-color: #fcf3e6;
-    border-inline-start-color: #c89544;
+    background-color: var(--callout-warning-bg);
+    border-inline-start-color: var(--callout-warning-border);
   }
   [data-content-body] blockquote[data-callout="warning"]::before {
     content: "⚠ Warning";
-  }
-
-  [data-theme-resolved="dark"] [data-content-body] blockquote[data-callout="note"] {
-    background-color: #1a2535;
-  }
-  [data-theme-resolved="dark"] [data-content-body] blockquote[data-callout="quote"] {
-    background-color: #26221a;
-  }
-  [data-theme-resolved="dark"] [data-content-body] blockquote[data-callout="tip"] {
-    background-color: #1a2a1d;
-  }
-  [data-theme-resolved="dark"] [data-content-body] blockquote[data-callout="info"] {
-    background-color: #16282d;
-  }
-  [data-theme-resolved="dark"] [data-content-body] blockquote[data-callout="warning"] {
-    background-color: #332618;
   }
 
   /* Responsive switching: marginalia (desktop) vs inline + trailing section

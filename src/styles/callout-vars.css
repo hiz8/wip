@@ -1,0 +1,31 @@
+/*
+ * Named CSS variables for callout colors. These are the single source of
+ * truth — both raw CSS (content.css) and StyleX tokens (tokens.stylex.ts)
+ * reference them via var(--callout-...).
+ *
+ * Dark-mode bg overrides are gated on [data-theme-resolved="dark"], which is
+ * set on <html> by themeScript / useTheme. Border colors are intentionally
+ * the same in both modes.
+ */
+@layer base {
+  :root {
+    --callout-note-bg: #eef4fb;
+    --callout-note-border: #5b8bc7;
+    --callout-quote-bg: #f5f1e8;
+    --callout-quote-border: #a89464;
+    --callout-tip-bg: #eef7ee;
+    --callout-tip-border: #6cae6e;
+    --callout-info-bg: #eaf3f5;
+    --callout-info-border: #5aa0ad;
+    --callout-warning-bg: #fcf3e6;
+    --callout-warning-border: #c89544;
+  }
+
+  [data-theme-resolved="dark"] {
+    --callout-note-bg: #1a2535;
+    --callout-quote-bg: #26221a;
+    --callout-tip-bg: #1a2a1d;
+    --callout-info-bg: #16282d;
+    --callout-warning-bg: #332618;
+  }
+}

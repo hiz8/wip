@@ -18,16 +18,6 @@ export const lightTheme = stylex.createTheme(colors, {
   codeBg: "#f4f1ea",
   codeBorder: "#dad6c8",
   selection: "#fde8c4",
-  calloutNoteBg: "#eef4fb",
-  calloutNoteBorder: "#5b8bc7",
-  calloutQuoteBg: "#f5f1e8",
-  calloutQuoteBorder: "#a89464",
-  calloutTipBg: "#eef7ee",
-  calloutTipBorder: "#6cae6e",
-  calloutInfoBg: "#eaf3f5",
-  calloutInfoBorder: "#5aa0ad",
-  calloutWarningBg: "#fcf3e6",
-  calloutWarningBorder: "#c89544",
 });
 
 export const darkTheme = stylex.createTheme(colors, {
@@ -47,16 +37,6 @@ export const darkTheme = stylex.createTheme(colors, {
   codeBg: "#13161e",
   codeBorder: "#262a36",
   selection: "#3a4358",
-  calloutNoteBg: "#1a2535",
-  calloutNoteBorder: "#5b8bc7",
-  calloutQuoteBg: "#26221a",
-  calloutQuoteBorder: "#a89464",
-  calloutTipBg: "#1a2a1d",
-  calloutTipBorder: "#6cae6e",
-  calloutInfoBg: "#16282d",
-  calloutInfoBorder: "#5aa0ad",
-  calloutWarningBg: "#332618",
-  calloutWarningBorder: "#c89544",
 });
 
 const lightProps = stylex.props(lightTheme);
