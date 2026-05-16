@@ -26,6 +26,7 @@ export { assertUniqueSlugs, deriveSlug } from "./slug.ts";
 export { pickContentTitle } from "./title.ts";
 export { BuildError, formatBuildError } from "./errors.ts";
 export type { BuildErrorCategory, BuildErrorDetails } from "./errors.ts";
+export { compareByUpdatedDesc } from "./sort.ts";
 
 export function collectNotes(config: SiteConfigParsed): Promise<ContentItem<NotesFrontmatter>[]> {
   return collectContentItems<NotesFrontmatter>({

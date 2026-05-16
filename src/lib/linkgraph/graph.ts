@@ -5,6 +5,12 @@ import type {
   RenderedItem,
   RenderedNote,
 } from "@/types/content.ts";
+import { compareByUpdatedDesc } from "@/lib/content/sort.ts";
+
+const compareBacklinkUpdatedDesc = compareByUpdatedDesc<BacklinkRef>(
+  (ref) => ref.updated,
+  (ref) => ref.slug,
+);
 
 export type RenderedItemDraft<F extends BaseFrontmatter = BaseFrontmatter> = Omit<
   RenderedItem<F>,
@@ -43,7 +49,7 @@ export function buildBacklinks(
   }
 
   for (const refs of result.values()) {
-    refs.sort(compareUpdatedDesc);
+    refs.sort(compareBacklinkUpdatedDesc);
   }
 
   return result;
@@ -70,9 +76,4 @@ export function attachBacklinksToNotes(
   backlinks: Map<string, BacklinkRef[]>,
 ): RenderedNote[] {
   return attachBacklinks<NotesFrontmatter>(drafts, backlinks);
-}
-
-function compareUpdatedDesc(a: BacklinkRef, b: BacklinkRef): number {
-  if (a.updated === b.updated) return a.slug.localeCompare(b.slug);
-  return a.updated < b.updated ? 1 : -1;
 }

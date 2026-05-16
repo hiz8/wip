@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { basename, extname } from "node:path";
+import { basename, dirname, extname, isAbsolute, resolve as resolvePath } from "node:path";
 import type { ImageRef } from "@/types/content.ts";
 
 export interface ImageMappingEntry {
@@ -16,6 +16,26 @@ const EXTERNAL_RE = /^(?:https?:|data:)/u;
 
 export function isExternalImagePath(value: string): boolean {
   return EXTERNAL_RE.test(value);
+}
+
+export interface ResolveImageRefContext {
+  rawPath: string;
+  fromAbsolutePath: string;
+  vaultRoot: string;
+}
+
+export function resolveImageRef(ctx: ResolveImageRefContext): ImageRef {
+  const { rawPath, fromAbsolutePath, vaultRoot } = ctx;
+  if (isExternalImagePath(rawPath)) {
+    return { rawPath, resolvedAbsolutePath: rawPath };
+  }
+  if (rawPath.startsWith("/")) {
+    return { rawPath, resolvedAbsolutePath: resolvePath(vaultRoot, rawPath.slice(1)) };
+  }
+  if (isAbsolute(rawPath)) {
+    return { rawPath, resolvedAbsolutePath: rawPath };
+  }
+  return { rawPath, resolvedAbsolutePath: resolvePath(dirname(fromAbsolutePath), rawPath) };
 }
 
 export function hashSuffix(absolutePath: string): string {

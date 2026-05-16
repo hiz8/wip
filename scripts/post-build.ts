@@ -1,7 +1,7 @@
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { spawn } from "node:child_process";
-import { dirname, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { loadConfig } from "@/lib/config/load.ts";
 import {
   __setSiteDatasetConfigForTests,
@@ -41,9 +41,7 @@ async function main(): Promise<void> {
   const dataset = await getSiteDataset();
 
   await copyImages(dataset.imageMapping);
-  await rewriteHtmlFiles(dataset);
-  await writeSitemap(dataset);
-  await writeFeed(dataset);
+  await Promise.all([rewriteHtmlFiles(dataset), writeSitemap(dataset), writeFeed(dataset)]);
   await runPagefind();
 
   console.log("[post-build] images, sitemap, feed, pagefind index written under dist/client/");
@@ -67,15 +65,20 @@ async function copyImages(entries: readonly ImageMappingEntry[]): Promise<void> 
   if (entries.length === 0) return;
   await mkdir(IMAGES_DIR, { recursive: true });
   const missing: string[] = [];
-  for (const entry of entries) {
-    if (!existsSync(entry.resolvedAbsolutePath)) {
-      missing.push(entry.resolvedAbsolutePath);
-      continue;
-    }
-    const dest = join(DIST_DIR, entry.publicPath.replace(/^\//u, ""));
-    await mkdir(dirname(dest), { recursive: true });
-    await copyFile(entry.resolvedAbsolutePath, dest);
-  }
+  await Promise.all(
+    entries.map(async (entry) => {
+      const dest = join(DIST_DIR, entry.publicPath.replace(/^\//u, ""));
+      try {
+        await copyFile(entry.resolvedAbsolutePath, dest);
+      } catch (error: unknown) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+          missing.push(entry.resolvedAbsolutePath);
+          return;
+        }
+        throw error;
+      }
+    }),
+  );
   if (missing.length > 0) {
     console.error("[post-build] missing image files:");
     for (const path of missing) console.error(`  - ${path}`);
@@ -93,8 +96,6 @@ async function rewriteHtmlFiles(dataset: SiteDataset): Promise<void> {
     slugPath: string,
     images: ReadonlyArray<{ rawPath: string; resolvedAbsolutePath: string }>,
   ): Promise<void> => {
-    const htmlPath = join(DIST_DIR, slugPath, "index.html");
-    if (!existsSync(htmlPath)) return;
     const map = new Map<string, string>();
     for (const img of images) {
       if (isExternalImagePath(img.rawPath)) continue;
@@ -102,20 +103,18 @@ async function rewriteHtmlFiles(dataset: SiteDataset): Promise<void> {
       if (publicPath !== undefined) map.set(img.rawPath, publicPath);
     }
     if (map.size === 0) return;
+    const htmlPath = join(DIST_DIR, slugPath, "index.html");
+    if (!existsSync(htmlPath)) return;
     const html = await readFile(htmlPath, "utf8");
     const rewritten = rewriteImgSrcInHtml(html, map);
     if (rewritten !== html) await writeFile(htmlPath, rewritten, "utf8");
   };
 
-  for (const note of dataset.notes) {
-    await rewriteOne(`notes/${note.slug}`, note.images);
-  }
-  for (const term of dataset.glossary) {
-    await rewriteOne(`glossary/${term.slug}`, term.images);
-  }
-  for (const book of dataset.books) {
-    await rewriteOne(`books/${book.slug}`, book.images);
-  }
+  await Promise.all([
+    ...dataset.notes.map((note) => rewriteOne(`notes/${note.slug}`, note.images)),
+    ...dataset.glossary.map((term) => rewriteOne(`glossary/${term.slug}`, term.images)),
+    ...dataset.books.map((book) => rewriteOne(`books/${book.slug}`, book.images)),
+  ]);
 }
 
 async function writeSitemap(dataset: SiteDataset): Promise<void> {

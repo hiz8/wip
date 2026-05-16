@@ -15,11 +15,12 @@ import {
 } from "@/lib/markdown/pipeline.ts";
 import { buildContentIndex } from "@/lib/linkgraph/resolve.ts";
 import { attachBacklinks, buildBacklinks } from "@/lib/linkgraph/graph.ts";
+import { compareByUpdatedDesc } from "@/lib/content/sort.ts";
 import {
   buildImageMapping,
   buildResolvedToPublicMap,
   bookCoverToImageRef,
-  lookupBookCoverUrl,
+  isExternalImagePath,
   type ImageMappingEntry,
 } from "@/lib/images/index.ts";
 // Static import so the bundler embeds the config in the SSR bundle.
@@ -115,6 +116,8 @@ function computeImageArtifacts(
   for (const item of notes) refs.push(...item.images);
   for (const item of glossary) refs.push(...item.images);
   for (const item of books) refs.push(...item.images);
+
+  const bookCoverRefs: Array<{ slug: string; ref: ImageRef }> = [];
   for (const book of books) {
     const cover = book.frontmatter.cover;
     if (cover === undefined) continue;
@@ -123,21 +126,20 @@ function computeImageArtifacts(
       bookAbsolutePath: book.absolutePath,
       vaultRoot,
     });
-    if (ref !== null) refs.push(ref);
+    if (ref === null) continue;
+    refs.push(ref);
+    bookCoverRefs.push({ slug: book.slug, ref });
   }
 
   const { entries } = buildImageMapping(refs);
   const resolvedToPublic = buildResolvedToPublicMap(entries);
 
   const coverBySlug = new Map<string, string>();
-  for (const book of books) {
-    const cover = book.frontmatter.cover;
-    if (cover === undefined) continue;
-    const url = lookupBookCoverUrl(
-      { cover, bookAbsolutePath: book.absolutePath, vaultRoot },
-      resolvedToPublic,
-    );
-    if (url !== null) coverBySlug.set(book.slug, url);
+  for (const { slug, ref } of bookCoverRefs) {
+    const url = isExternalImagePath(ref.rawPath)
+      ? ref.rawPath
+      : (resolvedToPublic.get(ref.resolvedAbsolutePath) ?? null);
+    if (url !== null) coverBySlug.set(slug, url);
   }
 
   return { imageMapping: entries, coverBySlug };
@@ -149,13 +151,13 @@ function indexBySlug<T extends { slug: string }>(items: readonly T[]): Map<strin
   return map;
 }
 
+const compareNoteUpdatedDesc = compareByUpdatedDesc<RenderedNote>(
+  (n) => n.frontmatter.updated,
+  (n) => n.slug,
+);
+
 function sortNotes(notes: readonly RenderedNote[]): RenderedNote[] {
-  return notes.toSorted((a, b) => {
-    if (a.frontmatter.updated === b.frontmatter.updated) {
-      return a.slug.localeCompare(b.slug);
-    }
-    return a.frontmatter.updated < b.frontmatter.updated ? 1 : -1;
-  });
+  return notes.toSorted(compareNoteUpdatedDesc);
 }
 
 function sortGlossary(items: readonly RenderedGlossaryTerm[]): RenderedGlossaryTerm[] {

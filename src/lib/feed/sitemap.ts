@@ -1,4 +1,5 @@
 import type { ContentType, RenderedItem } from "@/types/content.ts";
+import { compareByUpdatedDesc } from "@/lib/content/sort.ts";
 import { escapeXml, joinSiteUrl } from "./url.ts";
 
 export interface SitemapEntry {
@@ -6,17 +7,18 @@ export interface SitemapEntry {
   lastmod?: string;
 }
 
+type SitemapItem = Pick<RenderedItem, "slug" | "frontmatter">;
+
 export interface SitemapInput {
-  notes: ReadonlyArray<Pick<RenderedItem, "slug" | "frontmatter">>;
-  glossary: ReadonlyArray<Pick<RenderedItem, "slug" | "frontmatter">>;
-  books: ReadonlyArray<Pick<RenderedItem, "slug" | "frontmatter">>;
+  notes: ReadonlyArray<SitemapItem>;
+  glossary: ReadonlyArray<SitemapItem>;
+  books: ReadonlyArray<SitemapItem>;
 }
 
-const ROUTE_PREFIX: Record<ContentType, string> = {
-  notes: "notes",
-  glossary: "glossary",
-  books: "books",
-};
+const compareSitemapItemUpdatedDesc = compareByUpdatedDesc<SitemapItem>(
+  (item) => item.frontmatter.updated ?? "",
+  (item) => item.slug,
+);
 
 export function buildSitemapEntries(input: SitemapInput, siteUrl: string): SitemapEntry[] {
   const entries: SitemapEntry[] = [
@@ -33,18 +35,13 @@ export function buildSitemapEntries(input: SitemapInput, siteUrl: string): Sitem
 
 function pushType(
   entries: SitemapEntry[],
-  items: ReadonlyArray<Pick<RenderedItem, "slug" | "frontmatter">>,
+  items: ReadonlyArray<SitemapItem>,
   type: ContentType,
   siteUrl: string,
 ): void {
-  const sorted = items.toSorted((a, b) => {
-    const au = a.frontmatter.updated ?? "";
-    const bu = b.frontmatter.updated ?? "";
-    if (au === bu) return a.slug.localeCompare(b.slug);
-    return au < bu ? 1 : -1;
-  });
+  const sorted = items.toSorted(compareSitemapItemUpdatedDesc);
   for (const item of sorted) {
-    const loc = joinSiteUrl(siteUrl, `/${ROUTE_PREFIX[type]}/${item.slug}`);
+    const loc = joinSiteUrl(siteUrl, `/${type}/${item.slug}`);
     const updated = item.frontmatter.updated;
     entries.push(updated ? { loc, lastmod: updated } : { loc });
   }

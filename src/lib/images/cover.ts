@@ -1,6 +1,5 @@
-import { dirname, isAbsolute, resolve as resolvePath } from "node:path";
 import type { ImageRef } from "@/types/content.ts";
-import { isExternalImagePath } from "./resolve.ts";
+import { isExternalImagePath, resolveImageRef } from "./resolve.ts";
 
 export interface BookCoverContext {
   cover?: string;
@@ -11,22 +10,11 @@ export interface BookCoverContext {
 export function bookCoverToImageRef(ctx: BookCoverContext): ImageRef | null {
   const cover = ctx.cover?.trim();
   if (!cover) return null;
-  if (isExternalImagePath(cover)) {
-    return { rawPath: cover, resolvedAbsolutePath: cover };
-  }
-  if (cover.startsWith("/")) {
-    return {
-      rawPath: cover,
-      resolvedAbsolutePath: resolvePath(ctx.vaultRoot, cover.slice(1)),
-    };
-  }
-  if (isAbsolute(cover)) {
-    return { rawPath: cover, resolvedAbsolutePath: cover };
-  }
-  return {
+  return resolveImageRef({
     rawPath: cover,
-    resolvedAbsolutePath: resolvePath(dirname(ctx.bookAbsolutePath), cover),
-  };
+    fromAbsolutePath: ctx.bookAbsolutePath,
+    vaultRoot: ctx.vaultRoot,
+  });
 }
 
 export function lookupBookCoverUrl(

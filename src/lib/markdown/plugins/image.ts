@@ -1,7 +1,7 @@
-import { dirname, isAbsolute, resolve as resolvePath } from "node:path";
 import type { Image, PhrasingContent, Root } from "mdast";
 import { visit } from "unist-util-visit";
 import type { ImageRef } from "@/types/content.ts";
+import { resolveImageRef } from "@/lib/images/resolve.ts";
 import { rewriteTextNodes } from "./wiki-link.ts";
 import { isImagePath } from "./image-util.ts";
 
@@ -46,21 +46,9 @@ function splitInlineImageEmbeds(value: string): PhrasingContent[] | null {
 }
 
 function toImageRef(node: Image, ctx: ImageContext): ImageRef {
-  const url = node.url;
-  if (/^https?:\/\//u.test(url) || url.startsWith("data:")) {
-    return { rawPath: url, resolvedAbsolutePath: url };
-  }
-  if (url.startsWith("/")) {
-    return {
-      rawPath: url,
-      resolvedAbsolutePath: resolvePath(ctx.vaultRoot, url.slice(1)),
-    };
-  }
-  if (isAbsolute(url)) {
-    return { rawPath: url, resolvedAbsolutePath: url };
-  }
-  return {
-    rawPath: url,
-    resolvedAbsolutePath: resolvePath(dirname(ctx.fromAbsolutePath), url),
-  };
+  return resolveImageRef({
+    rawPath: node.url,
+    fromAbsolutePath: ctx.fromAbsolutePath,
+    vaultRoot: ctx.vaultRoot,
+  });
 }

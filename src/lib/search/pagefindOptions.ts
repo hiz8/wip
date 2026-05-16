@@ -1,5 +1,3 @@
-// Public assets path served by Cloudflare Workers Static Assets after
-// the post-build script writes the pagefind index under dist/client/.
 export const PAGEFIND_BUNDLE_PATH = "/pagefind/pagefind-ui.js";
 export const PAGEFIND_CSS_HREF = "/pagefind/pagefind-ui.css";
 
