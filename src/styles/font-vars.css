@@ -1,0 +1,14 @@
+/*
+ * Named CSS variables for font stacks. Same pattern as callout-vars.css:
+ * raw CSS (content.css) and StyleX tokens (tokens.stylex.ts) both
+ * reference these via var(--font-...), so there is one source of truth.
+ * Font stacks are constant across light/dark, so no theme overrides.
+ */
+@layer base {
+  :root {
+    --font-sans:
+      "Inter", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", system-ui, -apple-system, sans-serif;
+    --font-mono: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+    --font-serif: "Source Serif 4", "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif;
+  }
+}

@@ -4,6 +4,14 @@
  * variables, so there is a single source of truth for the colors.
  */
 @layer components {
+  [data-content-body] :is(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--font-serif);
+  }
+
+  [data-content-body] :is(code, pre, kbd, samp) {
+    font-family: var(--font-mono);
+  }
+
   [data-content-body] sup {
     font-size: 0.75em;
     line-height: 0;

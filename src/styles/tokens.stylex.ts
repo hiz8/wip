@@ -54,10 +54,9 @@ export const radius = stylex.defineVars({
 });
 
 export const typography = stylex.defineVars({
-  fontSans:
-    '"Inter", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", system-ui, -apple-system, sans-serif',
-  fontMono: '"JetBrains Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace',
-  fontSerif: '"Source Serif 4", "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif',
+  fontSans: "var(--font-sans)",
+  fontMono: "var(--font-mono)",
+  fontSerif: "var(--font-serif)",
   fontSizeXs: "0.75rem",
   fontSizeSm: "0.875rem",
   fontSizeBase: "1rem",
