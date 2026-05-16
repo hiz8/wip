@@ -7,6 +7,7 @@ import {
   PAGEFIND_CSS_HREF,
   makePagefindUIOptions,
 } from "@/lib/search/pagefindOptions.ts";
+import "@/lib/search/pagefind-overrides.css";
 
 interface SearchDialogProps {
   open: boolean;

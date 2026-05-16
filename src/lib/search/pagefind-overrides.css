@@ -1,0 +1,47 @@
+/*
+ * Overrides for Pagefind UI. The upstream stylesheet (loaded at runtime
+ * from /pagefind/pagefind-ui.css) sets --pagefind-ui-* design tokens on
+ * :root with fixed light-mode colors (#393939 text on #ffffff bg, etc.)
+ * that are illegible on the dark theme and visually inconsistent with
+ * the rest of the site.
+ *
+ * Here we re-declare the same tokens on .pagefind-ui (more specific than
+ * :root) and switch them on [data-theme-resolved="dark"], so the search
+ * dialog honours the active theme regardless of CSS load order. HEX
+ * values mirror src/styles/tokens.stylex.ts.
+ */
+@layer components {
+  .pagefind-ui {
+    --pagefind-ui-scale: 0.85;
+    --pagefind-ui-primary: #0a5dad;
+    --pagefind-ui-text: #1a1a1c;
+    --pagefind-ui-background: #ffffff;
+    --pagefind-ui-border: #c9c5b8;
+    --pagefind-ui-tag: #f6f4ee;
+    --pagefind-ui-border-width: 1px;
+    --pagefind-ui-border-radius: 0.5rem;
+    --pagefind-ui-font: var(--font-sans);
+  }
+
+  [data-theme-resolved="dark"] .pagefind-ui {
+    --pagefind-ui-primary: #7cb1e8;
+    --pagefind-ui-text: #e8eaed;
+    --pagefind-ui-background: #161922;
+    --pagefind-ui-border: #3a3f4d;
+    --pagefind-ui-tag: #1d212c;
+  }
+
+  /* Pagefind wraps matched terms in <mark>. The browser default (yellow
+     on dark text) is unreadable in dark mode. Use the same selection
+     swatch as the rest of the site. */
+  .pagefind-ui mark {
+    background-color: #fde8c4;
+    color: inherit;
+    padding-inline: 0.1em;
+    border-radius: 0.15em;
+  }
+
+  [data-theme-resolved="dark"] .pagefind-ui mark {
+    background-color: #3a4358;
+  }
+}
