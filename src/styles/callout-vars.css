@@ -12,13 +12,13 @@
     --callout-note-bg: #eef4fb;
     --callout-note-border: #5b8bc7;
     --callout-quote-bg: #f5f1e8;
-    --callout-quote-border: #a89464;
+    --callout-quote-border: #8e7a3f;
     --callout-tip-bg: #eef7ee;
-    --callout-tip-border: #6cae6e;
+    --callout-tip-border: #449448;
     --callout-info-bg: #eaf3f5;
-    --callout-info-border: #5aa0ad;
+    --callout-info-border: #3a838f;
     --callout-warning-bg: #fcf3e6;
-    --callout-warning-border: #c89544;
+    --callout-warning-border: #a87427;
   }
 
   [data-theme-resolved="dark"] {
