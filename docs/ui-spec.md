@@ -97,9 +97,22 @@ react-aria-components の Tree / TextField コンポーネントを使用し、�
 Markdown を変換した HTML を表示する。
 
 - 見出し (H1-H6)、段落、リスト、引用、コードブロックなど標準的な Markdown 要素をサポート
-- コードブロックは Shiki によるシンタックスハイライト付き
+- コードブロックは Shiki によるシンタックスハイライト付き。`<pre>` は site の code-bg / code-border でフレーム化し、`pre code` 内の color は `--shiki-light` / `--shiki-dark` を `[data-theme-resolved="dark"]` で切替
+- インライン code は subtle な `code-bg` 背景を持つ (枠なし)
 - 画像は `<img>` で配置 (将来的に `<picture>` 化)
 - 内部リンクはサイト内ハイパーリンク、外部リンクは新規タブで開く
+
+### フォント
+
+本文 (`[data-content-body]`) では editorial を意識して 3 系統を使い分ける。UI chrome (IconNav / Tree / Card / 一覧 heading 等) は `fontSans` で統一。
+
+| 要素                           | 使用フォント token                                | 適用方法                                |
+| ------------------------------ | ------------------------------------------------- | --------------------------------------- |
+| 本文 h1–h6                     | `fontSerif` (Source Serif 4 / Hiragino Mincho)    | `content.css` の selector で適用        |
+| inline code / `<pre>` / kbd    | `fontMono` (JetBrains Mono / SFMono / Menlo 等)   | `content.css` の selector で適用        |
+| その他全て (body 既定 / UI)    | `fontSans` (Inter / Hiragino Kaku Gothic 等)      | `AppShell` の body root から継承        |
+
+font-family の実値は `src/styles/font-vars.css` の `--font-{sans|mono|serif}` を single source of truth とし、`tokens.stylex.ts` も同じ CSS variable を参照する。
 
 ### Marginalia (詳細ページのみ)
 
@@ -132,7 +145,7 @@ Markdown を変換した HTML を表示する。
 | 中 (タブレット)     | 右余白のみ                               | 右余白のみ                     |
 | 狭い (モバイル)     | ページ末尾に脚注セクションとしてまとめる | 該当箇所の直下にインライン展開 |
 
-ブレークポイントは StyleX の Media Query で定義する。具体的なピクセル値は実装時に決定。
+ブレークポイントは `BP_DESKTOP` (1024px) / `BP_DESKTOP_WIDE` (1280px) の flat string const として layout ごとのファイルで定義。広いビューでは `pickSide(index)` の偶奇判定で左右にジグザグ配置する (Phase 8 で現状ロジックを維持する判断)。
 
 ## 右サイドバー (詳細ページのみ)
 

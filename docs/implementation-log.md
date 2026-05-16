@@ -679,27 +679,94 @@ tests/lib/config/static.test.ts                 # FEED_MAX_ITEMS drift
 - フォント / カラーパレット / 間隔の最終調整 — Phase 8
 - `npm run dev` 中の `<img>` を Vault から提供する dev middleware — Phase 8 で検討
 
-## Phase 8 (引き継ぎメモ)
+## Phase 8 — デザインの作り込みと style cleanup ✅
+
+### 達成範囲
+
+- StyleX-emitted hashed CSS variable と raw CSS (`content.css`) の HEX 二重定義を解消。新規 3 ファイル `src/styles/{callout,code,font}-vars.css` に `:root` (light) と `[data-theme-resolved="dark"]` (dark) の名前付き変数を流し、`tokens.stylex.ts` と `theme.stylex.ts` のエントリを `"var(--callout-*)"` / `"var(--code-*)"` / `"var(--font-*)"` の参照に書き換えた。`theme.stylex.ts` の `createTheme` から callout・code 関連の override を全削除 (CSS var が theme を切り替えるので不要)
+- `fontSans` / `fontMono` / `fontSerif` の適用範囲を確定。`content.css` の `[data-content-body]` 配下で `h1–h6` に `var(--font-serif)`、`code` / `pre` / `kbd` / `samp` に `var(--font-mono)` を適用。UI chrome (IconNav / Tree / Card / 一覧ページの heading) は `AppShell` の `fontSans` 継承を維持
+- ContentTree の indent `calc()` をハードコードの `0.75rem` / `0.25rem` から `${space.s3}` / `${space.s1}` 参照に置換 (spacing スケールが single source of truth)
+- DetailShell の tag リストに `marginBottom: space.s4` を追加 (タグと本文の間隔が tight すぎた問題を解消)
+- WCAG 2.2 SC 1.4.11 (3:1) を満たすため callout 4 種 (quote / tip / info / warning) の border 色を darken。検証スクリプト `scripts/check-contrast.ts` を新設し、AA 必須ペアを `npx tsx scripts/check-contrast.ts` で再測定可能にした
+- code 周りを実際に配線。Phase 7 まで `tokens.codeBg` / `codeBorder` は token 定義のみで未使用、Shiki は `defaultColor: false` で `--shiki-light` / `--shiki-dark` を CSS 変数として吐くだけでマッピングなしの状態だった。`content.css` で `pre` を `--code-bg` + `--code-border` + padding + radius でフレーム化、`pre code (span)` の `color` を `var(--shiki-light)` / `var(--shiki-dark)` にマッピング、`(not pre) > code` には subtle bg を当てた
+- Pagefind UI が `:root` で固定の light 配色 (#393939 text on #ffffff) を強制してくる問題を、`src/lib/search/pagefind-overrides.css` で `.pagefind-ui` (より specific) を経由して上書き。`[data-theme-resolved="dark"]` で dark テーマ値に切替、`<mark>` (検索ハイライト) を `colors.selection` 相当の swatch に置換。SearchDialog.tsx から `import` してチャンクに同梱
+- SearchDialog の overlay / dialog padding を `clamp(space.s_, vw, space.s_)` 化。固定 `space.s4` だった padding がモバイル/デスクトップで滑らかにスケールするように
+- 全 commit ごとに `typecheck` / `lint` / `test` (270 件全 green 維持) / `VAULT_ROOT=tests/fixtures/vault build` / `deploy:dry` で検証
+
+### 公開 API (主な追加)
+
+`src/styles/`:
+
+- `callout-vars.css`、`code-vars.css`、`font-vars.css` — `:root` と `[data-theme-resolved="dark"]` で `--callout-*` / `--code-*` / `--font-*` を宣言。命名規則は `--{group}-{role}` (`--callout-note-bg`、`--code-border`、`--font-mono` 等)。raw CSS と StyleX tokens の双方の source of truth
+- `tokens.stylex.ts` の callout / code / font 関連トークンは `"var(--...)"` 文字列に統一。`theme.stylex.ts` の `lightTheme` / `darkTheme` から callout / code エントリを削除 (`createTheme` は partial を受け付ける)
+
+`src/lib/search/`:
+
+- `pagefind-overrides.css` — `.pagefind-ui` を経由した Pagefind UI 配色 override。`[data-theme-resolved="dark"]` で dark テーマに連動
+
+`scripts/`:
+
+- `check-contrast.ts` — WCAG 2.x 相対輝度とコントラスト比を sRGB から純関数で算出。`light` / `dark` 各テーマで本文・リンク・focus ring・code・callout の必須ペアを assert。失敗時 exit 1。再実行コマンドは `npx tsx scripts/check-contrast.ts`
+
+### 主要ファイル
+
+```
+src/styles/callout-vars.css            # 新規 — callout 色の named CSS var
+src/styles/code-vars.css               # 新規 — code 色の named CSS var
+src/styles/font-vars.css               # 新規 — font-family の named CSS var
+src/styles/tokens.stylex.ts            # callout/code/font tokens → var(--...) 参照
+src/styles/theme.stylex.ts             # callout/code override を削除
+src/styles/content.css                 # callout HEX 撤去、h1-h6 serif、pre/code/Shiki 配線
+src/router.tsx                         # callout-vars / code-vars / font-vars の import 追加
+src/components/tree/ContentTree.tsx    # indent calc を space.s* 参照に
+src/components/layout/DetailShell.tsx  # tags marginBottom 追加
+src/components/common/SearchDialog.tsx # overlay/dialog padding を clamp() 化、override CSS import
+src/lib/search/pagefind-overrides.css  # 新規 — Pagefind UI 配色 override
+scripts/check-contrast.ts              # 新規 — WCAG AA 検証
+```
+
+### 設計判断 (Phase 9 以降に影響)
+
+1. **二重定義は名前付き CSS variable で解消** — 検討した 3 案 ((a) named var / (b) callout を StyleX 化 / (c) build step で hash 再公開) のうち (a) を採用。最小工数で source of truth を 1 箇所にでき、StyleX 側も `"var(--...)"` を default 値として `defineVars` に置けば従来 API を破壊しない。callout だけでなく code・font にも同パターンを拡張した
+2. **dark mode 切替は `[data-theme-resolved="dark"]` を中心化** — `useTheme.ts` / `themeScript.ts` が `<html>` に attribute を立てる既存仕様 (Phase 4 から) を活用。CSS var の override は同 selector で記述し、StyleX `themeClasses` (createTheme) は callout/code を持たなくなった
+3. **font 適用は content.css で selector-based、StyleX 経由ではない** — body 本文 (`[data-content-body]`) の HTML は `dangerouslySetInnerHTML` で挿入されるため React コンポーネントで包めない。`content.css` の `[data-content-body] :is(h1..h6)` 等で適用するのが最少手数
+4. **`fontSerif` は本文 heading のみに適用** — Hiragino Mincho ProN は和文サイドが明確に異なるので UI 用と分離。一覧 card / IconNav / Tree は `fontSans` を維持し、editorial と navigation の視覚区別を作った
+5. **WCAG 検証は自前スクリプトで純関数化** — `@axe-core` 等は導入せず、sRGB → 相対輝度 → コントラスト比を `scripts/check-contrast.ts` 内に inline。失敗時 `process.exitCode = 1` で CI からも assert 可能。今後 token を増減したら同スクリプトの `Token[]` を更新する
+6. **callout border は light/dark 共通で AA 通過** — オリジナルは dark 主導で light が AA 未達だった。light で 3:1 を満たす mid-tone を選び直すと dark でも 4.3–5.4:1 を維持できたので、テーマごとに border を split せず単一値で済ませた (`callout-vars.css` 内 dark override は bg のみ)
+7. **Shiki は upstream の `--shiki-light/dark` を CSS で `color` に流すだけ** — `defaultColor: false` を維持。React 側からテーマを知らせる必要がなく、`[data-theme-resolved="dark"]` のグローバル切替で全 code block が連動する
+8. **Pagefind 上書きは `.pagefind-ui` selector 経由 (上書き先 token は変更しない)** — upstream の `:root` 設定よりも specificity が高いため CSS 読み込み順に関係なく勝つ。CSS は `SearchDialog.tsx` から `import` し、Pagefind UI JS と同じチャンクに含めて初回 search dialog open まで cost を遅延
+9. **SearchDialog の padding は `clamp(space.s_, vw, space.s_)`** — flat string CSS expression を StyleX に渡すパターン。breakpoint media query を増やさず viewport 連動の余白を実現
+10. **Marginalia zigzag は維持** — `pickSide(index)` の偶奇ロジックを `BP_DESKTOP_WIDE` 以上で継続使用。Phase 8 では別ロジック (全件右 / type 別) への切替は見送り、Phase 9 で UX フィードバックを基に再検討
+
+### Phase 8 で意図的に未実装
+
+- `npm run dev` 中の `/images/...` を Vault に向ける Vite middleware — Phase 9
+- 画像最適化 (WebP / `<picture>` / srcset) と動的 OGP 画像生成 — 別 Phase で独立タスク化
+- タグルート (`/notes/tags` / `/glossary/tags` / `/books/tags`) — 3 type 横串で別 Phase
+- Vault watch モード / 差分ビルド — 将来課題
+
+## Phase 9 (引き継ぎメモ)
 
 ### 想定スコープ
 
-- StyleX の hashed CSS variable と `content.css` の HEX ハードコードを解消 (`:root` に名前付き variable を流すか、`content.css` を StyleX 化)
-- フォント (Inter / Hiragino Kaku Gothic ProN / Source Serif 4 の適用範囲)、間隔、カラーパレットの最終調整
-- レスポンシブの微調整 (ブレークポイント値、Marginalia の zigzag → 別ロジック切替、検索 Dialog のモバイル幅)
-- ダークモードの可読性 (検索結果 highlight、callout 配色、code block コントラスト)
-- 画像最適化 (WebP 変換、`<picture>` srcset)、動的 OGP の検討
-- `npm run dev` 中の画像参照を Vault から提供する Vite middleware (`/images/...` → resolved path)
-
-### 着手前の確認
-
-- Phase 7 で導入した `dist/client/images/` の URL 規約
-- `src/styles/content.css` の `@layer components` 内のハードコード HEX (callout 5 種)
-- `tests/components/SearchDialog.test.tsx` の Pagefind mock パターン (UI スタイル変更時にレイアウト崩れがないか視認)
+- `npm run dev` 中の `/images/...` を Vault から提供する Vite middleware
+  - `src/lib/images/resolve.ts` の `buildImageMapping` を `configureServer` フックで dev server 起動時に評価して `resolvedToPublic` Map を作り、Vite middleware で `/images/<path>` リクエストを `fs.createReadStream(resolvedAbsolutePath)` で返す
+  - Vault 変更検知 (watch) は依然として将来課題
+- 画像最適化パイプライン
+  - WebP 変換、複数解像度生成、`<picture>` + `srcset` への HTML 書換
+  - `scripts/post-build.ts` を拡張するか、別スクリプト/プラグインに切り出すか要検討
+- 動的 OGP 画像生成
+  - 詳細ページごとに social card を SVG → PNG / WebP で生成
+  - `@cloudflare/workers-types` 経由で Worker 化するか、static 事前生成にとどめるか
+- タグルート (`/notes/tags`、`/glossary/tags`、`/books/tags`) 横串展開
+- デザイン UX フィードバックに基づく Marginalia 配置ロジック再評価 (現状 zigzag を維持)
 
 ### 既存資産
 
-- 画像コピー / HTML 書換ロジックは `scripts/post-build.ts` 内で完結。dev middleware はここを参考に Vite plugin 化できる
-- `SearchDialog` の Pagefind UI 内部 DOM は Pagefind 標準 CSS で塗られている。Modular UI に切り替える場合は `src/lib/search/pagefindOptions.ts` の API を差し替える
+- 名前付き CSS var パターン (`src/styles/{callout,code,font}-vars.css` + `var(--...)` 参照) — Pagefind override で実証済み。Phase 9 で他の third-party UI を組み込む際は同パターンを再利用できる
+- `scripts/check-contrast.ts` — palette 調整時に `Token[]` を更新して再実行するだけで AA 検証可能。新規 callout や theme を増やすときは pairs 関数に追記
+- Shiki マッピング (`content.css` の `pre code, pre code span { color: var(--shiki-light) }`) — 他のテーマを増やす場合 `cssVariablePrefix` と CSS 側を揃える
+- `pagefind-overrides.css` の `.pagefind-ui` selector + `[data-theme-resolved="dark"]` パターン — 別の third-party UI (例: コメントウィジェット) を後で組み込むときの参考
 
 ## ログ更新ルール
 

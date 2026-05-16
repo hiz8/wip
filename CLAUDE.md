@@ -25,7 +25,8 @@ Obsidian Vault をソースとした個人ブランディング目的の Digital
 - Phase 5 (Glossary / Books の対応、五十音インデックス、cross-type リンク解決) **完了**
 - Phase 6 (Marginalia / TOC アクティブハイライト / バックリンクの type アイコン) **完了**
 - Phase 7 (画像コピー / 書影 / sitemap / Atom feed / Pagefind / Cloudflare Workers デプロイ) **完了**
-- Phase 8 以降は未着手
+- Phase 8 (デザインの作り込みと style cleanup: 名前付き CSS var、フォント / spacing / WCAG AA、Shiki と Pagefind の dark mode、SearchDialog レスポンシブ) **完了**
+- Phase 9 以降は未着手
 
 完了範囲・公開 API・設計判断・次フェーズへの引き継ぎメモは `docs/implementation-log.md` に集約している。実装作業を始める前に必ず参照すること。
 
