@@ -31,7 +31,7 @@ const styles = stylex.create({
   item: (level: number) => ({
     display: "block",
     outlineStyle: "none",
-    paddingInlineStart: `calc(${level} * 0.75rem + 0.25rem)`,
+    paddingInlineStart: `calc(${level} * ${space.s3} + ${space.s1})`,
   }),
   row: {
     display: "flex",

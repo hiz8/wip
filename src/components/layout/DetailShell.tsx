@@ -48,6 +48,7 @@ const styles = stylex.create({
     flexWrap: "wrap",
     gap: space.s2,
     marginTop: space.s2,
+    marginBottom: space.s4,
     listStyle: "none",
     padding: 0,
   },
