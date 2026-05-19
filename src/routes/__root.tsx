@@ -47,11 +47,19 @@ export const Route = createRootRoute({
   component: RootDocument,
 });
 
+// In dev, @stylexjs/unplugin normally injects its virtual CSS link via Vite's
+// transformIndexHtml hook. TanStack Start's SSR pipeline renders HTML in React
+// instead of going through transformIndexHtml for link tags, so we add the
+// link manually. In production the CSS is bundled into an asset and this link
+// is unnecessary.
+const STYLEX_DEV_CSS_HREF = "/virtual:stylex.css";
+
 function RootDocument() {
   return (
-    <html lang={SITE_LOCALE}>
+    <html lang={SITE_LOCALE} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={THEME_SCRIPT_HTML} />
+        {import.meta.env.DEV ? <link rel="stylesheet" href={STYLEX_DEV_CSS_HREF} /> : null}
         <HeadContent />
       </head>
       <body>
