@@ -17,7 +17,16 @@ export default defineConfig({
     vaultRoot: process.env["VAULT_ROOT"] ?? "",
     notes: {
       path: ".",
-      exclude: ["Glossary/**", "Books/**", "Clips/**", "_site/**"],
+      exclude: [
+        "Glossary/**",
+        "Books/**",
+        "Clips/**",
+        "Clippings/**",
+        "_site/**",
+        "TIL/**",
+        "Templates/**",
+        "CLAUDE.md",
+      ],
     },
     glossary: {
       path: "Glossary",
