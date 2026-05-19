@@ -51,11 +51,20 @@ const booksFrontmatterSchema = z.object({
   cover: z.string().optional(),
 });
 
+// YAML treats `key:` (no value) as null. Treat such fields as absent so optional schemas accept them.
+function stripNulls(raw: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (value !== null) out[key] = value;
+  }
+  return out;
+}
+
 export function validateNotesFrontmatter(
   raw: Record<string, unknown>,
   filePath: string,
 ): NotesFrontmatter {
-  const parsed = notesFrontmatterSchema.safeParse(raw);
+  const parsed = notesFrontmatterSchema.safeParse(stripNulls(raw));
   if (!parsed.success) {
     throw frontmatterError(parsed.error, filePath);
   }
@@ -66,7 +75,7 @@ export function validateGlossaryFrontmatter(
   raw: Record<string, unknown>,
   filePath: string,
 ): GlossaryFrontmatter {
-  const parsed = glossaryFrontmatterSchema.safeParse(raw);
+  const parsed = glossaryFrontmatterSchema.safeParse(stripNulls(raw));
   if (!parsed.success) {
     throw frontmatterError(parsed.error, filePath);
   }
@@ -77,7 +86,7 @@ export function validateBooksFrontmatter(
   raw: Record<string, unknown>,
   filePath: string,
 ): BooksFrontmatter {
-  const parsed = booksFrontmatterSchema.safeParse(raw);
+  const parsed = booksFrontmatterSchema.safeParse(stripNulls(raw));
   if (!parsed.success) {
     throw frontmatterError(parsed.error, filePath);
   }
