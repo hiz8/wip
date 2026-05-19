@@ -2,7 +2,6 @@ import { existsSync } from "node:fs";
 import { dirname, isAbsolute, resolve as resolvePath } from "node:path";
 import { defineConfig } from "vite";
 import viteReact from "@vitejs/plugin-react";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import stylex from "@stylexjs/unplugin";
 
@@ -39,10 +38,6 @@ export default defineConfig({
     },
   },
   plugins: [
-    tanstackRouter({
-      target: "react",
-      autoCodeSplitting: true,
-    }),
     tanstackStart({
       prerender: {
         enabled: true,
