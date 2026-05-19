@@ -768,6 +768,16 @@ scripts/check-contrast.ts              # 新規 — WCAG AA 検証
 - Shiki マッピング (`content.css` の `pre code, pre code span { color: var(--shiki-light) }`) — 他のテーマを増やす場合 `cssVariablePrefix` と CSS 側を揃える
 - `pagefind-overrides.css` の `.pagefind-ui` selector + `[data-theme-resolved="dark"]` パターン — 別の third-party UI (例: コメントウィジェット) を後で組み込むときの参考
 
+### ツールチェーン追従メモ (2026-05)
+
+Phase 9 着手前に環境を `npm run dev` で改めて起動して判明した、Phase 8 までは表面化していなかった非互換と回避策。`npm run build && npm run preview` ベースで作業すると見落とすので注意。
+
+- **TanStack Start v1.169 系では standalone `tanstackRouter` を併用しない** — `vite.config.ts` に `tanstackRouter` と `tanstackStart` の両方を登録すると code-splitting transform がすり抜けて、初回リクエストで `TSRSplitComponent is not defined` の 500 が出る。`tanstackStart` だけを使えば router-plugin が内部で適用される。`autoCodeSplitting` は `@tanstack/start-plugin-core/schema.ts` が `.omit({ autoCodeSplitting: true, target: true })` しており、ユーザー入力からは渡せない (内部で管理される)。Phase 4 で書いた `vite.config.ts` のプラグイン構成からこの 1 行を取り除く形で対応した
+- **`@stylexjs/unplugin` の dev CSS link は SSR 環境では手動注入する** — `unplugin` は Vite の `transformIndexHtml` フックで `<link rel="stylesheet" href="/virtual:stylex.css">` と `<script src="/@id/virtual:stylex:runtime">` を head に注入するが、`tanstackStart` の SSR pipeline は transformIndexHtml 結果から `<script>` のみ抽出するため link 側が落ち、StyleX が生成する hashed クラスに対応する CSS が一切配信されない。本番ビルドでは `generateBundle` で CSS が asset に統合されるため問題は出ない。dev 専用対処として `src/routes/__root.tsx` の `<head>` 内で `import.meta.env.DEV` を見て手動で `<link>` を出している
+- **`<html>` には `suppressHydrationWarning` を付ける** — `__root.tsx` 先頭で `themeScript` を実行して `<html>` の `data-theme` / `data-theme-resolved` / `color-scheme` を書き換える設計上、サーバー HTML とクライアント DOM が必ず食い違う。React の警告を抑止するため `<html>` に `suppressHydrationWarning` を付与している。直下属性だけ抑制されるので body 配下の hydration mismatch は引き続き検出される
+- **YAML 空フィールドは null になる** — `summary:` のように値が無いフィールドは parser が `null` として返す。Zod の `.optional()` は `undefined` しか許容しないため、parse 前に top-level の null エントリを undefined 相当へ落とす `stripNulls()` を `src/lib/content/validate.ts` に追加した。`summary` だけでなく `tags` / `featured` / `created` / `updated` などあらゆる optional フィールドで同じ問題が起こり得る (Obsidian Vault では空フィールドが残りがち) ので、フィールド単位ではなく入り口で前処理する方針
+- **dev と preview の検証乖離** — Phase 7 / 8 までの目視確認は `npm run preview` 中心で、`npm run dev` 経路で初めて顕在化する不具合 (上記 3 つ全部含む) が見過ごされていた。Phase 9 以降は機能追加時に **dev / preview 両方** で表示確認するのが安全
+
 ## ログ更新ルール
 
 - フェーズ完了時にこのファイルを更新する (達成範囲・公開 API・主要ファイル・設計判断)
