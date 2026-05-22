@@ -21,6 +21,7 @@ import {
   buildResolvedToPublicMap,
   bookCoverToImageRef,
   isExternalImagePath,
+  rewriteItemHtml,
   type ImageMappingEntry,
 } from "@/lib/images/index.ts";
 // Static import so the bundler embeds the config in the SSR bundle.
@@ -92,14 +93,27 @@ async function build(): Promise<SiteDataset> {
     config.content.vaultRoot,
   );
 
+  // Rewrite in-content <img src> from rawPath to publicPath. This is the single
+  // source of truth for the src rewrite, so the same HTML is served in dev (via
+  // the dev images middleware) and in prod (prerendered output). Book cover URLs
+  // already use publicPath via coverBySlug, so they are not handled here.
+  const resolvedToPublic = buildResolvedToPublicMap(imageMapping);
+  const rewriteHtml = <T extends { html: string; images: ImageRef[] }>(item: T): T => ({
+    ...item,
+    html: rewriteItemHtml(item.html, item.images, resolvedToPublic),
+  });
+  const notesRewritten = notes.map((item) => rewriteHtml(item));
+  const glossaryRewritten = glossary.map((item) => rewriteHtml(item));
+  const booksRewritten = books.map((item) => rewriteHtml(item));
+
   return {
-    notes,
-    glossary,
-    books,
+    notes: notesRewritten,
+    glossary: glossaryRewritten,
+    books: booksRewritten,
     bySlug: {
-      notes: indexBySlug(notes),
-      glossary: indexBySlug(glossary),
-      books: indexBySlug(books),
+      notes: indexBySlug(notesRewritten),
+      glossary: indexBySlug(glossaryRewritten),
+      books: indexBySlug(booksRewritten),
     },
     imageMapping,
     coverBySlug,

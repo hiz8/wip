@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rewriteImgSrcInHtml } from "@/lib/images/rewrite.ts";
+import { rewriteImgSrcInHtml, rewriteItemHtml } from "@/lib/images/rewrite.ts";
 
 describe("rewriteImgSrcInHtml", () => {
   it("returns html unchanged when the mapping is empty", () => {
@@ -56,5 +56,53 @@ describe("rewriteImgSrcInHtml", () => {
     const html = '<img src="https://example.com/a.png">';
     const map = new Map([["a.png", "/images/a.png"]]);
     expect(rewriteImgSrcInHtml(html, map)).toBe(html);
+  });
+
+  it("matches a URL-encoded src against the decoded rawPath key", () => {
+    const html = '<img src="4%20quadrant%20design.png" alt="">';
+    const map = new Map([["4 quadrant design.png", "/images/4 quadrant design.png"]]);
+    expect(rewriteImgSrcInHtml(html, map)).toBe('<img src="/images/4 quadrant design.png" alt="">');
+  });
+});
+
+describe("rewriteItemHtml", () => {
+  it("rewrites rawPath src to publicPath using the resolved map", () => {
+    const html = '<p><img src="assets/foo.png" alt=""></p>';
+    const images = [{ rawPath: "assets/foo.png", resolvedAbsolutePath: "/vault/assets/foo.png" }];
+    const resolvedToPublic = new Map([["/vault/assets/foo.png", "/images/foo.png"]]);
+    expect(rewriteItemHtml(html, images, resolvedToPublic)).toBe(
+      '<p><img src="/images/foo.png" alt=""></p>',
+    );
+  });
+
+  it("skips external images and leaves them unchanged", () => {
+    const html = '<img src="https://example.com/a.png">';
+    const images = [
+      { rawPath: "https://example.com/a.png", resolvedAbsolutePath: "https://example.com/a.png" },
+    ];
+    const resolvedToPublic = new Map<string, string>();
+    expect(rewriteItemHtml(html, images, resolvedToPublic)).toBe(html);
+  });
+
+  it("returns html unchanged when no image resolves to a public path", () => {
+    const html = '<p><img src="missing.png"></p>';
+    const images = [{ rawPath: "missing.png", resolvedAbsolutePath: "/vault/missing.png" }];
+    const resolvedToPublic = new Map([["/vault/other.png", "/images/other.png"]]);
+    expect(rewriteItemHtml(html, images, resolvedToPublic)).toBe(html);
+  });
+
+  it("maps a hashed publicPath for basename collisions", () => {
+    const html = '<img src="a/diagram.png"><img src="b/diagram.png">';
+    const images = [
+      { rawPath: "a/diagram.png", resolvedAbsolutePath: "/vault/a/diagram.png" },
+      { rawPath: "b/diagram.png", resolvedAbsolutePath: "/vault/b/diagram.png" },
+    ];
+    const resolvedToPublic = new Map([
+      ["/vault/a/diagram.png", "/images/diagram-11111111.png"],
+      ["/vault/b/diagram.png", "/images/diagram-22222222.png"],
+    ]);
+    expect(rewriteItemHtml(html, images, resolvedToPublic)).toBe(
+      '<img src="/images/diagram-11111111.png"><img src="/images/diagram-22222222.png">',
+    );
   });
 });

@@ -4,6 +4,7 @@ import { defineConfig } from "vite";
 import viteReact from "@vitejs/plugin-react";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import stylex from "@stylexjs/unplugin";
+import { devImagesPlugin } from "./vite/dev-images-plugin.ts";
 
 const projectRoot = `${import.meta.dirname}/`;
 const srcRoot = `${import.meta.dirname}/src/`;
@@ -38,6 +39,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    devImagesPlugin(),
     tanstackStart({
       prerender: {
         enabled: true,

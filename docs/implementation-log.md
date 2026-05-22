@@ -745,13 +745,44 @@ scripts/check-contrast.ts              # 新規 — WCAG AA 検証
 - タグルート (`/notes/tags` / `/glossary/tags` / `/books/tags`) — 3 type 横串で別 Phase
 - Vault watch モード / 差分ビルド — 将来課題
 
+## Phase 9-(1) (dev サーバーで Vault 画像を配信) **完了**
+
+### 達成範囲
+
+`npm run dev` 中に本文画像・書影が 404 になっていた問題を解消し、dev と prod で画像経路を一本化した。
+
+- **dev**: `<img src>` が `/images/...` を参照し、Vite middleware が Vault の実ファイルを 200 で配信
+- **prod**: 従来通り (prerender HTML が `/images/...` 参照 + `dist/client/images/` に実ファイル) で回帰なし
+
+### 主要ファイル
+
+- `src/lib/images/rewrite.ts` — `rewriteItemHtml()` を新設 (per-item の `images` から `rawPath → publicPath` Map を作り `rewriteImgSrcInHtml` を適用する純関数。外部画像は除外)。`rewriteImgSrcInHtml` に **URL-encode 耐性**を追加 (下記「設計判断」参照)
+- `src/server/datasets.ts` — `build()` の `computeImageArtifacts()` 後に `rewriteItemHtml()` を全 `notes`/`glossary`/`books` の `html` へ適用。**書換後の配列から `notes` と `bySlug` の両方を構成**する (loaders は `bySlug` 経由で html を取り出すため)
+- `vite/dev-images-plugin.ts` (新規) — dev 専用 (`apply: "serve"`) の `devImagesPlugin()`。`configureServer` 本体で `server.middlewares.use()` 登録 (TanStack の SSR catch-all より前)。初回 `/images/` リクエスト時に `server.ssrLoadModule("/src/server/index.ts")` → `getSiteDataset()` で `imageMapping` を取得し逆引き Map (`publicPath → resolvedAbsolutePath`) をキャッシュ。Map に在るパスのみ `createReadStream` で配信 (allowlist 方式でパストラバーサル不可)
+- `vite.config.ts` — `devImagesPlugin()` を `plugins` 配列の `tanstackStart()` 前に挿入 (他は不変)
+- `scripts/post-build.ts` — `rewriteHtmlFiles()` を削除 (HTML 書換はデータ層に一本化したため no-op になる)。`copyImages()` は本番でファイルを `dist/client/images/` へ置くため残す
+
+### 設計判断
+
+- **HTML src 書換をデータ層 (datasets.ts) へ移した** — 従来は本番の `scripts/post-build.ts` だけが dist の HTML を書き換えており、dev では走らないため画像が 404 になっていた。書換を SSR データセット組み立て時に行うことで dev/prod とも同一の書換済み HTML が配信され、source of truth が 1 経路になる。結果 `post-build` の `rewriteHtmlFiles()` は冗長になったため削除した
+- **`coverBySlug` (書影 URL) は元から publicPath ベース** (`computeImageArtifacts` 内で算出) で、書影は HTML 文字列ではなく React props 経由で `<img src={coverUrl}>` に渡る。よって変更1の HTML 書換の対象外で、dev middleware が入るだけで書影も自動配信される
+- **`rewriteImgSrcInHtml` に URL-encode 耐性を追加** — 埋め込み `![[file with space.png]]` の `images[].rawPath` は生パス (`file with space.png`) で保存される一方、rehype は HTML へのシリアライズ時に src を URL エンコード (`file%20with%20space.png`) する。マップは rawPath キーなので両者が一致せず書換が空振りしていた (テスト fixtures が ASCII のため Phase 7 以来顕在化せず、**dev/prod 双方の潜在バグ**だった)。lookup を「完全一致 → `decodeURIComponent(src)` 一致」のフォールバックにして両経路を修正
+
+### 検証
+
+- `npm run dev`: 画像を埋め込むノート詳細の HTML が `/images/...` を参照、`GET /images/<encoded>` が 200 (image/png)、存在しないパスは 404 でフォールスルー
+- `npm run build` (npm の `postbuild` フックで post-build も実行) + `npm run preview`: prerender HTML が書換済み、`dist/client/images/` に実ファイル、preview で画像 200
+- `npm run typecheck` / `npm run lint` / `npm run test` (275 件) すべてグリーン
+
+### スコープ外 (将来課題)
+
+- Vault watch による自動再ビルド (dev 中に Vault へ画像を足した場合は dev server 再起動で取り込む)
+
 ## Phase 9 (引き継ぎメモ)
 
 ### 想定スコープ
 
-- `npm run dev` 中の `/images/...` を Vault から提供する Vite middleware
-  - `src/lib/images/resolve.ts` の `buildImageMapping` を `configureServer` フックで dev server 起動時に評価して `resolvedToPublic` Map を作り、Vite middleware で `/images/<path>` リクエストを `fs.createReadStream(resolvedAbsolutePath)` で返す
-  - Vault 変更検知 (watch) は依然として将来課題
+- ~~`npm run dev` 中の `/images/...` を Vault から提供する Vite middleware~~ → Phase 9-(1) で完了 (上記参照)。Vault 変更検知 (watch) は依然として将来課題
 - 画像最適化パイプライン
   - WebP 変換、複数解像度生成、`<picture>` + `srcset` への HTML 書換
   - `scripts/post-build.ts` を拡張するか、別スクリプト/プラグインに切り出すか要検討

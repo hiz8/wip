@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { join, resolve } from "node:path";
@@ -10,7 +10,6 @@ import {
   type SiteDataset,
 } from "@/server/datasets.ts";
 import type { ImageMappingEntry } from "@/lib/images/index.ts";
-import { isExternalImagePath, rewriteImgSrcInHtml } from "@/lib/images/index.ts";
 import { buildSitemapEntries, renderSitemapXml } from "@/lib/feed/sitemap.ts";
 import { buildAtomEntries, renderAtomXml } from "@/lib/feed/atom.ts";
 import {
@@ -40,8 +39,11 @@ async function main(): Promise<void> {
 
   const dataset = await getSiteDataset();
 
+  // In-content <img src> rewriting now happens in the SSR dataset build
+  // (src/server/datasets.ts), so the prerendered HTML already references
+  // /images/<publicPath>. Here we only need to copy the source files into dist.
   await copyImages(dataset.imageMapping);
-  await Promise.all([rewriteHtmlFiles(dataset), writeSitemap(dataset), writeFeed(dataset)]);
+  await Promise.all([writeSitemap(dataset), writeFeed(dataset)]);
   await runPagefind();
 
   console.log("[post-build] images, sitemap, feed, pagefind index written under dist/client/");
@@ -84,37 +86,6 @@ async function copyImages(entries: readonly ImageMappingEntry[]): Promise<void> 
     for (const path of missing) console.error(`  - ${path}`);
     throw new Error(`${missing.length} referenced image file(s) not found`);
   }
-}
-
-async function rewriteHtmlFiles(dataset: SiteDataset): Promise<void> {
-  const resolvedToPublic = new Map<string, string>();
-  for (const entry of dataset.imageMapping) {
-    resolvedToPublic.set(entry.resolvedAbsolutePath, entry.publicPath);
-  }
-
-  const rewriteOne = async (
-    slugPath: string,
-    images: ReadonlyArray<{ rawPath: string; resolvedAbsolutePath: string }>,
-  ): Promise<void> => {
-    const map = new Map<string, string>();
-    for (const img of images) {
-      if (isExternalImagePath(img.rawPath)) continue;
-      const publicPath = resolvedToPublic.get(img.resolvedAbsolutePath);
-      if (publicPath !== undefined) map.set(img.rawPath, publicPath);
-    }
-    if (map.size === 0) return;
-    const htmlPath = join(DIST_DIR, slugPath, "index.html");
-    if (!existsSync(htmlPath)) return;
-    const html = await readFile(htmlPath, "utf8");
-    const rewritten = rewriteImgSrcInHtml(html, map);
-    if (rewritten !== html) await writeFile(htmlPath, rewritten, "utf8");
-  };
-
-  await Promise.all([
-    ...dataset.notes.map((note) => rewriteOne(`notes/${note.slug}`, note.images)),
-    ...dataset.glossary.map((term) => rewriteOne(`glossary/${term.slug}`, term.images)),
-    ...dataset.books.map((book) => rewriteOne(`books/${book.slug}`, book.images)),
-  ]);
 }
 
 async function writeSitemap(dataset: SiteDataset): Promise<void> {
