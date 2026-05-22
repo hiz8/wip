@@ -11,3 +11,6 @@ src/routeTree.gen.ts
 
 # Vite cache
 .vite/
+
+# TanStack Start build cache
+.tanstack/
