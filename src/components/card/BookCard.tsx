@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
 import { Link } from "@tanstack/react-router";
+import { TagChips } from "@/components/common/TagChips.tsx";
 import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
 
 interface BookCardProps {
@@ -74,22 +75,6 @@ const styles = stylex.create({
     fontSize: typography.fontSizeXs,
     color: colors.textMuted,
   },
-  tags: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: space.s1,
-    listStyle: "none",
-    margin: 0,
-    padding: 0,
-  },
-  tag: {
-    display: "inline-block",
-    paddingInline: space.s2,
-    paddingBlock: 0,
-    borderRadius: radius.pill,
-    backgroundColor: colors.bgElevated,
-    color: colors.textSecondary,
-  },
 });
 
 export function BookCard({
@@ -126,15 +111,7 @@ export function BookCard({
       )}
       <div {...stylex.props(styles.meta)}>
         {pubYear !== null && <span>{pubYear}</span>}
-        {tags.length > 0 && (
-          <ul {...stylex.props(styles.tags)} role="list">
-            {tags.map((tag) => (
-              <li key={tag} {...stylex.props(styles.tag)}>
-                {tag}
-              </li>
-            ))}
-          </ul>
-        )}
+        <TagChips type="books" tags={tags} />
       </div>
     </article>
   );

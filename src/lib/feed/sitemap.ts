@@ -1,5 +1,6 @@
 import type { ContentType, RenderedItem } from "@/types/content.ts";
 import { compareByUpdatedDesc } from "@/lib/content/sort.ts";
+import { aggregateTags, encodeTagToSlug } from "@/lib/tags/index.ts";
 import { escapeXml, joinSiteUrl } from "./url.ts";
 
 export interface SitemapEntry {
@@ -30,7 +31,24 @@ export function buildSitemapEntries(input: SitemapInput, siteUrl: string): Sitem
   pushType(entries, input.notes, "notes", siteUrl);
   pushType(entries, input.glossary, "glossary", siteUrl);
   pushType(entries, input.books, "books", siteUrl);
+  pushTagPages(entries, input.notes, "notes", siteUrl);
+  pushTagPages(entries, input.glossary, "glossary", siteUrl);
+  pushTagPages(entries, input.books, "books", siteUrl);
   return entries;
+}
+
+// Tag index page + one tag-detail page per aggregated tag (ancestors included).
+function pushTagPages(
+  entries: SitemapEntry[],
+  items: ReadonlyArray<SitemapItem>,
+  type: ContentType,
+  siteUrl: string,
+): void {
+  entries.push({ loc: joinSiteUrl(siteUrl, `/${type}/tags`) });
+  const tags = aggregateTags(items.map((item) => ({ tags: item.frontmatter.tags ?? [] })));
+  for (const { tag } of tags) {
+    entries.push({ loc: joinSiteUrl(siteUrl, `/${type}/tags/${encodeTagToSlug(tag)}`) });
+  }
 }
 
 function pushType(

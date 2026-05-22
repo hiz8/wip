@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
 import { Link } from "@tanstack/react-router";
+import { TagChips } from "@/components/common/TagChips.tsx";
 import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
 
 interface GlossaryItemProps {
@@ -103,15 +104,7 @@ export function GlossaryItem({ slug, term, furigana, summary, aliases, tags }: G
               ))}
             </ul>
           )}
-          {tags.length > 0 && (
-            <ul {...stylex.props(styles.pillList)} role="list" aria-label="Tags">
-              {tags.map((tag) => (
-                <li key={`tag-${tag}`} {...stylex.props(styles.pill)}>
-                  {tag}
-                </li>
-              ))}
-            </ul>
-          )}
+          <TagChips type="glossary" tags={tags} />
         </div>
       )}
     </article>

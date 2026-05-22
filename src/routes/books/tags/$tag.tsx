@@ -4,21 +4,24 @@ import { Link, createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell.tsx";
 import { TreeSidebar } from "@/components/layout/TreeSidebar.tsx";
 import { BookCard } from "@/components/card/BookCard.tsx";
-import { getBooksIndexData } from "@/server/loaders.ts";
+import { getBooksByTagData } from "@/server/loaders.ts";
+import { decodeTagSlug } from "@/lib/tags/index.ts";
 import { makeTitle } from "@/lib/seo/title.ts";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 
 const styles = stylex.create({
-  heading: {
-    fontSize: typography.fontSize2xl,
-    fontWeight: typography.weightSemibold,
-    marginBottom: space.s3,
-  },
-  tagsLink: {
-    display: "inline-block",
+  back: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: space.s1,
     color: colors.link,
     fontSize: typography.fontSizeSm,
     textDecoration: { default: "none", ":hover": "underline" },
+    marginBottom: space.s4,
+  },
+  heading: {
+    fontSize: typography.fontSize2xl,
+    fontWeight: typography.weightSemibold,
     marginBottom: space.s5,
   },
   grid: {
@@ -34,19 +37,24 @@ const styles = stylex.create({
   },
 });
 
-export const Route = createFileRoute("/books/")({
-  loader: () => getBooksIndexData(),
-  head: () => ({
-    meta: [
-      { title: makeTitle("Books") },
-      { name: "description", content: "Books — published reading notes." },
-    ],
-  }),
-  component: BooksIndex,
+export const Route = createFileRoute("/books/tags/$tag")({
+  loader: ({ params }) => getBooksByTagData({ data: { tag: params.tag } }),
+  head: ({ params }) => {
+    const tag = decodeTagSlug(params.tag);
+    return {
+      meta: [
+        { title: makeTitle(`Books tagged "${tag}"`) },
+        { name: "description", content: `Books tagged with "${tag}".` },
+      ],
+    };
+  },
+  component: BooksByTag,
 });
 
-function BooksIndex() {
+function BooksByTag() {
   const books = Route.useLoaderData();
+  const { tag } = Route.useParams();
+  const decodedTag = decodeTagSlug(tag);
   const tree = useLoaderData({ from: "/books" });
   const treeSidebar = useMemo(
     () => <TreeSidebar tree={tree} activeSlug={null} treeKind="books" />,
@@ -55,12 +63,12 @@ function BooksIndex() {
 
   return (
     <AppShell variant="list" treeSidebar={treeSidebar}>
-      <h1 {...stylex.props(styles.heading)}>Books</h1>
-      <Link to="/books/tags" {...stylex.props(styles.tagsLink)}>
-        Browse tags →
+      <Link to="/books/tags" {...stylex.props(styles.back)}>
+        ← Books Tags
       </Link>
+      <h1 {...stylex.props(styles.heading)}>#{decodedTag}</h1>
       {books.length === 0 ? (
-        <p {...stylex.props(styles.empty)}>No published books yet.</p>
+        <p {...stylex.props(styles.empty)}>No books with this tag.</p>
       ) : (
         <ul {...stylex.props(styles.grid)} role="list">
           {books.map((book) => (

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
-import { createFileRoute, useLoaderData } from "@tanstack/react-router";
+import { Link, createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell.tsx";
 import { TreeSidebar } from "@/components/layout/TreeSidebar.tsx";
 import { GlossaryItem } from "@/components/card/GlossaryItem.tsx";
@@ -12,6 +12,13 @@ const styles = stylex.create({
   heading: {
     fontSize: typography.fontSize2xl,
     fontWeight: typography.weightSemibold,
+    marginBottom: space.s3,
+  },
+  tagsLink: {
+    display: "inline-block",
+    color: colors.link,
+    fontSize: typography.fontSizeSm,
+    textDecoration: { default: "none", ":hover": "underline" },
     marginBottom: space.s5,
   },
   jumpNav: {
@@ -83,6 +90,9 @@ function GlossaryIndex() {
   return (
     <AppShell variant="list" treeSidebar={treeSidebar}>
       <h1 {...stylex.props(styles.heading)}>Glossary</h1>
+      <Link to="/glossary/tags" {...stylex.props(styles.tagsLink)}>
+        Browse tags →
+      </Link>
       {sections.length === 0 ? (
         <p {...stylex.props(styles.empty)}>No published terms yet.</p>
       ) : (

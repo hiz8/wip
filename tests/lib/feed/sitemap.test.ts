@@ -3,16 +3,24 @@ import { buildSitemapEntries, renderSitemapXml } from "@/lib/feed/sitemap.ts";
 
 const SITE = "https://example.com";
 
-const item = (type: "notes" | "glossary" | "books", slug: string, updated?: string) => ({
+const item = (
+  type: "notes" | "glossary" | "books",
+  slug: string,
+  updated?: string,
+  tags?: string[],
+) => ({
   type,
   slug,
-  frontmatter: updated === undefined ? {} : { updated },
+  frontmatter: {
+    ...(updated === undefined ? {} : { updated }),
+    ...(tags === undefined ? {} : { tags }),
+  },
 });
 
 describe("buildSitemapEntries", () => {
   it("emits the four root routes first", () => {
     const entries = buildSitemapEntries({ notes: [], glossary: [], books: [] }, SITE);
-    expect(entries.map((e) => e.loc)).toEqual([
+    expect(entries.slice(0, 4).map((e) => e.loc)).toEqual([
       "https://example.com/",
       "https://example.com/notes",
       "https://example.com/glossary",
@@ -21,6 +29,29 @@ describe("buildSitemapEntries", () => {
     for (const entry of entries) {
       expect(entry.lastmod).toBeUndefined();
     }
+  });
+
+  it("always emits the per-type tag index pages", () => {
+    const entries = buildSitemapEntries({ notes: [], glossary: [], books: [] }, SITE);
+    const locs = entries.map((e) => e.loc);
+    expect(locs).toContain("https://example.com/notes/tags");
+    expect(locs).toContain("https://example.com/glossary/tags");
+    expect(locs).toContain("https://example.com/books/tags");
+  });
+
+  it("emits a tag-detail page per aggregated tag, with ancestors and slug escaping", () => {
+    const entries = buildSitemapEntries(
+      {
+        notes: [item("notes", "a", "2026-05-01", ["frontend/react"])],
+        glossary: [],
+        books: [],
+      },
+      SITE,
+    );
+    const locs = entries.map((e) => e.loc);
+    // ancestor synthesized + `/` escaped to `--`
+    expect(locs).toContain("https://example.com/notes/tags/frontend");
+    expect(locs).toContain("https://example.com/notes/tags/frontend--react");
   });
 
   it("orders detail entries by updated desc per type", () => {
@@ -36,7 +67,9 @@ describe("buildSitemapEntries", () => {
       },
       SITE,
     );
-    const noteLocs = entries.filter((e) => e.loc.includes("/notes/")).map((e) => e.loc);
+    const noteLocs = entries
+      .filter((e) => e.loc.includes("/notes/") && !e.loc.includes("/tags"))
+      .map((e) => e.loc);
     expect(noteLocs).toEqual([
       "https://example.com/notes/new",
       "https://example.com/notes/mid",

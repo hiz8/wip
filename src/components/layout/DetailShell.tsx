@@ -7,6 +7,7 @@ import { RightSidebar } from "./RightSidebar.tsx";
 import { TreeSidebar } from "./TreeSidebar.tsx";
 import { Marginalia } from "@/components/content/Marginalia.tsx";
 import { FootnoteSection } from "@/components/content/FootnoteSection.tsx";
+import { TagChips } from "@/components/common/TagChips.tsx";
 import type { TreeNode } from "@/lib/tree/buildTree.ts";
 import type {
   BacklinkRef,
@@ -15,7 +16,7 @@ import type {
   FootnoteEntry,
   TocEntry,
 } from "@/types/content.ts";
-import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
+import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 
 type DetailBackTo = "/notes" | "/glossary" | "/books";
 
@@ -44,22 +45,8 @@ const styles = stylex.create({
     marginBottom: space.s4,
   },
   tags: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: space.s2,
     marginTop: space.s2,
     marginBottom: space.s4,
-    listStyle: "none",
-    padding: 0,
-  },
-  tag: {
-    display: "inline-block",
-    paddingInline: space.s2,
-    paddingBlock: space.s1,
-    borderRadius: radius.pill,
-    backgroundColor: colors.bgElevated,
-    color: colors.textSecondary,
-    fontSize: typography.fontSizeXs,
   },
   content: {
     color: colors.textPrimary,
@@ -121,13 +108,9 @@ export function DetailShell({
         </Link>
         {header}
         {tags.length > 0 ? (
-          <ul {...stylex.props(styles.tags)} role="list">
-            {tags.map((tag) => (
-              <li key={tag} {...stylex.props(styles.tag)}>
-                {tag}
-              </li>
-            ))}
-          </ul>
+          <div {...stylex.props(styles.tags)}>
+            <TagChips type={treeKind} tags={tags} />
+          </div>
         ) : null}
         <div
           ref={contentRef}

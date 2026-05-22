@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
 import { Link } from "@tanstack/react-router";
+import { TagChips } from "@/components/common/TagChips.tsx";
 import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
 
 interface NoteCardProps {
@@ -45,22 +46,6 @@ const styles = stylex.create({
     fontSize: typography.fontSizeXs,
     color: colors.textMuted,
   },
-  tags: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: space.s1,
-    listStyle: "none",
-    margin: 0,
-    padding: 0,
-  },
-  tag: {
-    display: "inline-block",
-    paddingInline: space.s2,
-    paddingBlock: 0,
-    borderRadius: radius.pill,
-    backgroundColor: colors.bgElevated,
-    color: colors.textSecondary,
-  },
 });
 
 export function NoteCard({ slug, title, summary, tags, updated }: NoteCardProps) {
@@ -75,15 +60,7 @@ export function NoteCard({ slug, title, summary, tags, updated }: NoteCardProps)
       )}
       <div {...stylex.props(styles.meta)}>
         <time dateTime={updated}>{updated.slice(0, 10)}</time>
-        {tags.length > 0 && (
-          <ul {...stylex.props(styles.tags)} role="list">
-            {tags.map((tag) => (
-              <li key={tag} {...stylex.props(styles.tag)}>
-                {tag}
-              </li>
-            ))}
-          </ul>
-        )}
+        <TagChips type="notes" tags={tags} />
       </div>
     </article>
   );

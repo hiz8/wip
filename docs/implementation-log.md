@@ -778,6 +778,105 @@ scripts/check-contrast.ts              # 新規 — WCAG AA 検証
 
 - Vault watch による自動再ビルド (dev 中に Vault へ画像を足した場合は dev server 再起動で取り込む)
 
+## Phase 9-(4) (タグルート: タグ一覧 / タグ別一覧) **完了**
+
+### 達成範囲
+
+SPEC.md / ui-spec.md / content-spec.md に定義済みで Phase 5〜8 を通じて先送りされていた
+タグルート計 6 本を実装。タグはこれまでカード・詳細にプレーンテキスト表示されるだけだったが、
+リンク化して絞り込みとタグ一覧を可能にした。
+
+- 追加ルート (型ごと 2 本 × 3 型):
+  - `/notes/tags` `/glossary/tags` `/books/tags` — 型内の全タグ一覧 (使用件数併記、件数降順)
+  - `/notes/tags/$tag` `/glossary/tags/$tag` `/books/tags/$tag` — 該当タグのコンテンツ一覧
+- 階層タグ: 親タグでフィルタすると子タグも含む (`frontend` ⊇ `frontend/react` / `frontend/css`)。
+  タグ一覧には authored タグの全祖先を合成して並べるため、親のみのページも到達可能
+- 名前空間分離: 型ごとに集計・絞り込み (元データが型別 `getAll*` なので自然分離)。
+  `/notes/tags/react` と `/books/tags/react` は別物
+- 階層タグ URL は `/` を `--` にエスケープ (`frontend/react` → `frontend--react`)。日本語タグは
+  生のまま URL に出す (ファイル名スラッグと同方針)
+- カード (`NoteCard` / `GlossaryItem` / `BookCard`) と詳細 (`DetailShell`) のタグチップを
+  対応する型のタグ別ページへの `<Link>` に変更。各一覧ページ上部に「Browse tags →」導線を追加
+- sitemap にタグ一覧 + タグ別ページを追加 (Atom feed はタグ対象外)
+- テスト 16 件追加 (275 → 291 件、全グリーン)。プリレンダー 27 ページ (Notes tags 5 + Glossary
+  tags 3 + Books tags 3 + 既存)
+
+### 公開 API (主な追加)
+
+`src/lib/tags/index.ts`:
+
+- `encodeTagToSlug(tag)` / `decodeTagSlug(slug)` — `/` ↔ `--`。round-trip 保証 (タグ名自体に
+  `--` を含むケースは非対応、コメントで明記)
+- `tagAncestors(tag)` — `a/b/c` → `["a", "a/b", "a/b/c"]`
+- `matchesTag(itemTag, filterTag)` — `itemTag === filterTag || itemTag.startsWith(filterTag + "/")`
+- `aggregateTags(items)` — 祖先合成 + 階層マッチ件数集計、件数降順 → タグ昇順ソート、`TagCount[]`
+- `filterByTag(items, tag)` — 階層マッチでフィルタ
+- 型: `TagCount`, `Tagged`
+
+`src/server/loaders.ts`:
+
+- `getNotesTagsData` / `getGlossaryTagsData` / `getBooksTagsData` (`TagCount[]`)
+- `getNotesByTagData` / `getGlossaryByTagData` / `getBooksByTagData` (zod `{ tag }`、`*ListItem[]`)
+- `TagCount` 型を再 export
+
+`src/components/common/`:
+
+- `TagChips` (`{ type, tags }`) — カード・詳細共通のタグリンク群
+- `TagIndexList` (`{ type, tags: TagCount[] }`) — 件数バッジ付きタグ一覧
+
+### 主要ファイル
+
+```
+src/lib/tags/{tags,index}.ts                      # 純関数 + 公開 API
+src/server/loaders.ts                             # 6 loader + projection helper 切り出し + TagCount
+src/components/common/{TagChips,TagIndexList}.tsx
+src/components/card/{NoteCard,GlossaryItem,BookCard}.tsx  # タグチップを Link 化
+src/components/layout/DetailShell.tsx             # タグチップを Link 化 (treeKind を渡す)
+src/routes/notes/tags/{index,$tag}.tsx
+src/routes/glossary/tags/{index,$tag}.tsx
+src/routes/books/tags/{index,$tag}.tsx
+src/routes/{notes,glossary,books}/index.tsx       # 「Browse tags →」導線
+src/lib/feed/sitemap.ts                           # pushTagPages
+tests/lib/tags/tags.test.ts
+tests/lib/feed/sitemap.test.ts                    # タグ URL の期待値追加
+```
+
+### 設計判断
+
+1. **祖先タグを合成** — `aggregateTags` が authored タグの全祖先を候補に含め、件数は階層マッチで
+   数える。これで親のみのページ (`frontend/react` しか無くても `/notes/tags/frontend`) が
+   タグ一覧からリンクされ、crawlLinks に発見される
+2. **prerender 発見性の三点担保** — (a) カード・詳細のタグチップを `<Link>` 化 →
+   タグ別ページ発見、(b) 各一覧ページ上部の「Browse tags →」→ タグ一覧ページ発見、
+   (c) 祖先合成 → 親タグページ発見。`crawlLinks: true` + `failOnError: true` 下で全 6 種が
+   欠損なく SSG 出力されることを dist で確認
+3. **escape は `/` ↔ `--` のみ** — 日本語タグは生のまま (slug 同方針)、`joinSiteUrl` /
+   TanStack Router が percent-encode を担当。round-trip をユニットテストで保証
+4. **名前空間は型別データで自然分離** — 横断統合用の特別な仕組みは入れず、各 loader が
+   `getAllNotes` / `getAllGlossaryTerms` / `getAllBooks` 由来の型別 ListItem を集計・絞り込み
+5. **projection helper を切り出し** — createServerFn handler は inline 必須 (Phase 4 設計判断 1)
+   で server fn 同士を呼べないため、`projectNotesIndex` 等の plain 関数を新設し index loader と
+   tag loader の双方が呼ぶ。マッピングの single source of truth を維持
+6. **タグチップ共通化** — `DetailShell` は型横断で共有されるので、既存 `treeKind: ContentType`
+   prop をそのまま `TagChips` の `type` に渡す (呼び出し側の変更不要)。`params` オブジェクトは
+   `useMemo` で安定参照化 (react-perf lint 対応、`NoteCard` 既存パターン踏襲)
+7. **タグ一覧は件数降順フラット** — ui-spec デフォルト。Glossary タグ別はフラット一覧
+   (五十音セクションは付けない)
+
+### 検証
+
+- `npm run typecheck` / `npm run lint` (0 warnings/errors) / `npm run test` (291 件) グリーン
+- `VAULT_ROOT=tests/fixtures/vault npm run build` — 6 種ルートを全て SSG 出力、`failOnError`
+  で落ちず。`dist/client/{notes,glossary,books}/tags/` と各 `$tag` ページ、`sitemap.xml` の
+  タグ URL を確認。親タグ `/notes/tags/frontend` のカードが子タグ (`frontend/react` の note-a、
+  `frontend/css` の nested) を含むことを確認
+- `npm run dev` — 同一ルートが HTTP 200、SSR 描画されたカード/タグ一覧が build と一致
+- `npx tsx scripts/check-contrast.ts` — light/dark とも 0 failures
+
+### スコープ外 (将来課題)
+
+- タグの型横断統合 / タグのリネーム・エイリアス / タグ別 feed / OGP 生成
+
 ## Phase 9 (引き継ぎメモ)
 
 ### 想定スコープ
@@ -789,7 +888,7 @@ scripts/check-contrast.ts              # 新規 — WCAG AA 検証
 - 動的 OGP 画像生成
   - 詳細ページごとに social card を SVG → PNG / WebP で生成
   - `@cloudflare/workers-types` 経由で Worker 化するか、static 事前生成にとどめるか
-- タグルート (`/notes/tags`、`/glossary/tags`、`/books/tags`) 横串展開
+- ~~タグルート (`/notes/tags`、`/glossary/tags`、`/books/tags`) 横串展開~~ → Phase 9-(4) で完了 (上記参照)
 - デザイン UX フィードバックに基づく Marginalia 配置ロジック再評価 (現状 zigzag を維持)
 
 ### 既存資産

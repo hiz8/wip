@@ -8,7 +8,11 @@ import { buildGlossaryTree } from "@/lib/tree/buildGlossaryTree.ts";
 import { buildTreeFromRenderedNotes } from "@/lib/tree/buildTree.ts";
 import type { TreeNode } from "@/lib/tree/buildTree.ts";
 import type { FuriganaGroup } from "@/lib/glossary/groupByFurigana.ts";
+import { aggregateTags, decodeTagSlug, filterByTag } from "@/lib/tags/index.ts";
+import type { TagCount } from "@/lib/tags/index.ts";
 import type { BacklinkRef, CalloutEntry, FootnoteEntry, TocEntry } from "@/types/content.ts";
+
+export type { TagCount } from "@/lib/tags/index.ts";
 
 export interface NoteListItem {
   slug: string;
@@ -90,18 +94,53 @@ export interface BookDetail {
   callouts: CalloutEntry[];
 }
 
+// Plain projection helpers shared by the index loaders and the tag loaders.
+// (createServerFn handlers must be inline, so the tag loaders cannot call the
+// index server fns directly; they call these primitives instead.)
+async function projectNotesIndex(): Promise<NoteListItem[]> {
+  const notes = await getAllNotes();
+  return notes.map((note) => ({
+    slug: note.slug,
+    title: note.title,
+    updated: note.frontmatter.updated,
+    summary: note.frontmatter.summary ?? null,
+    tags: note.frontmatter.tags ?? [],
+    featured: note.frontmatter.featured ?? false,
+  }));
+}
+
+async function projectGlossaryIndex(): Promise<GlossaryGroupSectionDto[]> {
+  const groups = await getGlossaryGroupedIndex();
+  return groups.map((g) => ({
+    name: g.name,
+    items: g.items.map((term) => ({
+      slug: term.slug,
+      term: term.title,
+      furigana: term.frontmatter.furigana ?? null,
+      summary: term.frontmatter.summary ?? null,
+      tags: term.frontmatter.tags ?? [],
+      aliases: term.frontmatter.aliases ?? [],
+    })),
+  }));
+}
+
+async function projectBooksIndex(): Promise<BookListItem[]> {
+  const books = await getAllBooks();
+  const covers = await getBookCoverMap();
+  return books.map((book) => ({
+    slug: book.slug,
+    title: book.title,
+    authors: book.frontmatter.authors,
+    pubYear: book.frontmatter.pubYear ?? null,
+    publisher: book.frontmatter.publisher ?? null,
+    summary: book.frontmatter.summary ?? null,
+    tags: book.frontmatter.tags ?? [],
+    coverUrl: covers.get(book.slug) ?? null,
+  }));
+}
+
 export const getNotesIndexData = createServerFn({ method: "GET" }).handler(
-  async (): Promise<NoteListItem[]> => {
-    const notes = await getAllNotes();
-    return notes.map((note) => ({
-      slug: note.slug,
-      title: note.title,
-      updated: note.frontmatter.updated,
-      summary: note.frontmatter.summary ?? null,
-      tags: note.frontmatter.tags ?? [],
-      featured: note.frontmatter.featured ?? false,
-    }));
-  },
+  (): Promise<NoteListItem[]> => projectNotesIndex(),
 );
 
 const noteSlugSchema = z.object({ slug: z.string().min(1) });
@@ -134,20 +173,7 @@ export const getNotesTreeData = createServerFn({ method: "GET" }).handler(
 );
 
 export const getGlossaryIndexData = createServerFn({ method: "GET" }).handler(
-  async (): Promise<GlossaryGroupSectionDto[]> => {
-    const groups = await getGlossaryGroupedIndex();
-    return groups.map((g) => ({
-      name: g.name,
-      items: g.items.map((term) => ({
-        slug: term.slug,
-        term: term.title,
-        furigana: term.frontmatter.furigana ?? null,
-        summary: term.frontmatter.summary ?? null,
-        tags: term.frontmatter.tags ?? [],
-        aliases: term.frontmatter.aliases ?? [],
-      })),
-    }));
-  },
+  (): Promise<GlossaryGroupSectionDto[]> => projectGlossaryIndex(),
 );
 
 const glossarySlugSchema = z.object({ slug: z.string().min(1) });
@@ -180,20 +206,7 @@ export const getGlossaryTreeData = createServerFn({ method: "GET" }).handler(
 );
 
 export const getBooksIndexData = createServerFn({ method: "GET" }).handler(
-  async (): Promise<BookListItem[]> => {
-    const books = await getAllBooks();
-    const covers = await getBookCoverMap();
-    return books.map((book) => ({
-      slug: book.slug,
-      title: book.title,
-      authors: book.frontmatter.authors,
-      pubYear: book.frontmatter.pubYear ?? null,
-      publisher: book.frontmatter.publisher ?? null,
-      summary: book.frontmatter.summary ?? null,
-      tags: book.frontmatter.tags ?? [],
-      coverUrl: covers.get(book.slug) ?? null,
-    }));
-  },
+  (): Promise<BookListItem[]> => projectBooksIndex(),
 );
 
 const bookIsbnSchema = z.object({ isbn: z.string().min(1) });
@@ -229,3 +242,46 @@ export const getBooksTreeData = createServerFn({ method: "GET" }).handler(
     return buildBooksTree(books);
   },
 );
+
+// Tags are namespaced per content type, so each type aggregates and filters its
+// own items only; a tag slug carries `--` for the hierarchy separator (decoded here).
+const tagSlugSchema = z.object({ tag: z.string().min(1) });
+
+export const getNotesTagsData = createServerFn({ method: "GET" }).handler(
+  async (): Promise<TagCount[]> => aggregateTags(await projectNotesIndex()),
+);
+
+export const getNotesByTagData = createServerFn({ method: "GET" })
+  .inputValidator((value: unknown) => tagSlugSchema.parse(value))
+  .handler(
+    async ({ data }): Promise<NoteListItem[]> =>
+      filterByTag(await projectNotesIndex(), decodeTagSlug(data.tag)),
+  );
+
+export const getGlossaryTagsData = createServerFn({ method: "GET" }).handler(
+  async (): Promise<TagCount[]> => {
+    const sections = await projectGlossaryIndex();
+    return aggregateTags(sections.flatMap((section) => section.items));
+  },
+);
+
+export const getGlossaryByTagData = createServerFn({ method: "GET" })
+  .inputValidator((value: unknown) => tagSlugSchema.parse(value))
+  .handler(async ({ data }): Promise<GlossaryListItem[]> => {
+    const sections = await projectGlossaryIndex();
+    return filterByTag(
+      sections.flatMap((section) => section.items),
+      decodeTagSlug(data.tag),
+    );
+  });
+
+export const getBooksTagsData = createServerFn({ method: "GET" }).handler(
+  async (): Promise<TagCount[]> => aggregateTags(await projectBooksIndex()),
+);
+
+export const getBooksByTagData = createServerFn({ method: "GET" })
+  .inputValidator((value: unknown) => tagSlugSchema.parse(value))
+  .handler(
+    async ({ data }): Promise<BookListItem[]> =>
+      filterByTag(await projectBooksIndex(), decodeTagSlug(data.tag)),
+  );

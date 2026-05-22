@@ -1,17 +1,24 @@
 import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
-import { createFileRoute, useLoaderData } from "@tanstack/react-router";
+import { Link, createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell.tsx";
 import { TreeSidebar } from "@/components/layout/TreeSidebar.tsx";
 import { NoteCard } from "@/components/card/NoteCard.tsx";
 import { getNotesIndexData } from "@/server/loaders.ts";
 import { makeTitle } from "@/lib/seo/title.ts";
-import { space, typography } from "@/styles/tokens.stylex.ts";
+import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 
 const styles = stylex.create({
   heading: {
     fontSize: typography.fontSize2xl,
     fontWeight: typography.weightSemibold,
+    marginBottom: space.s3,
+  },
+  tagsLink: {
+    display: "inline-block",
+    color: colors.link,
+    fontSize: typography.fontSizeSm,
+    textDecoration: { default: "none", ":hover": "underline" },
     marginBottom: space.s5,
   },
   grid: {
@@ -43,6 +50,9 @@ function NotesIndex() {
   return (
     <AppShell variant="list" treeSidebar={treeSidebar}>
       <h1 {...stylex.props(styles.heading)}>Notes</h1>
+      <Link to="/notes/tags" {...stylex.props(styles.tagsLink)}>
+        Browse tags →
+      </Link>
       <ul {...stylex.props(styles.grid)} role="list">
         {notes.map((note) => (
           <li key={note.slug}>
