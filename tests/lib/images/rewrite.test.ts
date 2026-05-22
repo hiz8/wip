@@ -63,6 +63,24 @@ describe("rewriteImgSrcInHtml", () => {
     const map = new Map([["4 quadrant design.png", "/images/4 quadrant design.png"]]);
     expect(rewriteImgSrcInHtml(html, map)).toBe('<img src="/images/4 quadrant design.png" alt="">');
   });
+
+  it("matches an entity-escaped src against a rawPath key containing &", () => {
+    const html = '<img src="Q&amp;A note.png" alt="">';
+    const map = new Map([["Q&A note.png", "/images/Q&A note.png"]]);
+    expect(rewriteImgSrcInHtml(html, map)).toBe('<img src="/images/Q&A note.png" alt="">');
+  });
+
+  it("matches a src that is both entity-escaped and percent-encoded", () => {
+    const html = '<img src="Q&amp;A%20note.png" alt="">';
+    const map = new Map([["Q&A note.png", "/images/Q&A note.png"]]);
+    expect(rewriteImgSrcInHtml(html, map)).toBe('<img src="/images/Q&A note.png" alt="">');
+  });
+
+  it("matches a numeric character reference against the decoded rawPath key", () => {
+    const html = '<img src="a&#38;b.png" alt="">';
+    const map = new Map([["a&b.png", "/images/a&b.png"]]);
+    expect(rewriteImgSrcInHtml(html, map)).toBe('<img src="/images/a&b.png" alt="">');
+  });
 });
 
 describe("rewriteItemHtml", () => {

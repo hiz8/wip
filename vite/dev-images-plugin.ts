@@ -1,5 +1,4 @@
-import { createReadStream } from "node:fs";
-import { stat } from "node:fs/promises";
+import { open } from "node:fs/promises";
 import { extname } from "node:path";
 import type { Connect, Plugin, ViteDevServer } from "vite";
 import type { ServerResponse } from "node:http";
@@ -21,22 +20,28 @@ async function serveImage(
   path: string,
   getMap: () => Promise<ReadonlyMap<string, string>>,
 ): Promise<void> {
-  let absolutePath: string | undefined;
+  // Open the file once and read its size from the same handle, so the
+  // Content-Length we send and the bytes we stream cannot disagree (no TOCTOU
+  // between stat and read). Any failure here falls through to SSR before a
+  // single header is written.
+  let handle: Awaited<ReturnType<typeof open>> | undefined;
   let size: number | undefined;
+  let absolutePath: string | undefined;
   try {
     const map = await getMap();
-    const publicPath = decodeURIComponent(path);
-    absolutePath = map.get(publicPath);
+    absolutePath = map.get(decodeURIComponent(path));
     if (absolutePath !== undefined) {
-      const stats = await stat(absolutePath);
+      handle = await open(absolutePath, "r");
+      const stats = await handle.stat();
       if (stats.isFile()) size = stats.size;
     }
   } catch {
     // Dataset build failed or the file is unreadable: fall through to SSR.
-    absolutePath = undefined;
+    size = undefined;
   }
 
-  if (absolutePath === undefined || size === undefined) {
+  if (absolutePath === undefined || handle === undefined || size === undefined) {
+    if (handle !== undefined) await handle.close();
     next();
     return;
   }
@@ -47,13 +52,16 @@ async function serveImage(
   res.setHeader("Content-Length", String(size));
 
   if (req.method === "HEAD") {
+    await handle.close();
     res.end();
     return;
   }
 
-  const stream = createReadStream(absolutePath);
+  // createReadStream from the open handle closes the fd automatically (autoClose
+  // defaults to true). Headers are already settled, so a late read error can
+  // only end the (now partial) response.
+  const stream = handle.createReadStream();
   stream.on("error", () => {
-    if (!res.headersSent) res.statusCode = 500;
     res.end();
   });
   stream.pipe(res);
