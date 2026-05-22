@@ -1,4 +1,14 @@
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
+// Global stylesheets are imported from the root route (not router.tsx) so that
+// tanstack-start's dev style collector includes them in the SSR <head>,
+// avoiding a flash of unstyled content on the dev server's initial paint.
+// (The @layer cascade order itself is locked separately by LAYER_ORDER_HTML
+// below, which is what keeps StyleX winning regardless of injection order.)
+import "@/styles/reset.css";
+import "@/styles/callout-vars.css";
+import "@/styles/code-vars.css";
+import "@/styles/font-vars.css";
+import "@/styles/content.css";
 import { themeScript } from "@/lib/theme/themeScript.ts";
 import {
   SITE_DESCRIPTION,
@@ -54,10 +64,25 @@ export const Route = createRootRoute({
 // is unnecessary.
 const STYLEX_DEV_CSS_HREF = "/virtual:stylex.css";
 
+// Lock the CSS `@layer` cascade order up front, as the very first thing in
+// <head>. @layer precedence is fixed by the order names first appear, so once
+// these named layers are declared here, StyleX's later `@layer priorityN`
+// declarations are always appended after them and therefore win — regardless
+// of the order in which stylesheets are injected.
+//
+// This matters in dev: after hydration, TanStack removes its SSR style-collector
+// <link> (which carried this same declaration) and Vite re-injects the global
+// stylesheets as <style> tags *after* the StyleX virtual CSS link. Without this
+// fixed declaration the order would invert (reset/base would override StyleX),
+// which is exactly the dev-only regression this guards against. Mirrors the
+// declaration at the top of src/styles/reset.css.
+const LAYER_ORDER_HTML = { __html: "@layer reset, base, components, utilities;" };
+
 function RootDocument() {
   return (
     <html lang={SITE_LOCALE} suppressHydrationWarning>
       <head>
+        <style dangerouslySetInnerHTML={LAYER_ORDER_HTML} />
         <script dangerouslySetInnerHTML={THEME_SCRIPT_HTML} />
         {import.meta.env.DEV ? <link rel="stylesheet" href={STYLEX_DEV_CSS_HREF} /> : null}
         <HeadContent />
