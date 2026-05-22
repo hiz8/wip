@@ -7,7 +7,7 @@
 @layer base {
   :root {
     --font-sans:
-      "Inter", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", system-ui, -apple-system, sans-serif;
+      "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", system-ui, -apple-system, sans-serif;
     --font-mono: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
     --font-serif: "Source Serif 4", "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif;
   }
