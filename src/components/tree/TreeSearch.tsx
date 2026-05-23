@@ -26,6 +26,7 @@ const styles = stylex.create({
   },
   input: {
     flexGrow: 1,
+    width: "100%",
     borderStyle: "none",
     outlineStyle: "none",
     backgroundColor: "transparent",
