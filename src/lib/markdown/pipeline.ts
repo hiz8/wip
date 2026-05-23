@@ -28,6 +28,7 @@ import { applyCallout } from "./plugins/callout.ts";
 import { applyEmbed } from "./plugins/embed.ts";
 import { applyFootnote } from "./plugins/footnote.ts";
 import { applyImage } from "./plugins/image.ts";
+import { rehypeSectionize } from "./plugins/sectionize.ts";
 import { applyToc, extractFirstH1 } from "./plugins/toc.ts";
 import { applyWikiLink } from "./plugins/wiki-link.ts";
 import { rehypeShiki, SHIKI_OPTIONS } from "./shiki.ts";
@@ -190,6 +191,7 @@ function createFinalRenderer(): AnyProcessor {
     .use(remarkGfm)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeSlug)
+    .use(rehypeSectionize)
     .use(rehypeShiki, SHIKI_OPTIONS)
     .use(rehypeStringify, { allowDangerousHtml: true });
   return processor as unknown as AnyProcessor;

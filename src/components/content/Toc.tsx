@@ -43,7 +43,7 @@ const styles = stylex.create({
 });
 
 export function Toc({ entries }: TocProps) {
-  const activeId = useTocActive(entries.map((entry) => entry.id));
+  const activeIds = useTocActive(entries.map((entry) => entry.id));
 
   if (entries.length === 0) return null;
   return (
@@ -51,7 +51,7 @@ export function Toc({ entries }: TocProps) {
       <p {...stylex.props(styles.heading)}>On this page</p>
       <ol {...stylex.props(styles.list)}>
         {entries.map((entry) => {
-          const isActive = entry.id === activeId;
+          const isActive = activeIds.has(entry.id);
           return (
             <li key={entry.id} {...stylex.props(entry.depth === 3 && styles.itemH3)}>
               <a
