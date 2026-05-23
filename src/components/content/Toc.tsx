@@ -38,7 +38,6 @@ const styles = stylex.create({
   },
   linkActive: {
     color: colors.accent,
-    fontWeight: typography.weightSemibold,
   },
 });
 
