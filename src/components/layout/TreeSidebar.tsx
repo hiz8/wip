@@ -50,8 +50,11 @@ const styles = stylex.create({
     gap: space.s3,
     paddingInline: space.s3,
     paddingBlock: space.s4,
-    height: "100%",
+    maxHeight: "100vh",
+    boxSizing: "border-box",
     overflowY: "auto",
+    position: "sticky",
+    top: 0,
   },
 });
 
