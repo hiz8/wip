@@ -11,6 +11,7 @@
      from prose-vars.css. */
   [data-content-body] {
     line-height: 1.75;
+    counter-reset: fn-num;
   }
 
   [data-content-body] > :first-child {
@@ -195,7 +196,7 @@
     border-inline-start-color: var(--callout-note-border);
   }
   [data-content-body] blockquote[data-callout="note"]::before {
-    content: "ⓘ Note";
+    content: "ⓘ " attr(data-callout-title, "Note");
   }
 
   [data-content-body] blockquote[data-callout="quote"] {
@@ -203,7 +204,7 @@
     border-inline-start-color: var(--callout-quote-border);
   }
   [data-content-body] blockquote[data-callout="quote"]::before {
-    content: "❝ Quote";
+    content: "❝ " attr(data-callout-title, "Quote");
   }
 
   [data-content-body] blockquote[data-callout="tip"] {
@@ -211,7 +212,7 @@
     border-inline-start-color: var(--callout-tip-border);
   }
   [data-content-body] blockquote[data-callout="tip"]::before {
-    content: "💡 Tip";
+    content: "💡 " attr(data-callout-title, "Tip");
   }
 
   [data-content-body] blockquote[data-callout="info"] {
@@ -219,7 +220,7 @@
     border-inline-start-color: var(--callout-info-border);
   }
   [data-content-body] blockquote[data-callout="info"]::before {
-    content: "🔗 Info";
+    content: "🔗 " attr(data-callout-title, "Info");
   }
 
   [data-content-body] blockquote[data-callout="warning"] {
@@ -227,7 +228,7 @@
     border-inline-start-color: var(--callout-warning-border);
   }
   [data-content-body] blockquote[data-callout="warning"]::before {
-    content: "⚠ Warning";
+    content: "⚠ " attr(data-callout-title, "Warning");
   }
 
   /* Marginalia layout (Tufte CSS inspired): callouts and footnote asides
@@ -239,7 +240,7 @@
      docs/ui-spec.md. The breakpoints mirror DetailLayout's
      `BP_DESKTOP_WIDE` (1280px) and AppShell's `BP_DESKTOP` (1024px). */
 
-  [data-content-body] .footnote-aside {
+  [data-content-body] aside.footnote-aside {
     display: none;
   }
 
@@ -248,7 +249,7 @@
       display: none;
     }
 
-    [data-content-body] .footnote-aside {
+    [data-content-body] aside.footnote-aside {
       display: block;
       box-sizing: border-box;
       font-size: 0.85rem;
@@ -256,37 +257,46 @@
       color: var(--prose-muted);
     }
 
-    [data-content-body] .footnote-aside > :first-child {
+    [data-content-body] aside.footnote-aside > :first-child {
       margin-block-start: 0;
     }
 
-    [data-content-body] .footnote-aside > :last-child {
+    [data-content-body] aside.footnote-aside > :last-child {
       margin-block-end: 0;
     }
 
+    /* Number prefix matches the `<sup>` order; counter advances per aside in
+       document order, mirroring mdast-util-to-hast's <sup> numbering. */
+    [data-content-body] aside.footnote-aside::before {
+      counter-increment: fn-num;
+      content: counter(fn-num) ". ";
+      color: var(--prose-accent);
+      font-weight: 600;
+      margin-inline-end: 0.25rem;
+    }
+
     /* width + negative margin keeps the float box entirely outside the main
-       column (which is max 44rem) and sits inside the 12rem gutter column,
-       so body text never wraps around it. Negative margin = -(gutter width +
-       gap - aside width / 2). With gutter 12rem, gap 1.5rem, aside 11rem we
-       use -12.5rem so the inner edge of the aside aligns with the gutter's
-       inner edge. */
+       column (44rem fixed by DetailLayout's minmax) and lands inside the
+       12rem gutter column with a small buffer toward the RightSidebar. */
     [data-content-body] blockquote[data-callout],
-    [data-content-body] .footnote-aside {
+    [data-content-body] aside.footnote-aside {
       float: right;
       clear: right;
-      width: 11rem;
-      margin-inline-end: -12.5rem;
+      width: 10.5rem;
+      margin-inline-end: -12rem;
       margin-inline-start: 0;
       margin-block: 0.25rem;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
   }
 
   @media (min-width: 1280px) {
     [data-content-body] blockquote[data-callout][data-side="left"],
-    [data-content-body] .footnote-aside[data-side="left"] {
+    [data-content-body] aside.footnote-aside[data-side="left"] {
       float: left;
       clear: left;
-      margin-inline-start: -12.5rem;
+      margin-inline-start: -12rem;
       margin-inline-end: 0;
     }
   }

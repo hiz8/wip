@@ -8,7 +8,13 @@ import { TreeSidebar } from "./TreeSidebar.tsx";
 import { FootnoteSection } from "@/components/content/FootnoteSection.tsx";
 import { TagChips } from "@/components/common/TagChips.tsx";
 import type { TreeNode } from "@/lib/tree/buildTree.ts";
-import type { BacklinkRef, ContentType, FootnoteEntry, TocEntry } from "@/types/content.ts";
+import type {
+  BacklinkRef,
+  CalloutEntry,
+  ContentType,
+  FootnoteEntry,
+  TocEntry,
+} from "@/types/content.ts";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 
 type DetailBackTo = "/notes" | "/glossary" | "/books";
@@ -24,6 +30,7 @@ interface DetailShellProps {
   tags: readonly string[];
   html: string;
   footnotes: readonly FootnoteEntry[];
+  callouts: readonly CalloutEntry[];
 }
 
 const styles = stylex.create({
@@ -56,6 +63,7 @@ export function DetailShell({
   tags,
   html,
   footnotes,
+  callouts,
 }: DetailShellProps) {
   // useMemo wrappers below keep JSX/object prop identities stable for the
   // project's react-perf lint rules (jsx-no-jsx-as-prop, jsx-no-new-object-as-prop).
@@ -68,10 +76,11 @@ export function DetailShell({
     [toc, backlinks],
   );
   const contentHtml = useMemo(() => ({ __html: html }), [html]);
+  const hasMarginalia = callouts.length > 0 || footnotes.length > 0;
 
   return (
     <AppShell variant="detail" treeSidebar={treeSidebar} rightSidebar={rightSidebar}>
-      <DetailLayout>
+      <DetailLayout hasMarginalia={hasMarginalia}>
         <Link to={back.to} {...stylex.props(styles.back)}>
           ← {back.label}
         </Link>

@@ -137,6 +137,36 @@ describe("applyEmbed", () => {
     expect(outgoing).toEqual([]);
   });
 
+  it("Embed 内の footnoteReference はテキスト化、footnoteDefinition は除去される", async () => {
+    const items = [note("host"), note("target")];
+    const index = buildContentIndex(items);
+    const parsedBodies = new Map<string, Root>([
+      ["host", parse("![[target]]")],
+      ["target", parse(["本文に[^a]脚注。", "", "[^a]: 埋め込み側の脚注本文。"].join("\n"))],
+    ]);
+
+    const tree = structuredClone(parsedBodies.get("host")!) as Root;
+    applyEmbed(tree, {
+      index,
+      fromFilePath: "host.md",
+      fromSlug: "host",
+      outgoing: [],
+      parsedBodies,
+    });
+
+    const html = await toHtml(tree);
+
+    // Footnote reference falls back to a text marker so readers see the
+    // shape but the host's footnote numbering is not polluted.
+    expect(html).toContain("[^a]");
+    expect(html).not.toMatch(/<sup[^>]*data-footnote-ref/u);
+
+    // The definition's body must not bleed into the host as an auto-
+    // generated <section data-footnotes> nor as the bare prose.
+    expect(html).not.toContain("埋め込み側の脚注本文。");
+    expect(html).not.toContain("data-footnotes");
+  });
+
   it("画像拡張子の Embed は image ノードに変換", async () => {
     const items = [note("host")];
     const index = buildContentIndex(items);

@@ -1,5 +1,5 @@
 import type { Root } from "mdast";
-import { visit } from "unist-util-visit";
+import { SKIP, visit } from "unist-util-visit";
 
 export type MarginaliaSide = "left" | "right";
 
@@ -7,6 +7,10 @@ export type MarginaliaSide = "left" | "right";
 // every callout (blockquote[data-callout]) and footnote reference. Even index
 // goes right, odd index goes left. The side is written to data.hProperties so
 // remark-rehype materializes it as a data-side HTML attribute downstream.
+//
+// SKIP is returned for every blockquote so that footnote references nested
+// inside callouts, embeds, or plain quotes do not advance the global counter
+// (their asides never reach the gutter as independent marginalia).
 export function assignMarginaliaSides(tree: Root): void {
   let index = 0;
 
@@ -17,7 +21,7 @@ export function assignMarginaliaSides(tree: Root): void {
         setSide(node, sideFor(index));
         index += 1;
       }
-      return;
+      return SKIP;
     }
 
     if (node.type === "footnoteReference") {

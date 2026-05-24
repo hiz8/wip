@@ -1,4 +1,5 @@
 import type { Blockquote, Link, Paragraph, Root, RootContent, Text } from "mdast";
+import { visit } from "unist-util-visit";
 import { BuildError } from "@/lib/content/errors.ts";
 import { pickContentTitle } from "@/lib/content/title.ts";
 import type { ContentIndex } from "@/lib/linkgraph/resolve.ts";
@@ -103,6 +104,7 @@ function expandEmbed(
 
   const cloned = structuredClone(body) as Root;
   demoteEmbedsToLinks(cloned);
+  sanitizeEmbeddedFootnotes(cloned);
 
   const sourceLink: Link = {
     type: "link",
@@ -134,5 +136,21 @@ function demoteEmbedsToLinks(tree: Root): void {
   rewriteTextNodes(tree, (value) => {
     if (!value.includes("![[")) return null;
     return [{ type: "text", value: value.replaceAll("![[", "[[") }];
+  });
+}
+
+// Strip footnote definitions and references from an embedded subtree. The
+// host page owns the footnote numbering and the trailing FootnoteSection;
+// leaving embedded definitions in place would (a) let mdast-util-to-hast
+// auto-generate a duplicate <section data-footnotes> in the rendered HTML
+// and (b) make embedded `<sup>` links jump to a host footnote that may not
+// exist or belong to a different definition.
+function sanitizeEmbeddedFootnotes(tree: Root): void {
+  tree.children = tree.children.filter((node) => node.type !== "footnoteDefinition");
+
+  visit(tree, "footnoteReference", (node, index, parent) => {
+    if (!parent || index === undefined) return;
+    const fallback: Text = { type: "text", value: `[^${node.identifier}]` };
+    parent.children[index] = fallback;
   });
 }
