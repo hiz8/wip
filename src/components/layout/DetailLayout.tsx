@@ -4,8 +4,6 @@ import { space, typography } from "@/styles/tokens.stylex.ts";
 
 interface DetailLayoutProps {
   children: ReactNode;
-  leftMargin?: ReactNode;
-  rightMargin?: ReactNode;
 }
 
 // See AppShell.tsx for why breakpoints are flat string consts in the same
@@ -28,6 +26,11 @@ const styles = stylex.create({
       [BP_DESKTOP_WIDE]: '"left-margin main right-margin"',
     },
   },
+  // Reserved gutter columns. Marginalia content is no longer mounted here:
+  // callouts and footnote asides live inside the main column's HTML and use
+  // negative-margin floats to escape into these columns. The empty cells
+  // exist so the grid still allocates physical space for the floats to land
+  // in.
   leftMargin: {
     gridRowStart: "left-margin",
     gridRowEnd: "left-margin",
@@ -55,16 +58,12 @@ const styles = stylex.create({
   },
 });
 
-export function DetailLayout({ children, leftMargin, rightMargin }: DetailLayoutProps) {
+export function DetailLayout({ children }: DetailLayoutProps) {
   return (
     <div {...stylex.props(styles.wrapper)}>
-      <div {...stylex.props(styles.leftMargin)} aria-hidden={leftMargin ? undefined : true}>
-        {leftMargin}
-      </div>
+      <div {...stylex.props(styles.leftMargin)} aria-hidden="true" />
       <div {...stylex.props(styles.main)}>{children}</div>
-      <div {...stylex.props(styles.rightMargin)} aria-hidden={rightMargin ? undefined : true}>
-        {rightMargin}
-      </div>
+      <div {...stylex.props(styles.rightMargin)} aria-hidden="true" />
     </div>
   );
 }

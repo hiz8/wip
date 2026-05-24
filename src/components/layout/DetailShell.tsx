@@ -1,21 +1,14 @@
 import * as stylex from "@stylexjs/stylex";
-import { useMemo, useRef, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { AppShell } from "./AppShell.tsx";
 import { DetailLayout } from "./DetailLayout.tsx";
 import { RightSidebar } from "./RightSidebar.tsx";
 import { TreeSidebar } from "./TreeSidebar.tsx";
-import { Marginalia } from "@/components/content/Marginalia.tsx";
 import { FootnoteSection } from "@/components/content/FootnoteSection.tsx";
 import { TagChips } from "@/components/common/TagChips.tsx";
 import type { TreeNode } from "@/lib/tree/buildTree.ts";
-import type {
-  BacklinkRef,
-  CalloutEntry,
-  ContentType,
-  FootnoteEntry,
-  TocEntry,
-} from "@/types/content.ts";
+import type { BacklinkRef, ContentType, FootnoteEntry, TocEntry } from "@/types/content.ts";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 
 type DetailBackTo = "/notes" | "/glossary" | "/books";
@@ -31,7 +24,6 @@ interface DetailShellProps {
   tags: readonly string[];
   html: string;
   footnotes: readonly FootnoteEntry[];
-  callouts: readonly CalloutEntry[];
 }
 
 const styles = stylex.create({
@@ -64,11 +56,7 @@ export function DetailShell({
   tags,
   html,
   footnotes,
-  callouts,
 }: DetailShellProps) {
-  const contentRef = useRef<HTMLDivElement | null>(null);
-  const hasMarginaliaItems = footnotes.length > 0 || callouts.length > 0;
-
   // useMemo wrappers below keep JSX/object prop identities stable for the
   // project's react-perf lint rules (jsx-no-jsx-as-prop, jsx-no-new-object-as-prop).
   const treeSidebar = useMemo(
@@ -79,30 +67,11 @@ export function DetailShell({
     () => <RightSidebar toc={toc} backlinks={backlinks} />,
     [toc, backlinks],
   );
-  const leftMargin = useMemo(
-    () =>
-      hasMarginaliaItems ? (
-        <Marginalia side="left" contentRef={contentRef} footnotes={footnotes} callouts={callouts} />
-      ) : null,
-    [hasMarginaliaItems, footnotes, callouts],
-  );
-  const rightMargin = useMemo(
-    () =>
-      hasMarginaliaItems ? (
-        <Marginalia
-          side="right"
-          contentRef={contentRef}
-          footnotes={footnotes}
-          callouts={callouts}
-        />
-      ) : null,
-    [hasMarginaliaItems, footnotes, callouts],
-  );
   const contentHtml = useMemo(() => ({ __html: html }), [html]);
 
   return (
     <AppShell variant="detail" treeSidebar={treeSidebar} rightSidebar={rightSidebar}>
-      <DetailLayout leftMargin={leftMargin} rightMargin={rightMargin}>
+      <DetailLayout>
         <Link to={back.to} {...stylex.props(styles.back)}>
           ← {back.label}
         </Link>
@@ -113,7 +82,6 @@ export function DetailShell({
           </div>
         ) : null}
         <div
-          ref={contentRef}
           data-content-body
           data-pagefind-body
           {...stylex.props(styles.content)}

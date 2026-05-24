@@ -230,27 +230,64 @@
     content: "⚠ Warning";
   }
 
-  /* Responsive switching: marginalia (desktop) vs inline + trailing section
-     (mobile). Breakpoints mirror DetailLayout's `BP_DESKTOP_WIDE` (1280px)
-     and AppShell's `BP_DESKTOP` (1024px). */
+  /* Marginalia layout (Tufte CSS inspired): callouts and footnote asides
+     flow inline by default and float into the surrounding gutter at
+     >=1024px. Left/right alternation kicks in at >=1280px via
+     `data-side="left|right"` assigned at build time by
+     `assignMarginaliaSides`. On narrow viewports the inline footnote aside
+     is hidden — the trailing FootnoteSection takes over per
+     docs/ui-spec.md. The breakpoints mirror DetailLayout's
+     `BP_DESKTOP_WIDE` (1280px) and AppShell's `BP_DESKTOP` (1024px). */
+
+  [data-content-body] .footnote-aside {
+    display: none;
+  }
+
   @media (min-width: 1024px) {
-    [data-content-body] blockquote[data-callout] {
-      display: none;
-    }
     [data-footnote-section] {
       display: none;
     }
-  }
 
-  @media (max-width: 1023px) {
-    [data-marginalia-side] {
-      display: none;
+    [data-content-body] .footnote-aside {
+      display: block;
+      box-sizing: border-box;
+      font-size: 0.85rem;
+      line-height: 1.55;
+      color: var(--prose-muted);
+    }
+
+    [data-content-body] .footnote-aside > :first-child {
+      margin-block-start: 0;
+    }
+
+    [data-content-body] .footnote-aside > :last-child {
+      margin-block-end: 0;
+    }
+
+    /* width + negative margin keeps the float box entirely outside the main
+       column (which is max 44rem) and sits inside the 12rem gutter column,
+       so body text never wraps around it. Negative margin = -(gutter width +
+       gap - aside width / 2). With gutter 12rem, gap 1.5rem, aside 11rem we
+       use -12.5rem so the inner edge of the aside aligns with the gutter's
+       inner edge. */
+    [data-content-body] blockquote[data-callout],
+    [data-content-body] .footnote-aside {
+      float: right;
+      clear: right;
+      width: 11rem;
+      margin-inline-end: -12.5rem;
+      margin-inline-start: 0;
+      margin-block: 0.25rem;
     }
   }
 
-  @media (max-width: 1279px) {
-    [data-marginalia-side="left"] {
-      display: none;
+  @media (min-width: 1280px) {
+    [data-content-body] blockquote[data-callout][data-side="left"],
+    [data-content-body] .footnote-aside[data-side="left"] {
+      float: left;
+      clear: left;
+      margin-inline-start: -12.5rem;
+      margin-inline-end: 0;
     }
   }
 }

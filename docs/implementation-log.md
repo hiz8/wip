@@ -908,6 +908,49 @@ Phase 9 着手前に環境を `npm run dev` で改めて起動して判明した
 - **YAML 空フィールドは null になる** — `summary:` のように値が無いフィールドは parser が `null` として返す。Zod の `.optional()` は `undefined` しか許容しないため、parse 前に top-level の null エントリを undefined 相当へ落とす `stripNulls()` を `src/lib/content/validate.ts` に追加した。`summary` だけでなく `tags` / `featured` / `created` / `updated` などあらゆる optional フィールドで同じ問題が起こり得る (Obsidian Vault では空フィールドが残りがち) ので、フィールド単位ではなく入り口で前処理する方針
 - **dev と preview の検証乖離** — Phase 7 / 8 までの目視確認は `npm run preview` 中心で、`npm run dev` 経路で初めて顕在化する不具合 (上記 3 つ全部含む) が見過ごされていた。Phase 9 以降は機能追加時に **dev / preview 両方** で表示確認するのが安全
 
+## Phase 8 後の改修 — Marginalia を Tufte CSS 風 CSS-only float へ ✅ (2026-05-24)
+
+### 達成範囲
+
+- 同一内容を「本文インライン / `Marginalia` (サイド) / `FootnoteSection` (末尾)」と 3 系統で DOM 出力していた Phase 6 の構造を、Tufte CSS の `.marginnote` / `.sidenote` を参考にした **CSS-only float レイアウト**に置換
+- Callout: 本文中の `<blockquote data-callout>` 1 系統に統合。CSS `float: right` + 負マージン (`-12.5rem`) で 12rem のガター列に飛ばす
+- Footnote: 参照 `[^N]` の直後にインライン `<span class="footnote-aside">…</span>` をパイプライン側で挿入し、CSS で float。狭いビュー (<1024px) は `display: none` で隠して `FootnoteSection` (末尾) のみ表示 — 仕様 (docs/ui-spec.md) の「モバイル: 脚注は末尾にまとめ」を維持するための部分的二重出力 (Callout は完全に 1 系統)
+- 左右振り分けは新規プラグイン `assignMarginaliaSides` (`src/lib/markdown/plugins/marginalia-side.ts`) が document order で `data-side="left"/"right"` を交互に付与。`applyCallout` → `applyToc` → `assignMarginaliaSides` → `applyFootnote` の順
+- クライアント側の位置計算 (`Marginalia.tsx` の `ResizeObserver` / `MutationObserver` / `getBoundingClientRect` / `computeMarginaliaPlacements`) は不要となり全削除
+
+### 削除されたファイル
+
+- `src/components/content/Marginalia.tsx`
+- `src/components/content/MarginaliaItem.tsx`
+- `src/lib/marginalia/index.ts`
+- `src/lib/marginalia/placements.ts`
+- `tests/components/Marginalia.test.tsx`
+- `tests/lib/marginalia/placements.test.ts`
+
+### 主要ファイル
+
+- `src/lib/markdown/plugins/marginalia-side.ts` — 新規。`unist-util-visit` で blockquote (data-callout 付き) と footnoteReference を走査、`hProperties["data-side"]` を交互設定
+- `src/lib/markdown/plugins/footnote.ts` — 定義抽出後に `footnoteReference` 直後へ `<span class="footnote-aside" id="user-content-fn-aside-…" data-side="…" role="note">…</span>` を `type: "html"` raw node として挿入
+- `src/lib/markdown/pipeline.ts` — `assignMarginaliaSides` を `applyToc` の直後に呼ぶ
+- `src/styles/content.css` — `[data-callout]` と `.footnote-aside` を `float: right; clear: right; width: 11rem; margin-inline-end: -12.5rem` で右ガターへ。`@media (min-width: 1280px)` で `[data-side="left"]` のみ `float: left` + `margin-inline-start: -12.5rem` に切替
+- `src/components/layout/DetailLayout.tsx` — `leftMargin` / `rightMargin` props を削除。grid `12rem / 1fr / 12rem` は **物理的なガター予約スペース**として維持 (float の落とし先)
+- `src/components/layout/DetailShell.tsx` — Marginalia 呼び出し削除、`callouts` prop 削除
+
+### 設計判断メモ
+
+1. **二重出力は Callout で 0、Footnote で 1 へ削減** — Footnote だけ残ったのは、狭いビューで「末尾にまとめる」spec を維持するため。同じ内容 (footnote 定義 HTML) を `.footnote-aside` (CSS float、広いビュー用) と `FootnoteSection` (末尾セクション、狭いビュー用) の両方に出している。CSS の media query で必ず片方だけが visible
+2. **side 割り当ては document order ベース** — Phase 6 の "footnotes 先頭 → callouts 後尾" 順を改め、AST を上から下に visit した順で偶奇判定。視覚上のばらつき方は同等で、build-time の単一カウンタだけで実現できるためシンプル
+3. **`<span>` ベースの aside** — `<aside>` ブロック要素を `<p>` の中に入れられない (HTML 仕様) ため、Tufte CSS と同じく `<span>` でラップ。中身に `<p>` 等の block を含むのは技術的に invalid だがブラウザは寛容に扱う。CSS で `display: block; float: …` を当てるので見た目はブロック
+4. **ガター列の grid は維持** — `DetailLayout` の 12rem 列を消すと、AppShell 中央列が狭い場合に float が落ちる物理スペースが無くなる。空セルを残すことで負マージン (`-12.5rem`) が外側に届く
+5. **負マージン値の根拠** — main 列幅 max 44rem、grid gap 1.5rem、ガター 12rem、aside width 11rem。float の右端を main 右端 + 12.5rem に配置 (= ガター内側 1.5rem ぴったり)、左端は main 右端 + 1.5rem (= ガター内側端) で完全にガター内に収まり本文 wrap も起こらない
+6. **アクセシビリティ** — `.footnote-aside` には `role="note"` を付与。`id="user-content-fn-aside-…"` はガター aside、`id="user-content-fn-…"` は末尾 `FootnoteSection` で別空間。脚注参照リンクは末尾 id へ飛ぶ既存挙動を保持
+
+### Phase 9 への引き継ぎメモ
+
+- 視覚チューニング (アイコン、ライン高、ラベル色) は CSS だけで完結する。aside の中身 (`.footnote-aside p { font-size: … }` 等) を細かく調整するなら `content.css` を増やすだけ
+- 左右振り分け規則を変えるなら `src/lib/markdown/plugins/marginalia-side.ts` の `sideFor()` を差し替え。CSS は `[data-side="left"]` 分岐をそのまま使える
+- ガター幅 (12rem) を変更する場合は `DetailLayout.tsx` の grid と `content.css` の `width: 11rem` / `margin-inline-end: -12.5rem` を同期させること
+
 ## ログ更新ルール
 
 - フェーズ完了時にこのファイルを更新する (達成範囲・公開 API・主要ファイル・設計判断)

@@ -28,6 +28,7 @@ import { applyCallout } from "./plugins/callout.ts";
 import { applyEmbed } from "./plugins/embed.ts";
 import { applyFootnote } from "./plugins/footnote.ts";
 import { applyImage } from "./plugins/image.ts";
+import { assignMarginaliaSides } from "./plugins/marginalia-side.ts";
 import { rehypeSectionize } from "./plugins/sectionize.ts";
 import { applyToc, extractFirstH1 } from "./plugins/toc.ts";
 import { applyWikiLink } from "./plugins/wiki-link.ts";
@@ -96,6 +97,8 @@ export async function renderContentDrafts<F extends BaseFrontmatter>(
     });
 
     applyToc(tree, { entries: toc });
+
+    assignMarginaliaSides(tree);
 
     await applyFootnote(tree, {
       footnotes,

@@ -66,7 +66,6 @@ function BookDetail() {
       html={book.html}
       header={header}
       footnotes={book.footnotes}
-      callouts={book.callouts}
     />
   );
 }

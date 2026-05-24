@@ -133,19 +133,19 @@ font-family の実値は `src/styles/font-vars.css` の `--font-{sans|mono|serif
 
 #### 配置ロジック
 
-- 脚注は本文中の参照箇所と同じ高さに配置
-- Callout は本文中で記述された位置と同じ高さに配置
-- 同じ高さに複数の Marginalia がある場合は縦に並べる
+- Marginalia は Tufte CSS 風の純 CSS アプローチで実装する。本文 HTML 中に書かれた位置にそのまま `blockquote[data-callout]` / `<span class="footnote-aside">` を出力し、`float` と負マージンで隣接ガター列に飛ばす
+- 縦位置は source 位置 (= 参照箇所の行頭) から自然に流れる。同じガターに連続する Marginalia は `clear` によって自動で縦に積み重なる
+- 左右振り分けは build 時にマークダウンパイプライン (`assignMarginaliaSides`) が document order で交互に `data-side="left"` / `data-side="right"` を付与する。0 番目を右、1 番目を左、以後交互
 
 #### レスポンシブ
 
 | ビューポート        | 脚注                                     | Callout                        |
 | ------------------- | ---------------------------------------- | ------------------------------ |
-| 広い (デスクトップ) | 左右余白                                 | 左右余白                       |
-| 中 (タブレット)     | 右余白のみ                               | 右余白のみ                     |
+| 広い (デスクトップ) | 左右余白に float (data-side で振り分け)  | 左右余白に float               |
+| 中 (タブレット)     | 右余白に float (左 side も右へまとめる)  | 右余白に float                 |
 | 狭い (モバイル)     | ページ末尾に脚注セクションとしてまとめる | 該当箇所の直下にインライン展開 |
 
-ブレークポイントは `BP_DESKTOP` (1024px) / `BP_DESKTOP_WIDE` (1280px) の flat string const として layout ごとのファイルで定義。広いビューでは `pickSide(index)` の偶奇判定で左右にジグザグ配置する (Phase 8 で現状ロジックを維持する判断)。
+ブレークポイントは `BP_DESKTOP` (1024px) / `BP_DESKTOP_WIDE` (1280px) の flat string const として layout ごとのファイルで定義。狭いビューでは `.footnote-aside` を `display: none` し、末尾の `FootnoteSection` だけが残る (Callout はそのままインライン blockquote として表示)。広い側では `[data-footnote-section]` を `display: none` する。
 
 ## 右サイドバー (詳細ページのみ)
 

@@ -154,9 +154,11 @@ npm run fmt
 
 ### レスポンシブと Marginalia
 
-- デスクトップ広: 左右両方に Marginalia
-- デスクトップ中: 右側のみ
-- モバイル: 脚注は末尾にまとめ、Callout はインライン展開
+- 表示位置切替は純 CSS で行う (Tufte CSS 風の `float` + 負マージン)
+- デスクトップ広 (≥1280px): 左右両方のガターに float (build 時の `data-side` で振り分け)
+- デスクトップ中 (1024-1279px): 右側のみに float (左 side のものも右へまとめて落ちる)
+- モバイル (≤1023px): 脚注は本文末尾の `FootnoteSection` にまとめ、Callout はインライン展開
+- ガター列のスペース確保のため `DetailLayout` は 3 段階 grid (`12rem / 1fr / 12rem`) を維持する
 
 ### アクセシビリティ
 

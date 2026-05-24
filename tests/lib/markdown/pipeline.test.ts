@@ -57,13 +57,15 @@ describe("renderNotes (integration)", () => {
     expect(cs?.html).not.toContain("このメモは公開されない");
   }, 30_000);
 
-  it("footnotes が抽出され、本文末尾の脚注セクションは無くなる", async () => {
+  it("footnotes が抽出され、参照位置にインライン aside が挿入される", async () => {
     const items = await collectNotes(makeConfig("vault-markdown"));
     const rendered = await renderNotes(items, makeConfig("vault-markdown"));
 
     const fs = rendered.find((r) => r.slug === "footnotes");
     expect(fs?.footnotes.length).toBe(2);
-    expect(fs?.html).not.toContain("ひとつめの脚注");
+    expect(fs?.html).toContain('class="footnote-aside"');
+    expect(fs?.html).toContain("ひとつめの脚注");
+    expect(fs?.html).toMatch(/data-side="(left|right)"/u);
   }, 30_000);
 
   it("toc は H2/H3 のみ", async () => {
