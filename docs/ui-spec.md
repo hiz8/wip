@@ -106,11 +106,11 @@ Markdown を変換した HTML を表示する。
 
 本文 (`[data-content-body]`) では editorial を意識して 3 系統を使い分ける。UI chrome (IconNav / Tree / Card / 一覧 heading 等) は `fontSans` で統一。
 
-| 要素                           | 使用フォント token                                | 適用方法                                |
-| ------------------------------ | ------------------------------------------------- | --------------------------------------- |
-| 本文 h1–h6                     | `fontSerif` (Source Serif 4 / Hiragino Mincho)    | `content.css` の selector で適用        |
-| inline code / `<pre>` / kbd    | `fontMono` (JetBrains Mono / SFMono / Menlo 等)   | `content.css` の selector で適用        |
-| その他全て (body 既定 / UI)    | `fontSans` (Inter / Hiragino Kaku Gothic 等)      | `AppShell` の body root から継承        |
+| 要素                        | 使用フォント token                              | 適用方法                         |
+| --------------------------- | ----------------------------------------------- | -------------------------------- |
+| 本文 h1–h6                  | `fontSerif` (Source Serif 4 / Hiragino Mincho)  | `content.css` の selector で適用 |
+| inline code / `<pre>` / kbd | `fontMono` (JetBrains Mono / SFMono / Menlo 等) | `content.css` の selector で適用 |
+| その他全て (body 既定 / UI) | `fontSans` (Inter / Hiragino Kaku Gothic 等)    | `AppShell` の body root から継承 |
 
 font-family の実値は `src/styles/font-vars.css` の `--font-{sans|mono|serif}` を single source of truth とし、`tokens.stylex.ts` も同じ CSS variable を参照する。
 
