@@ -14,8 +14,6 @@ const styles = stylex.create({
     display: "flex",
     flexDirection: "column",
     gap: space.s5,
-    position: "sticky",
-    top: space.s5,
   },
 });
 

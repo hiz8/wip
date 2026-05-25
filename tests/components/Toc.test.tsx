@@ -80,7 +80,7 @@ function appendSections(entries: readonly TocEntry[]): Map<string, HTMLElement> 
 const NO_ENTRIES: readonly TocEntry[] = [];
 
 function activeLinks(): Set<string> {
-  const nav = screen.getByRole("navigation", { name: /table of contents/iu });
+  const nav = screen.getByRole("navigation", { name: "目次" });
   const active = new Set<string>();
   for (const a of nav.querySelectorAll<HTMLAnchorElement>("a")) {
     if (a.getAttribute("aria-current") === "location") {
