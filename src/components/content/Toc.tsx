@@ -8,14 +8,15 @@ interface TocProps {
   entries: readonly TocEntry[];
 }
 
-const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
-
 const styles = stylex.create({
   nav: {
     position: "sticky",
     top: space.s5,
     maxHeight: `calc(100vh - ${space.s7})`,
     overflowY: "auto",
+    // reset.css sets `scroll-behavior: smooth` on <html>, but TOC self-scroll
+    // happens inside <nav>, so the property is also needed here.
+    scrollBehavior: "smooth",
     fontSize: typography.fontSizeSm,
     color: colors.textSecondary,
     borderInlineStartWidth: "1px",
@@ -36,7 +37,6 @@ const styles = stylex.create({
     WebkitLineClamp: 2,
     overflow: "hidden",
     boxSizing: "border-box",
-    minHeight: "2.75rem",
     paddingBlock: space.s1,
     paddingInline: space.s2,
     marginInlineStart: `calc((${space.s3} + 2px) * -1)`,
@@ -45,7 +45,6 @@ const styles = stylex.create({
     borderInlineStartColor: "transparent",
     color: colors.textSecondary,
     textDecoration: { default: "none", ":hover": "underline" },
-    lineHeight: typography.lineHeightTight,
   },
   linkH2: {
     fontSize: "0.8125rem",
@@ -63,31 +62,44 @@ const styles = stylex.create({
   },
 });
 
-function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined") return false;
-  if (typeof window.matchMedia !== "function") return false;
-  return window.matchMedia(REDUCED_MOTION_QUERY).matches;
-}
-
 export function Toc({ entries }: TocProps) {
   const activeIds = useTocActive(entries.map((entry) => entry.id));
   const navRef = useRef<HTMLElement>(null);
 
-  const topActiveId = useMemo(
-    () => entries.find((entry) => activeIds.has(entry.id))?.id,
-    [entries, activeIds],
-  );
+  const topActiveId = useMemo(() => {
+    // Prefer the first active h3 over the parent h2. `rehypeSectionize` nests
+    // each h3 section inside its parent h2 section, so the h2 stays in
+    // `activeIds` for the entire span of its h3 children. Picking strictly
+    // by entries order would strand sync-scroll on the h2 even after the
+    // reader has progressed deep into the h3 subsections, hiding later h3
+    // links below the nav's visible area. Falling back to the first active
+    // entry preserves the guide-mandated "topmost active" behavior for
+    // sibling h2 transitions where no h3 is involved.
+    let firstActive: string | undefined;
+    for (const entry of entries) {
+      if (!activeIds.has(entry.id)) continue;
+      if (entry.depth === 3) return entry.id;
+      if (firstActive === undefined) firstActive = entry.id;
+    }
+    return firstActive;
+  }, [entries, activeIds]);
 
   useEffect(() => {
     if (!topActiveId) return;
-    const link = navRef.current?.querySelector<HTMLAnchorElement>(
-      `[data-toc-id="${CSS.escape(topActiveId)}"]`,
-    );
-    if (!link || typeof link.scrollIntoView !== "function") return;
-    link.scrollIntoView({
-      behavior: prefersReducedMotion() ? "auto" : "smooth",
-      block: "nearest",
-    });
+    const nav = navRef.current;
+    if (!nav) return;
+    const link = nav.querySelector<HTMLAnchorElement>(`[data-toc-id="${CSS.escape(topActiveId)}"]`);
+    if (!link) return;
+    // Scroll only the nav, not the document. scrollIntoView walks every
+    // ancestor scroll container, so when the sticky nav has temporarily
+    // drifted out of view it would rewind <html> to pull the nav back in —
+    // which the reader perceives as the page being yanked to the top.
+    const linkRect = link.getBoundingClientRect();
+    const navRect = nav.getBoundingClientRect();
+    let delta = 0;
+    if (linkRect.top < navRect.top) delta = linkRect.top - navRect.top;
+    else if (linkRect.bottom > navRect.bottom) delta = linkRect.bottom - navRect.bottom;
+    if (delta !== 0 && typeof nav.scrollBy === "function") nav.scrollBy({ top: delta });
   }, [topActiveId]);
 
   // Delegate clicks at the nav level instead of attaching per-anchor handlers.
@@ -114,10 +126,7 @@ export function Toc({ entries }: TocProps) {
       history.replaceState(null, "", `#${id}`);
       if (!heading.hasAttribute("tabindex")) heading.setAttribute("tabindex", "-1");
       heading.focus({ preventScroll: true });
-      heading.scrollIntoView({
-        behavior: prefersReducedMotion() ? "auto" : "smooth",
-        block: "start",
-      });
+      heading.scrollIntoView({ block: "start" });
     };
     nav.addEventListener("click", onClick);
     return () => nav.removeEventListener("click", onClick);
