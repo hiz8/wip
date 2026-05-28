@@ -14,8 +14,11 @@ const styles = stylex.create({
     display: "flex",
     flexDirection: "column",
     gap: space.s5,
-    position: "sticky",
-    top: space.s5,
+    // Stretch to the full <aside> height so the sticky <nav> inside <Toc> has
+    // a containing block that spans the article body. Without this, the
+    // flex column shrinks to its children's natural height and sticky drops
+    // out mid-article.
+    height: "100%",
   },
 });
 
