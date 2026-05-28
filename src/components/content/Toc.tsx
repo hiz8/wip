@@ -108,9 +108,14 @@ export function Toc({ entries }: TocProps) {
   // first render returns null (e.g., entries.length < 2) and a later render
   // mounts the <nav>: the empty-deps effect runs only after the initial
   // commit, when navRef.current is still null, and never re-runs.
+  //
+  // React 19 invokes the returned cleanup on unmount instead of re-calling
+  // the ref with null, so all setup lives in the mounted branch and the
+  // cleanup is the single place where the listener detaches and navRef is
+  // released.
   const handleNavRef = useCallback((node: HTMLElement | null) => {
-    navRef.current = node;
     if (!node) return;
+    navRef.current = node;
     const onClick = (event: MouseEvent) => {
       if (event.defaultPrevented) return;
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
