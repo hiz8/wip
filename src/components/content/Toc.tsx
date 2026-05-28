@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { TocEntry } from "@/types/content.ts";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 import { useTocActive } from "./useTocActive.ts";
@@ -103,12 +103,14 @@ export function Toc({ entries }: TocProps) {
   }, [topActiveId]);
 
   // Delegate clicks at the nav level instead of attaching per-anchor handlers.
-  // Bound imperatively because anchors handle keyboard activation natively;
-  // a JSX onClick on the container would trigger the jsx-a11y rule that
-  // expects a paired key handler.
-  useEffect(() => {
-    const nav = navRef.current;
-    if (!nav) return;
+  // Wired through a callback ref so the listener attaches exactly when the
+  // <nav> mounts. A `useEffect` with `[]` deps would miss the case where the
+  // first render returns null (e.g., entries.length < 2) and a later render
+  // mounts the <nav>: the empty-deps effect runs only after the initial
+  // commit, when navRef.current is still null, and never re-runs.
+  const handleNavRef = useCallback((node: HTMLElement | null) => {
+    navRef.current = node;
+    if (!node) return;
     const onClick = (event: MouseEvent) => {
       if (event.defaultPrevented) return;
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
@@ -117,7 +119,7 @@ export function Toc({ entries }: TocProps) {
       const target = event.target;
       if (!(target instanceof Element)) return;
       const anchor = target.closest<HTMLAnchorElement>("a[data-toc-id]");
-      if (!anchor || !nav.contains(anchor)) return;
+      if (!anchor || !node.contains(anchor)) return;
       const id = anchor.dataset["tocId"];
       if (!id) return;
       const heading = document.querySelector<HTMLElement>(`#${CSS.escape(id)}`);
@@ -128,14 +130,17 @@ export function Toc({ entries }: TocProps) {
       heading.focus({ preventScroll: true });
       heading.scrollIntoView({ block: "start" });
     };
-    nav.addEventListener("click", onClick);
-    return () => nav.removeEventListener("click", onClick);
+    node.addEventListener("click", onClick);
+    return () => {
+      node.removeEventListener("click", onClick);
+      navRef.current = null;
+    };
   }, []);
 
   if (entries.length < 2) return null;
 
   return (
-    <nav ref={navRef} {...stylex.props(styles.nav)} aria-label="目次">
+    <nav ref={handleNavRef} {...stylex.props(styles.nav)} aria-label="目次">
       <ul {...stylex.props(styles.list)}>
         {entries.map((entry) => {
           const isActive = activeIds.has(entry.id);
