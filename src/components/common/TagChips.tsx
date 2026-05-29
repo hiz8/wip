@@ -6,13 +6,14 @@ import type { ContentType } from "@/types/content.ts";
 import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
 
 interface TagChipsProps {
-  /** Content type whose namespaced tag pages the chips link to. */
+  /** chip がリンクする、名前空間付きタグページのコンテンツタイプ。 */
   type: ContentType;
   tags: readonly string[];
 }
 
-// Type-safe `to` per content type; the dynamic `$tag` segment carries the
-// `--`-escaped tag slug. Tags are namespaced per type so links never cross types.
+// コンテンツタイプごとの型安全な `to`。動的な `$tag` セグメントは `--` で
+// エスケープした tag slug を保持する。タグはタイプごとに名前空間が分離される
+// ため、リンクがタイプをまたぐことはない。
 const TAG_ROUTE = {
   notes: "/notes/tags/$tag",
   glossary: "/glossary/tags/$tag",
@@ -45,12 +46,13 @@ const styles = stylex.create({
 });
 
 /**
- * Render a list of tags as links to the per-type tag pages. Used by the content
- * cards and the detail header so the prerender crawler discovers tag routes.
+ * タグ一覧をタイプ別タグページへのリンクとして描画する。prerender クローラが
+ * タグルートを発見できるよう、コンテンツカードや詳細ヘッダーから使われる。
  */
 export function TagChips({ type, tags }: TagChipsProps) {
-  // Memoize per-tag `params` objects so they keep a stable identity (the
-  // project's react-perf lint rejects object literals created inline in JSX).
+  // タグごとの `params` オブジェクトを安定した identity に保つためメモ化する
+  // (プロジェクトの react-perf lint は JSX 内で inline 生成するオブジェクト
+  // リテラルを拒否する)。
   const links = useMemo(
     () => tags.map((tag) => ({ tag, params: { tag: encodeTagToSlug(tag) } })),
     [tags],

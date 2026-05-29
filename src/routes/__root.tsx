@@ -1,9 +1,9 @@
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
-// Global stylesheets are imported from the root route (not router.tsx) so that
-// tanstack-start's dev style collector includes them in the SSR <head>,
-// avoiding a flash of unstyled content on the dev server's initial paint.
-// (The @layer cascade order itself is locked separately by LAYER_ORDER_HTML
-// below, which is what keeps StyleX winning regardless of injection order.)
+// グローバルスタイルシートは router.tsx ではなく root route から import する。
+// こうすることで tanstack-start の dev style collector がそれらを SSR の <head>
+// に含め、dev サーバーの初回描画でスタイル未適用のちらつきが起きるのを防ぐ。
+// (@layer のカスケード順序自体は下の LAYER_ORDER_HTML で別途固定しており、
+// それが injection 順に関係なく StyleX を勝たせ続ける根拠となる。)
 import "@/styles/reset.css";
 import "@/styles/callout-vars.css";
 import "@/styles/code-vars.css";
@@ -58,25 +58,24 @@ export const Route = createRootRoute({
   component: RootDocument,
 });
 
-// In dev, @stylexjs/unplugin normally injects its virtual CSS link via Vite's
-// transformIndexHtml hook. TanStack Start's SSR pipeline renders HTML in React
-// instead of going through transformIndexHtml for link tags, so we add the
-// link manually. In production the CSS is bundled into an asset and this link
-// is unnecessary.
+// dev では @stylexjs/unplugin は通常 Vite の transformIndexHtml hook 経由で
+// virtual CSS の link を inject する。TanStack Start の SSR パイプラインは
+// link タグについて transformIndexHtml を通さず React で HTML をレンダリングする
+// ため、ここで link を手動追加する。本番では CSS が asset にバンドルされるため
+// この link は不要。
 const STYLEX_DEV_CSS_HREF = "/virtual:stylex.css";
 
-// Lock the CSS `@layer` cascade order up front, as the very first thing in
-// <head>. @layer precedence is fixed by the order names first appear, so once
-// these named layers are declared here, StyleX's later `@layer priorityN`
-// declarations are always appended after them and therefore win — regardless
-// of the order in which stylesheets are injected.
+// CSS の `@layer` カスケード順序を、<head> の最初の要素として前もって固定する。
+// @layer の優先順位は名前が最初に現れる順序で決まるため、ここで名前付きレイヤーを
+// 宣言しておけば、StyleX が後から出す `@layer priorityN` 宣言は常にそれらの後に
+// 追加され、結果として勝つ — スタイルシートの injection 順序に関係なく。
 //
-// This matters in dev: after hydration, TanStack removes its SSR style-collector
-// <link> (which carried this same declaration) and Vite re-injects the global
-// stylesheets as <style> tags *after* the StyleX virtual CSS link. Without this
-// fixed declaration the order would invert (reset/base would override StyleX),
-// which is exactly the dev-only regression this guards against. Mirrors the
-// declaration at the top of src/styles/reset.css.
+// これは dev で重要になる: hydration 後、TanStack は (同じ宣言を持っていた) SSR の
+// style-collector <link> を取り除き、Vite はグローバルスタイルシートを StyleX の
+// virtual CSS link の *後* に <style> タグとして再 inject する。この固定宣言が
+// なければ順序が反転し (reset/base が StyleX を上書きしてしまう)、これはまさに
+// この宣言が防いでいる dev 限定のリグレッションである。src/styles/reset.css
+// 冒頭の宣言をミラーしている。
 const LAYER_ORDER_HTML = { __html: "@layer reset, base, components, utilities;" };
 
 function RootDocument() {

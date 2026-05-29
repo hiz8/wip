@@ -7,22 +7,22 @@ interface UseTocActiveOptions {
 const DEFAULT_ROOT_MARGIN = "0px 0px 0px 0px";
 const EMPTY_SET: ReadonlySet<string> = new Set();
 
-// Track which heading ids are currently "active" based on viewport
-// intersection. Every TOC anchor whose associated section is visible gets a
-// truthy entry in the returned Set, so multiple anchors can be highlighted
-// simultaneously while the reader scrolls — mirroring MDN's TOC behavior.
+// viewport との交差に基づき、どの heading id が現在「active」かを追跡する。
+// 関連する section が可視である TOC anchor は返り値の Set に truthy な entry を
+// 持つため、読者がスクロールする間に複数の anchor を同時にハイライトできる —
+// MDN の TOC 挙動をミラーしている。
 //
-// Each TOC id is mapped to one or more `<section data-heading-id="…">`
-// elements (produced by `rehypeSectionize`). Sections without a matching TOC
-// id are absorbed by the preceding known TOC id (reverse-scan), so any extra
-// content stays attached to its nearest heading.
+// 各 TOC id は (`rehypeSectionize` が生成する) 1 つ以上の
+// `<section data-heading-id="…">` 要素にマップされる。一致する TOC id を持たない
+// section は直前の既知 TOC id に吸収される (reverse-scan) ため、余分なコンテンツも
+// 最も近い見出しに紐づいたままになる。
 export function useTocActive(
   headingIds: readonly string[],
   options: UseTocActiveOptions = {},
 ): ReadonlySet<string> {
   const [activeIds, setActiveIds] = useState<ReadonlySet<string>>(EMPTY_SET);
-  // Join into a single key so callers passing a freshly-mapped array each
-  // render do not retrigger the effect when ids are unchanged.
+  // 単一のキーに join することで、render ごとに新しく map した配列を渡す
+  // 呼び出し元でも、ids が不変なら effect を再トリガーしない。
   const idsKey = headingIds.join("\n");
   const rootMargin = options.rootMargin ?? DEFAULT_ROOT_MARGIN;
 
@@ -42,7 +42,7 @@ export function useTocActive(
       return;
     }
 
-    // Reverse-scan to absorb non-TOC sections into the preceding known id.
+    // reverse-scan で、TOC にない section を直前の既知 id に吸収する。
     const sectionToTocId = new Map<HTMLElement, string>();
     const groupByTocId = new Map<string, HTMLElement[]>();
     let currentTocId: string | null = null;
@@ -75,8 +75,8 @@ export function useTocActive(
           const tocId = sectionToTocId.get(target);
           if (!tocId) continue;
 
-          // Filter out the initial spurious "not intersecting" callback that
-          // fires for every observed element on the first IO tick.
+          // 最初の IO tick で監視対象の全要素に対して発火する、初回の偽の
+          // 「not intersecting」コールバックをフィルタする。
           if (!everVisible.has(target)) {
             if (entry.isIntersecting) everVisible.add(target);
             else continue;

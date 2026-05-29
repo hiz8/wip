@@ -1,6 +1,6 @@
-// Hand-maintained mirror of the site fields in `site.config.ts`.
-// Importing the dynamic config pulls in `node:fs` etc., so client-side code
-// reads these primitives instead. A unit test guards against drift.
+// `site.config.ts` の site フィールドを手動でミラーしたもの。
+// 動的な config を import すると `node:fs` などを巻き込むため、クライアント側の
+// コードは代わりにこれらのプリミティブを読む。ずれはユニットテストで防いでいる。
 export const SITE_NAME = "Digital Garden";
 export const SITE_DESCRIPTION = "個人ブランディング目的の Digital Garden 型サイト";
 export const SITE_URL = "https://example.com";

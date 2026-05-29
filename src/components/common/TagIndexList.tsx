@@ -7,7 +7,7 @@ import type { ContentType } from "@/types/content.ts";
 import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
 
 interface TagIndexListProps {
-  /** Content type whose namespaced tag pages the links point to. */
+  /** リンクが指す、名前空間付きタグページのコンテンツタイプ。 */
   type: ContentType;
   tags: readonly TagCount[];
 }
@@ -49,9 +49,10 @@ const styles = stylex.create({
   },
 });
 
-/** List of tags with usage counts, each linking to its per-type tag page. */
+/** 使用回数付きのタグ一覧。各タグはタイプ別タグページへリンクする。 */
 export function TagIndexList({ type, tags }: TagIndexListProps) {
-  // Memoize per-tag `params` objects for stable identity (react-perf lint).
+  // タグごとの `params` オブジェクトを安定した identity に保つためメモ化する
+  // (react-perf lint)。
   const links = useMemo(
     () => tags.map(({ tag, count }) => ({ tag, count, params: { tag: encodeTagToSlug(tag) } })),
     [tags],

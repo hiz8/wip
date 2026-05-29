@@ -156,13 +156,13 @@ describe("applyEmbed", () => {
 
     const html = await toHtml(tree);
 
-    // Footnote reference falls back to a text marker so readers see the
-    // shape but the host's footnote numbering is not polluted.
+    // 脚注参照はテキストマーカーにフォールバックするため、読者は形を見られるが、
+    // ホストの脚注の番号付けは汚染されない。
     expect(html).toContain("[^a]");
     expect(html).not.toMatch(/<sup[^>]*data-footnote-ref/u);
 
-    // The definition's body must not bleed into the host as an auto-
-    // generated <section data-footnotes> nor as the bare prose.
+    // 定義の本文は、自動生成される <section data-footnotes> としても、素の文章と
+    // しても、ホストへにじみ出てはならない。
     expect(html).not.toContain("埋め込み側の脚注本文。");
     expect(html).not.toContain("data-footnotes");
   });

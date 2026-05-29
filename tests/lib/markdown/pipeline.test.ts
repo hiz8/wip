@@ -43,7 +43,7 @@ describe("renderNotes (integration)", () => {
 
     const host = rendered.find((r) => r.slug === "embed-host");
     expect(host?.html).toContain("これは埋め込まれる側");
-    // grandchild embed becomes a link
+    // 孫の embed はリンクになる
     expect(host?.html).toContain('href="/notes/embed-grandchild"');
   }, 30_000);
 

@@ -14,10 +14,9 @@ const styles = stylex.create({
     display: "flex",
     flexDirection: "column",
     gap: space.s5,
-    // Stretch to the full <aside> height so the sticky <nav> inside <Toc> has
-    // a containing block that spans the article body. Without this, the
-    // flex column shrinks to its children's natural height and sticky drops
-    // out mid-article.
+    // <aside> の高さいっぱいに広げることで、<Toc> 内の sticky な <nav> が記事
+    // 本文にわたる containing block を持つようにする。これがないと flex 列は
+    // 子要素の自然な高さに縮み、記事の途中で sticky が外れてしまう。
     height: "100%",
   },
 });

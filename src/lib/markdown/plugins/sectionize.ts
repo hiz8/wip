@@ -1,14 +1,14 @@
 import type { Element, ElementContent, Root, RootContent } from "hast";
 
-// Wrap each h2 with <section data-heading-id="…"> and, inside each h2 section,
-// wrap each h3 with a nested <section data-heading-id="…">. The id is copied
-// from the heading's own `id` property so the TOC anchor can match the section
-// via `[data-heading-id]`. The heading element itself keeps its own `id` so
-// existing `#hash` anchors continue to work.
+// 各 h2 を <section data-heading-id="…"> で包み、各 h2 section の内側では各 h3 を
+// ネストした <section data-heading-id="…"> で包む。id は見出し自身の `id`
+// プロパティからコピーされるため、TOC anchor は `[data-heading-id]` 経由で
+// section に一致できる。見出し要素自体は自前の `id` を保持するため、既存の
+// `#hash` anchor も引き続き機能する。
 export function rehypeSectionize() {
   return (tree: Root): void => {
-    // remarkRehype output never contains <doctype>, so it is safe to treat
-    // tree.children as ElementContent[] for sectionizing.
+    // remarkRehype の出力に <doctype> が含まれることはないため、sectionize の
+    // 用途では tree.children を ElementContent[] として扱って安全。
     tree.children = sectionizeAtLevel(tree.children as ElementContent[], "h2") as RootContent[];
   };
 }

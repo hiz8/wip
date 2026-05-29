@@ -49,7 +49,7 @@ describe("buildSitemapEntries", () => {
       SITE,
     );
     const locs = entries.map((e) => e.loc);
-    // ancestor synthesized + `/` escaped to `--`
+    // 祖先が合成され、`/` が `--` にエスケープされる
     expect(locs).toContain("https://example.com/notes/tags/frontend");
     expect(locs).toContain("https://example.com/notes/tags/frontend--react");
   });

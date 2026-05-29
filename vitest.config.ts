@@ -32,7 +32,7 @@ function resolveStylexImport(importPath: string, sourceFilePath: string): string
 
 export default defineConfig({
   plugins: [
-    // oxlint-disable-next-line import/no-named-as-default-member -- types only ship via default
+    // oxlint-disable-next-line import/no-named-as-default-member -- 型情報は default にしか含まれていないため
     stylex.vite({
       useCSSLayers: true,
       unstable_moduleResolution: {

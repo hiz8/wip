@@ -7,8 +7,8 @@ import type {
   NotesFrontmatter,
 } from "@/types/content.ts";
 
-// Cross-type title extraction from frontmatter only. Used by embed Source labels
-// and any place that needs a stable display name without parsing the markdown.
+// frontmatter のみからの cross-type なタイトル抽出。embed の Source ラベルや、
+// markdown をパースせず安定した表示名が必要な箇所で使われる。
 const TITLE_FIELD: Record<ContentType, (fm: BaseFrontmatter) => string | undefined> = {
   notes: (fm) => (fm as NotesFrontmatter).title,
   glossary: (fm) => (fm as GlossaryFrontmatter).term,

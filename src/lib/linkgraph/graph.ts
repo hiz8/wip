@@ -17,7 +17,7 @@ export type RenderedItemDraft<F extends BaseFrontmatter = BaseFrontmatter> = Omi
   "incomingLinks"
 >;
 
-// Backwards-compatible alias used by existing tests and consumers.
+// 既存のテストや利用側で使われる後方互換エイリアス。
 export type RenderedNoteDraft = RenderedItemDraft<NotesFrontmatter>;
 
 export function buildBacklinks(
@@ -69,8 +69,7 @@ export function attachBacklinks<F extends BaseFrontmatter>(
   });
 }
 
-// Backwards-compatible specialization to support existing call sites that
-// expect the Notes-specific types.
+// Notes 固有の型を期待する既存の呼び出し箇所を支えるための後方互換な特殊化。
 export function attachBacklinksToNotes(
   drafts: readonly RenderedNoteDraft[],
   backlinks: Map<string, BacklinkRef[]>,

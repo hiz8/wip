@@ -65,8 +65,9 @@ export function DetailShell({
   footnotes,
   callouts,
 }: DetailShellProps) {
-  // useMemo wrappers below keep JSX/object prop identities stable for the
-  // project's react-perf lint rules (jsx-no-jsx-as-prop, jsx-no-new-object-as-prop).
+  // 下の useMemo ラッパーは、プロジェクトの react-perf lint ルール
+  // (jsx-no-jsx-as-prop, jsx-no-new-object-as-prop) を満たすため、JSX/オブジェクト
+  // の prop identity を安定させる。
   const treeSidebar = useMemo(
     () => <TreeSidebar tree={tree} activeSlug={activeSlug} treeKind={treeKind} />,
     [tree, activeSlug, treeKind],

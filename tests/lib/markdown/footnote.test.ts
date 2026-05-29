@@ -44,16 +44,16 @@ describe("applyFootnote", () => {
     expect(ids).toContain("longer");
     expect(footnotes[0]?.html).toContain("一つめ");
 
-    // The aside is now a block-level <aside> sibling of the host paragraph;
-    // ordinal ids guarantee uniqueness regardless of identifier shape.
+    // aside は今やホスト段落の block レベルの <aside> 兄弟である。序数 id が
+    // identifier の形に関係なく一意性を保証する。
     expect(html).toContain('<aside class="footnote-aside"');
     expect(html).toContain('id="user-content-fn-aside-1"');
     expect(html).toContain('id="user-content-fn-aside-2"');
     expect(html).toContain("一つめ。");
     expect(html).toContain("二つめ。");
 
-    // The aside is a sibling of the paragraph, not nested inside it: there
-    // must be no <aside> opening tag inside any <p>...</p>.
+    // aside は段落の内側にネストするのではなく兄弟である: どの <p>...</p> の
+    // 内側にも <aside> の開始タグがあってはならない。
     const paragraphMatches = html.matchAll(/<p>([\s\S]*?)<\/p>/gu);
     for (const m of paragraphMatches) {
       expect(m[1]).not.toContain("<aside");
@@ -72,7 +72,7 @@ describe("applyFootnote", () => {
     expect(html).toContain('<aside class="footnote-aside"');
     expect(html).toContain("一段落目");
     expect(html).toContain("二段落目");
-    // Both paragraphs survive inside the aside.
+    // 両方の段落が aside 内に残る。
     const asideMatch = /<aside class="footnote-aside"[\s\S]*?<\/aside>/u.exec(html);
     expect(asideMatch).not.toBeNull();
     const paragraphCount = (asideMatch?.[0].match(/<p>/gu) ?? []).length;
@@ -88,8 +88,8 @@ describe("applyFootnote", () => {
 
     expect(html).toContain('id="user-content-fn-aside-1"');
     expect(html).toContain('id="user-content-fn-aside-2"');
-    // The same body html is repeated because both references resolve to one
-    // definition, but the ordinal ids are distinct so the DOM is valid.
+    // 両方の参照が 1 つの定義に解決されるため同じ本文 html が繰り返されるが、
+    // 序数 id は別々なので DOM は妥当である。
     const asideOpens = html.match(/<aside class="footnote-aside"/gu) ?? [];
     expect(asideOpens.length).toBe(2);
   });

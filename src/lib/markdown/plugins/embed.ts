@@ -139,12 +139,11 @@ function demoteEmbedsToLinks(tree: Root): void {
   });
 }
 
-// Strip footnote definitions and references from an embedded subtree. The
-// host page owns the footnote numbering and the trailing FootnoteSection;
-// leaving embedded definitions in place would (a) let mdast-util-to-hast
-// auto-generate a duplicate <section data-footnotes> in the rendered HTML
-// and (b) make embedded `<sup>` links jump to a host footnote that may not
-// exist or belong to a different definition.
+// embed されたサブツリーから脚注の定義と参照を取り除く。脚注の番号付けと末尾の
+// FootnoteSection はホストページが所有しており、embed された定義をそのまま残すと
+// (a) mdast-util-to-hast がレンダリング後の HTML に重複した
+// <section data-footnotes> を自動生成し、(b) embed された `<sup>` リンクが、
+// 存在しないか別の定義に属するホストの脚注へジャンプしてしまう。
 function sanitizeEmbeddedFootnotes(tree: Root): void {
   tree.children = tree.children.filter((node) => node.type !== "footnoteDefinition");
 

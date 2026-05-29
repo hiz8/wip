@@ -43,9 +43,9 @@ describe("assignMarginaliaSides", () => {
       ].join("\n"),
     );
 
-    // Mark the two blockquotes as callouts (mimics applyCallout's
-    // hProperties annotation, which runs before assignMarginaliaSides in
-    // the real pipeline).
+    // 2 つの blockquote を callout として印付ける (実際のパイプラインで
+    // assignMarginaliaSides の前に走る applyCallout の hProperties 注釈を
+    // 模倣する)。
     for (const child of tree.children) {
       if (child.type === "blockquote") markCallout(child as Blockquote);
     }
@@ -56,7 +56,7 @@ describe("assignMarginaliaSides", () => {
     expect(getSide(blockquotes[0]!)).toBe("right");
     expect(getSide(blockquotes[1]!)).toBe("right");
 
-    // Find the two top-level footnote references inside paragraphs.
+    // 段落内のトップレベルの脚注参照を 2 つ探す。
     const refs: FootnoteReference[] = [];
     for (const c of tree.children) {
       if (c.type !== "paragraph") continue;
@@ -85,8 +85,8 @@ describe("assignMarginaliaSides", () => {
     const callout = tree.children.find((c): c is Blockquote => c.type === "blockquote");
     expect(getSide(callout!)).toBe("right");
 
-    // The reference nested inside the callout should NOT get a side
-    // because the visit returns SKIP at the blockquote level.
+    // visit が blockquote レベルで SKIP を返すため、callout の内側にネストした
+    // 参照は side を付与されては「ならない」。
     let nestedRef: FootnoteReference | undefined;
     for (const c of callout!.children) {
       if (c.type !== "paragraph") continue;
@@ -97,7 +97,7 @@ describe("assignMarginaliaSides", () => {
     expect(nestedRef).toBeDefined();
     expect(getSide(nestedRef!)).toBeUndefined();
 
-    // The top-level footnote ref takes the next slot (index 1 → left).
+    // トップレベルの脚注参照が次のスロットを取る (index 1 → left)。
     let topRef: FootnoteReference | undefined;
     for (const c of tree.children) {
       if (c.type !== "paragraph") continue;
@@ -112,13 +112,13 @@ describe("assignMarginaliaSides", () => {
   it("data-callout を持たない blockquote は side を付けず、内部にも降りない", () => {
     const tree = parse(["> 通常の引用[^1]内の参照", "", "[^1]: A"].join("\n"));
 
-    // No annotation: the blockquote stays plain.
+    // 注釈なし: blockquote は素のまま。
     assignMarginaliaSides(tree);
 
     const bq = tree.children.find((c): c is Blockquote => c.type === "blockquote");
     expect(getSide(bq!)).toBeUndefined();
 
-    // The nested ref must not receive a side either.
+    // ネストした参照も side を受け取ってはならない。
     let nested: FootnoteReference | undefined;
     for (const c of bq!.children) {
       if (c.type !== "paragraph") continue;

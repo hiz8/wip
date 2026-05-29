@@ -7,29 +7,30 @@ interface DetailLayoutProps {
   hasMarginalia: boolean;
 }
 
-// See AppShell.tsx for why breakpoints are flat string consts in the same
-// file (defineConsts cross-file refs bypass `enableMediaQueryOrder`).
+// ブレイクポイントを同一ファイル内のフラットな文字列 const にしている理由は
+// AppShell.tsx を参照 (defineConsts のファイルまたぎ参照は
+// `enableMediaQueryOrder` をバイパスする)。
 const BP_DESKTOP = "@media (min-width: 1024px)";
 const BP_DESKTOP_WIDE = "@media (min-width: 1280px)";
 
-// Center the three-column track so that the float-target gutters stay aligned
-// with the main column on viewports wider than the track itself.
+// 3 段のトラックを中央寄せし、トラック自体より広い viewport でも float の
+// 受け皿となるガターが main 列と揃ったままになるようにする。
 const styles = stylex.create({
   wrapper: {
     display: "grid",
     justifyContent: "center",
     gap: space.s5,
   },
-  // Single-column layout for pages with no marginalia: just a centered reading
-  // column. No reserved gutter cells means narrow viewports keep their width
-  // and wide viewports collapse the unused space.
+  // marginalia がないページ向けの 1 列レイアウト: 中央寄せした読み用の列だけ。
+  // ガターセルを確保しないため、狭い viewport は幅を保ち、広い viewport は
+  // 使われない余白を畳む。
   wrapperSingle: {
     gridTemplateColumns: "minmax(0, 44rem)",
     gridTemplateAreas: '"main"',
   },
-  // With marginalia: reserve a 12rem gutter beside the fixed 44rem main column
-  // so negative-margin floats land predictably. Right gutter at >=1024px,
-  // both gutters at >=1280px.
+  // marginalia がある場合: 固定 44rem の main 列の脇に 12rem のガターを確保し、
+  // 負マージンの float が予測通りに着地するようにする。>=1024px で右ガター、
+  // >=1280px で左右両方のガター。
   wrapperWithMarginalia: {
     gridTemplateColumns: {
       default: "minmax(0, 44rem)",
@@ -42,10 +43,10 @@ const styles = stylex.create({
       [BP_DESKTOP_WIDE]: '"left-margin main right-margin"',
     },
   },
-  // Reserved gutter cells. Marginalia content is no longer mounted here:
-  // callouts and footnote asides live inside the main column's HTML and use
-  // negative-margin floats to escape into these cells. The empty divs exist
-  // so the grid still allocates physical space for the floats to land in.
+  // 確保用のガターセル。marginalia コンテンツはもうここには mount されない:
+  // callout と footnote の aside は main 列の HTML 内に存在し、負マージンの
+  // float でこれらのセルへ逃げ出す。空の div は、float が着地する物理的な
+  // スペースを grid が依然として割り当てるために存在する。
   leftMargin: {
     gridRowStart: "left-margin",
     gridRowEnd: "left-margin",

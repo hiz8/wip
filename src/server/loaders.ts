@@ -94,9 +94,9 @@ export interface BookDetail {
   callouts: CalloutEntry[];
 }
 
-// Plain projection helpers shared by the index loaders and the tag loaders.
-// (createServerFn handlers must be inline, so the tag loaders cannot call the
-// index server fns directly; they call these primitives instead.)
+// index loaders と tag loaders で共有する素の投影ヘルパ。
+// (createServerFn の handler は inline でなければならず、tag loaders は index の
+// server fn を直接呼べないため、代わりにこれらのプリミティブを呼ぶ。)
 async function projectNotesIndex(): Promise<NoteListItem[]> {
   const notes = await getAllNotes();
   return notes.map((note) => ({
@@ -243,8 +243,8 @@ export const getBooksTreeData = createServerFn({ method: "GET" }).handler(
   },
 );
 
-// Tags are namespaced per content type, so each type aggregates and filters its
-// own items only; a tag slug carries `--` for the hierarchy separator (decoded here).
+// タグはコンテンツタイプごとに名前空間が分離されており、各タイプは自身の item
+// だけを集計・フィルタする。tag slug は階層区切りを `--` で保持する (ここで decode)。
 const tagSlugSchema = z.object({ tag: z.string().min(1) });
 
 export const getNotesTagsData = createServerFn({ method: "GET" }).handler(

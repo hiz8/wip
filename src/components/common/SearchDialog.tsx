@@ -59,8 +59,8 @@ let pagefindModulePromise: Promise<PagefindUIModule> | null = null;
 
 function loadPagefindModule(): Promise<PagefindUIModule> {
   if (pagefindModulePromise === null) {
-    // The bundle is served from /pagefind by the post-build script; Vite must
-    // not try to resolve it at build time, hence the runtime URL.
+    // バンドルは post-build スクリプトによって /pagefind から配信される。Vite が
+    // ビルド時に解決しようとしてはならないため、ランタイムの URL を使う。
     const dynamicImport = import(PAGEFIND_BUNDLE_PATH);
     pagefindModulePromise = dynamicImport as Promise<PagefindUIModule>;
   }
@@ -79,8 +79,7 @@ function injectPagefindCss(): void {
 
 async function mountPagefindUI(container: HTMLElement): Promise<void> {
   const mod = await loadPagefindModule();
-  // Pagefind UI installs itself via side effect; the instance is intentionally
-  // not retained.
+  // Pagefind UI は副作用で自身を設置する。インスタンスは意図的に保持しない。
   void new mod.PagefindUI(makePagefindUIOptions(container));
 }
 

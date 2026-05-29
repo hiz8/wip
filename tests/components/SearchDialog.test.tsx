@@ -35,7 +35,7 @@ describe("SearchDialog", () => {
   });
 
   afterEach(() => {
-    // Strip stylesheet links injected on previous renders.
+    // 以前の render で inject された stylesheet の link を取り除く。
     for (const link of document.querySelectorAll('link[href="/pagefind/pagefind-ui.css"]')) {
       link.remove();
     }

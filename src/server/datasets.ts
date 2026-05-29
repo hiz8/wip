@@ -24,7 +24,7 @@ import {
   rewriteItemHtml,
   type ImageMappingEntry,
 } from "@/lib/images/index.ts";
-// Static import so the bundler embeds the config in the SSR bundle.
+// バンドラが config を SSR バンドルに埋め込むよう、static import する。
 import siteConfigInput from "../../site.config.ts";
 import {
   FURIGANA_GROUP_ORDER,
@@ -93,10 +93,10 @@ async function build(): Promise<SiteDataset> {
     config.content.vaultRoot,
   );
 
-  // Rewrite in-content <img src> from rawPath to publicPath. This is the single
-  // source of truth for the src rewrite, so the same HTML is served in dev (via
-  // the dev images middleware) and in prod (prerendered output). Book cover URLs
-  // already use publicPath via coverBySlug, so they are not handled here.
+  // コンテンツ内の <img src> を rawPath から publicPath へ書き換える。これは src
+  // 書き換えの単一の情報源であり、dev (dev images middleware 経由) でも prod
+  // (プリレンダー出力) でも同じ HTML が配信される。書影の URL は coverBySlug
+  // 経由で既に publicPath を使うため、ここでは扱わない。
   const resolvedToPublic = buildResolvedToPublicMap(imageMapping);
   const rewriteHtml = <T extends { html: string; images: ImageRef[] }>(item: T): T => ({
     ...item,

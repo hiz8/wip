@@ -20,10 +20,10 @@ async function serveImage(
   path: string,
   getMap: () => Promise<ReadonlyMap<string, string>>,
 ): Promise<void> {
-  // Open the file once and read its size from the same handle, so the
-  // Content-Length we send and the bytes we stream cannot disagree (no TOCTOU
-  // between stat and read). Any failure here falls through to SSR before a
-  // single header is written.
+  // ファイルを一度だけ開き、同じハンドルからサイズを読む。こうすることで送出する
+  // Content-Length とストリームするバイト列が食い違わない (stat と read の間に
+  // TOCTOU がない)。ここでの失敗はいずれも、ヘッダーが 1 つも書かれる前に SSR へ
+  // フォールスルーする。
   let handle: Awaited<ReturnType<typeof open>> | undefined;
   let size: number | undefined;
   let absolutePath: string | undefined;
@@ -36,7 +36,7 @@ async function serveImage(
       if (stats.isFile()) size = stats.size;
     }
   } catch {
-    // Dataset build failed or the file is unreadable: fall through to SSR.
+    // dataset ビルドが失敗したか、ファイルが読めない: SSR へフォールスルーする。
     size = undefined;
   }
 
@@ -57,9 +57,9 @@ async function serveImage(
     return;
   }
 
-  // createReadStream from the open handle closes the fd automatically (autoClose
-  // defaults to true). Headers are already settled, so a late read error can
-  // only end the (now partial) response.
+  // 開いたハンドルからの createReadStream は fd を自動でクローズする (autoClose は
+  // 既定で true)。ヘッダーは既に確定しているため、遅れて発生する read エラーは
+  // (もはや部分的な) レスポンスを終了させることしかできない。
   const stream = handle.createReadStream();
   stream.on("error", () => {
     res.end();
@@ -68,24 +68,24 @@ async function serveImage(
 }
 
 /**
- * Dev-only Vite plugin that serves Vault images under `/images/...`.
+ * Vault の画像を `/images/...` の下で配信する dev 専用の Vite プラグイン。
  *
- * In production the prerendered HTML references `/images/<publicPath>` and
- * post-build copies the files into `dist/client/images/`. The dev server has no
- * such copy step, so this middleware maps each `/images/...` request back to its
- * source file in the Vault and streams it.
+ * 本番ではプリレンダー済みの HTML が `/images/<publicPath>` を参照し、post-build
+ * がファイルを `dist/client/images/` へコピーする。dev サーバーにはそうした
+ * コピー工程がないため、この middleware は各 `/images/...` リクエストを Vault 内の
+ * ソースファイルへマップしてストリームする。
  *
- * The mapping is an allowlist built from the site dataset's imageMapping
- * (publicPath -> resolvedAbsolutePath). Only paths present in that map are
- * served, which makes path traversal impossible by construction.
+ * このマッピングは site dataset の imageMapping
+ * (publicPath -> resolvedAbsolutePath) から構築した allowlist である。その map に
+ * 存在するパスだけが配信されるため、構造上パストラバーサルは不可能。
  */
 export function devImagesPlugin(): Plugin {
   return {
     name: "dev-vault-images",
     apply: "serve",
     configureServer(server: ViteDevServer) {
-      // Lazily load the dataset on the first /images/ request and cache the
-      // reverse map. On failure we reset so a later request can retry.
+      // 最初の /images/ リクエスト時に dataset を遅延ロードし、逆引き map を
+      // キャッシュする。失敗時はリセットし、後続のリクエストが再試行できるようにする。
       let mapPromise: Promise<ReadonlyMap<string, string>> | null = null;
       const getMap = (): Promise<ReadonlyMap<string, string>> => {
         if (mapPromise === null) {

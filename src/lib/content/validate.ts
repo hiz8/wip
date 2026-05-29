@@ -51,7 +51,7 @@ const booksFrontmatterSchema = z.object({
   cover: z.string().optional(),
 });
 
-// YAML treats `key:` (no value) as null. Treat such fields as absent so optional schemas accept them.
+// YAML は `key:` (値なし) を null として扱う。そうしたフィールドを欠損とみなし、optional スキーマが受理できるようにする。
 function stripNulls(raw: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(raw)) {
