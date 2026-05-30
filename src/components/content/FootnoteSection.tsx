@@ -39,8 +39,8 @@ const styles = stylex.create({
 });
 
 function FootnoteItem({ footnote }: { footnote: FootnoteEntry }) {
-  // Memoize the dangerouslySetInnerHTML prop object to satisfy the project's
-  // react-perf lint rule (jsx-no-new-object-as-prop).
+  // プロジェクトの react-perf lint ルール (jsx-no-new-object-as-prop) を満たすため、
+  // dangerouslySetInnerHTML の prop オブジェクトをメモ化する。
   const html = useMemo(() => ({ __html: footnote.html }), [footnote.html]);
   return (
     <li

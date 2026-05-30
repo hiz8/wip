@@ -12,14 +12,14 @@ interface AppShellProps {
   children: ReactNode;
 }
 
-// Breakpoints live as flat string consts in the same file (not as
-// `defineConsts` in a `.stylex.ts` file). Cross-file media-query consts get
-// emitted as `var(--hash)` refs under `unstable_moduleResolution.type:
-// "custom"`, which bypass `enableMediaQueryOrder` and let overlapping queries
-// collide in source order. Same-file string consts are inlined statically by
-// the StyleX babel plugin and resolved by `@stylexjs/eslint-plugin`'s
-// identifier evaluator (which does not follow `MemberExpression`, ruling out
-// the previous `as const bp = { ... }` object pattern).
+// ブレイクポイントは (`.stylex.ts` ファイルの `defineConsts` ではなく) 同一
+// ファイル内のフラットな文字列 const として置く。ファイルをまたぐ media-query
+// const は `unstable_moduleResolution.type: "custom"` の下では `var(--hash)`
+// 参照として出力され、`enableMediaQueryOrder` をバイパスして重なり合うクエリを
+// ソース順で衝突させてしまう。同一ファイルの文字列 const は StyleX babel plugin
+// によって静的に inline 化され、`@stylexjs/eslint-plugin` の identifier
+// evaluator で解決される (これは `MemberExpression` をたどらないため、以前の
+// `as const bp = { ... }` オブジェクトパターンは使えない)。
 const BP_TABLET = "@media (min-width: 768px)";
 const BP_DESKTOP = "@media (min-width: 1024px)";
 

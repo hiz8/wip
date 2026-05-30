@@ -41,9 +41,9 @@ export interface RenderContentSpec<F extends BaseFrontmatter> {
   pickTitle: (item: ContentItem<F>, tree: Root) => string;
 }
 
-// Internal: render content to drafts (no backlinks attached). Callers wire
-// backlinks across types externally so that cross-type bidirectional links
-// can be computed once over the union of all drafts.
+// Internal: コンテンツを draft へレンダリングする (backlinks は未付与)。呼び出し
+// 元がタイプをまたいで backlinks を外部で配線することで、cross-type の双方向
+// リンクを全 draft の和集合に対して一度だけ計算できる。
 export async function renderContentDrafts<F extends BaseFrontmatter>(
   spec: RenderContentSpec<F>,
 ): Promise<RenderedItemDraft<F>[]> {
@@ -128,10 +128,10 @@ export async function renderContentDrafts<F extends BaseFrontmatter>(
   return drafts;
 }
 
-// Embed lookups historically used a slug-only key. Notes-only renders kept
-// it that way; cross-type renders use `${type}/${slug}` to disambiguate.
-// We expose a slug-keyed map here to maintain backwards compatibility for
-// the existing applyEmbed signature.
+// Embed のルックアップは歴史的に slug のみのキーを使っていた。Notes 限定の
+// レンダリングはその方式のままだが、cross-type のレンダリングは曖昧さを避ける
+// ため `${type}/${slug}` を使う。既存の applyEmbed シグネチャとの後方互換を
+// 保つため、ここでは slug をキーにした map を公開する。
 function bodiesForEmbed(scoped: Map<string, Root>): Map<string, Root> {
   const flat = new Map<string, Root>();
   for (const [key, value] of scoped.entries()) {

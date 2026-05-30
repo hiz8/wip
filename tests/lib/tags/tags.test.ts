@@ -52,7 +52,7 @@ describe("aggregateTags", () => {
     const items = [{ tags: ["frontend/react"] }, { tags: ["frontend/css"] }, { tags: ["backend"] }];
     const result = aggregateTags(items);
     const byTag = new Map(result.map((r) => [r.tag, r.count]));
-    // ancestor synthesized even though never authored directly
+    // 直接書かれていなくても祖先が合成される
     expect(byTag.get("frontend")).toBe(2);
     expect(byTag.get("frontend/react")).toBe(1);
     expect(byTag.get("frontend/css")).toBe(1);

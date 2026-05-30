@@ -37,7 +37,7 @@ export function buildSitemapEntries(input: SitemapInput, siteUrl: string): Sitem
   return entries;
 }
 
-// Tag index page + one tag-detail page per aggregated tag (ancestors included).
+// タグ index ページ + 集計された各タグ (祖先を含む) ごとに 1 つのタグ詳細ページ。
 function pushTagPages(
   entries: SitemapEntry[],
   items: ReadonlyArray<SitemapItem>,

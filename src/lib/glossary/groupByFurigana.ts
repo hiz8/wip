@@ -26,7 +26,7 @@ export const FURIGANA_GROUP_ORDER: readonly FuriganaGroup[] = [
 ];
 
 const HIRAGANA_TO_GROUP: Record<string, FuriganaGroup> = {
-  // あ行 (vowels and small kana)
+  // あ行 (母音と小書きかな)
   あ: "あ行",
   い: "あ行",
   う: "あ行",
@@ -37,7 +37,7 @@ const HIRAGANA_TO_GROUP: Record<string, FuriganaGroup> = {
   ぅ: "あ行",
   ぇ: "あ行",
   ぉ: "あ行",
-  // か行 (incl. dakuten)
+  // か行 (濁点を含む)
   か: "か行",
   き: "か行",
   く: "か行",
@@ -59,7 +59,7 @@ const HIRAGANA_TO_GROUP: Record<string, FuriganaGroup> = {
   ず: "さ行",
   ぜ: "さ行",
   ぞ: "さ行",
-  // た行 (incl. small tsu and dakuten)
+  // た行 (小書きの つ と濁点を含む)
   た: "た行",
   ち: "た行",
   つ: "た行",
@@ -77,7 +77,7 @@ const HIRAGANA_TO_GROUP: Record<string, FuriganaGroup> = {
   ぬ: "な行",
   ね: "な行",
   の: "な行",
-  // は行 (incl. dakuten and handakuten)
+  // は行 (濁点と半濁点を含む)
   は: "は行",
   ひ: "は行",
   ふ: "は行",
@@ -99,7 +99,7 @@ const HIRAGANA_TO_GROUP: Record<string, FuriganaGroup> = {
   む: "ま行",
   め: "ま行",
   も: "ま行",
-  // や行 (incl. small ya/yu/yo)
+  // や行 (小書きの や/ゆ/よ を含む)
   や: "や行",
   ゆ: "や行",
   よ: "や行",
@@ -112,7 +112,7 @@ const HIRAGANA_TO_GROUP: Record<string, FuriganaGroup> = {
   る: "ら行",
   れ: "ら行",
   ろ: "ら行",
-  // わ行 (incl. small wa and n)
+  // わ行 (小書きの わ と ん を含む)
   わ: "わ行",
   を: "わ行",
   ん: "わ行",

@@ -39,7 +39,7 @@ describe("groupByFurigana", () => {
   it("カタカナはひらがな相当の行に分類する", () => {
     expect(groupByFurigana("リアクト")).toBe("ら行");
     expect(groupByFurigana("カタカナ")).toBe("か行");
-    // ヴ is out of the explicit mapping table, so it falls through.
+    // ヴ は明示的なマッピング表の対象外なので、フォールスルーする。
     expect(groupByFurigana("ヴ")).toBe("その他");
   });
 

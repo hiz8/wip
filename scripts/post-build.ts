@@ -30,18 +30,19 @@ async function main(): Promise<void> {
     );
   }
 
-  // Force a fresh dataset build under the script's own loadConfig (which
-  // honors VAULT_ROOT in the current shell environment) rather than the
-  // static `siteConfigInput` baked into the SSR bundle.
+  // SSR バンドルに焼き込まれた静的な `siteConfigInput` ではなく、スクリプト自身の
+  // loadConfig (現在のシェル環境の VAULT_ROOT を尊重する) の下でフレッシュな
+  // dataset ビルドを強制する。
   const config = await loadConfig();
   __resetSiteDatasetForTests();
   __setSiteDatasetConfigForTests(config);
 
   const dataset = await getSiteDataset();
 
-  // In-content <img src> rewriting now happens in the SSR dataset build
-  // (src/server/datasets.ts), so the prerendered HTML already references
-  // /images/<publicPath>. Here we only need to copy the source files into dist.
+  // コンテンツ内の <img src> 書き換えは今や SSR dataset ビルド
+  // (src/server/datasets.ts) で行われるため、プリレンダー済みの HTML は既に
+  // /images/<publicPath> を参照している。ここではソースファイルを dist へ
+  // コピーするだけでよい。
   await copyImages(dataset.imageMapping);
   await Promise.all([writeSitemap(dataset), writeFeed(dataset)]);
   await runPagefind();

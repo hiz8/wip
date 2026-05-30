@@ -1,16 +1,17 @@
 /**
- * Tag utilities shared by the per-type tag routes.
+ * タイプ別タグルートで共有されるタグ用ユーティリティ。
  *
- * Tags are namespaced per content type (Notes / Glossary / Books); these helpers
- * operate on a flat list of items for a single type and never cross types.
+ * タグはコンテンツタイプ (Notes / Glossary / Books) ごとに名前空間が分離される。
+ * これらのヘルパは単一タイプの item のフラットなリストに対して動作し、タイプを
+ * またぐことはない。
  */
 
-/** Anything carrying a list of tags. */
+/** タグのリストを持つ任意のもの。 */
 export interface Tagged {
   tags: readonly string[];
 }
 
-/** A tag paired with the number of items that match it (hierarchically). */
+/** タグと、それに (階層的に) 一致する item の数を組にしたもの。 */
 export interface TagCount {
   tag: string;
   count: number;
@@ -20,26 +21,26 @@ const SLUG_SEPARATOR = "--";
 const HIERARCHY_SEPARATOR = "/";
 
 /**
- * Encode a tag for use in a URL slug, escaping the hierarchy separator.
+ * 階層区切りをエスケープして、タグを URL slug 用にエンコードする。
  *
- * `frontend/react` -> `frontend--react`.
+ * `frontend/react` -> `frontend--react`。
  *
- * Known limitation: a tag whose name literally contains `--` does not round-trip.
- * Vault tags use `/` for hierarchy, so this is acceptable.
+ * 既知の制約: 名前に文字どおり `--` を含むタグは round-trip しない。Vault の
+ * タグは階層に `/` を使うため、これは許容できる。
  */
 export function encodeTagToSlug(tag: string): string {
   return tag.split(HIERARCHY_SEPARATOR).join(SLUG_SEPARATOR);
 }
 
-/** Inverse of {@link encodeTagToSlug}: `frontend--react` -> `frontend/react`. */
+/** {@link encodeTagToSlug} の逆: `frontend--react` -> `frontend/react`。 */
 export function decodeTagSlug(slug: string): string {
   return slug.split(SLUG_SEPARATOR).join(HIERARCHY_SEPARATOR);
 }
 
 /**
- * Return the tag itself plus every ancestor along the hierarchy.
+ * タグ自身に加え、階層に沿ったすべての祖先を返す。
  *
- * `a/b/c` -> `["a", "a/b", "a/b/c"]`.
+ * `a/b/c` -> `["a", "a/b", "a/b/c"]`。
  */
 export function tagAncestors(tag: string): string[] {
   const segments = tag.split(HIERARCHY_SEPARATOR);
@@ -53,19 +54,19 @@ export function tagAncestors(tag: string): string[] {
 }
 
 /**
- * Whether an item's tag matches a filter tag, including descendants.
+ * item のタグが、子孫を含めてフィルタタグに一致するかどうか。
  *
- * Filtering by `frontend` matches both `frontend` and `frontend/react`.
+ * `frontend` でフィルタすると `frontend` と `frontend/react` の両方に一致する。
  */
 export function matchesTag(itemTag: string, filterTag: string): boolean {
   return itemTag === filterTag || itemTag.startsWith(`${filterTag}${HIERARCHY_SEPARATOR}`);
 }
 
 /**
- * Aggregate the distinct tags used across items, synthesizing ancestor tags so
- * that parent-only pages (e.g. `frontend` when only `frontend/react` is authored)
- * are reachable. Counts use hierarchical matching; sorted by count desc, then by
- * tag asc (locale-aware).
+ * item 全体で使われている異なるタグを集計し、祖先タグを合成することで、親のみの
+ * ページ (例: `frontend/react` だけが書かれているときの `frontend`) に到達できる
+ * ようにする。カウントは階層的な一致を用いる。count 降順、次に tag 昇順
+ * (ロケール対応) でソートする。
  */
 export function aggregateTags(items: ReadonlyArray<Tagged>): TagCount[] {
   const candidates = new Set<string>();
@@ -92,7 +93,7 @@ export function aggregateTags(items: ReadonlyArray<Tagged>): TagCount[] {
   return counts;
 }
 
-/** Filter items that carry the given tag (or any descendant of it). */
+/** 指定したタグ (またはその任意の子孫) を持つ item をフィルタする。 */
 export function filterByTag<T extends Tagged>(items: readonly T[], tag: string): T[] {
   return items.filter((item) => item.tags.some((t) => matchesTag(t, tag)));
 }

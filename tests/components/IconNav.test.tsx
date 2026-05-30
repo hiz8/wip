@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 function MockPagefindUI() {
-  // no-op
+  // 何もしない
 }
 
 vi.mock("/pagefind/pagefind-ui.js", () => ({ PagefindUI: MockPagefindUI }));

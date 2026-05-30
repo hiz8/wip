@@ -40,14 +40,14 @@ export async function applyFootnote(tree: Root, ctx: FootnoteContext): Promise<v
     });
   }
 
-  // Collect block-level <aside> insertions next to every footnoteReference.
-  // The aside is a sibling of the paragraph that contains the reference
-  // (not nested inside it) so multi-paragraph and block-content footnote
-  // bodies render safely; placing a block element inside an inline span
-  // inside <p> would otherwise trigger HTML5 auto-close and break the float.
+  // 各 footnoteReference の隣に block レベルの <aside> 挿入を収集する。
+  // aside は参照を含む段落の (内側にネストするのではなく) 兄弟として置くため、
+  // 複数段落や block コンテンツの脚注本文も安全にレンダリングできる。<p> 内の
+  // inline span の内側に block 要素を置くと HTML5 の auto-close が発動し、
+  // float を壊してしまう。
   //
-  // CSS hides the aside on narrow viewports; the trailing FootnoteSection
-  // takes over there.
+  // CSS は狭い viewport で aside を隠し、そこでは末尾の FootnoteSection が
+  // 引き継ぐ。
   const pending: PendingAside[] = [];
   let ordinal = 0;
   visitParents(tree, "footnoteReference", (node, ancestors) => {
@@ -68,8 +68,8 @@ export async function applyFootnote(tree: Root, ctx: FootnoteContext): Promise<v
     });
   });
 
-  // Splice in reverse document order so earlier insertions never shift the
-  // indices captured for later ones.
+  // ドキュメント順の逆向きに splice することで、先に行う挿入が後続のために
+  // 捕捉したインデックスをずらさないようにする。
   for (let i = pending.length - 1; i >= 0; i--) {
     const entry = pending[i];
     if (!entry) continue;
@@ -78,9 +78,9 @@ export async function applyFootnote(tree: Root, ctx: FootnoteContext): Promise<v
   }
 }
 
-// Find the nearest paragraph ancestor of the footnoteReference and the
-// container that holds it. Returns the container parent and the paragraph's
-// index inside that container so the caller can insert a sibling after it.
+// footnoteReference の最も近い段落の祖先と、それを保持するコンテナを探す。
+// コンテナとなる親と、そのコンテナ内での段落のインデックスを返すことで、呼び出し
+// 元がその後ろに兄弟を挿入できるようにする。
 function findParagraphLocation(
   ancestors: readonly Parent[],
 ): { container: Parent; index: number } | null {

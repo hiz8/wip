@@ -52,8 +52,8 @@ const ENTRIES: readonly TocEntry[] = [
   { depth: 2, text: "Second", id: "second" },
 ];
 
-// Mirror the structure produced by rehypeSectionize: each h2 wraps a
-// <section data-heading-id>, and h3 sections nest inside their parent h2.
+// rehypeSectionize が生成する構造をミラーする: 各 h2 は
+// <section data-heading-id> を包み、h3 の section は親の h2 の内側にネストする。
 function appendSections(entries: readonly TocEntry[]): Map<string, HTMLElement> {
   const byId = new Map<string, HTMLElement>();
   let current: HTMLElement | null = null;
@@ -80,8 +80,8 @@ function appendSections(entries: readonly TocEntry[]): Map<string, HTMLElement> 
 const NO_ENTRIES: readonly TocEntry[] = [];
 const SINGLE_ENTRY: readonly TocEntry[] = [{ depth: 2, text: "Only", id: "only" }];
 
-// Stub getBoundingClientRect on a single element. Returns a restore callback
-// so individual tests can clean up without leaking spies into later tests.
+// 単一の要素で getBoundingClientRect をスタブする。restore 用のコールバックを
+// 返すため、各テストは後続のテストへ spy を漏らさずにクリーンアップできる。
 function stubRect(el: Element, rect: Partial<DOMRect>): () => void {
   const full = {
     top: 0,
@@ -178,19 +178,19 @@ describe("Toc", () => {
     expect(activeLinks().size).toBe(0);
   });
 
-  // rehypeSectionize nests h3 sections inside their parent h2 section, so
-  // the h2 stays active for the entire span of its children. topActiveId
-  // picks the first active h3 instead, falling back to the topmost active
-  // h2 when no h3 is active. The next two cases pin both branches by
-  // observing which link the sync-scroll effect targets.
+  // rehypeSectionize は h3 の section を親の h2 section の内側にネストするため、
+  // h2 はその子要素の範囲全体にわたって active のままになる。topActiveId は
+  // 代わりに最初の active な h3 を選び、active な h3 がないときは最上位の active な
+  // h2 にフォールバックする。次の 2 ケースは、sync-scroll の effect がどのリンクを
+  // 対象にするかを観察して両方の分岐を固定する。
   it("scrolls the nav to the first active h3 even when the parent h2 is also active", () => {
     const byId = appendSections(ENTRIES);
     const { container } = render(<Toc entries={ENTRIES} />);
     const nav = container.querySelector("nav")!;
     const firstLink = nav.querySelector<HTMLAnchorElement>('[data-toc-id="first"]')!;
     const nestedLink = nav.querySelector<HTMLAnchorElement>('[data-toc-id="nested"]')!;
-    // h2 link sits inside the nav viewport (delta 0 if it were picked); h3
-    // link sits below the nav so picking it produces a positive delta.
+    // h2 リンクは nav の viewport 内にある (選ばれていれば delta 0)。h3 リンクは
+    // nav の下にあるため、それを選ぶと正の delta が生じる。
     const restoreNav = stubRect(nav, { top: 0, bottom: 100 });
     const restoreFirst = stubRect(firstLink, { top: 10, bottom: 30 });
     const restoreNested = stubRect(nestedLink, { top: 200, bottom: 220 });
@@ -218,8 +218,8 @@ describe("Toc", () => {
     const nav = container.querySelector("nav")!;
     const firstLink = nav.querySelector<HTMLAnchorElement>('[data-toc-id="first"]')!;
     const secondLink = nav.querySelector<HTMLAnchorElement>('[data-toc-id="second"]')!;
-    // Distinct deltas so the assertion disambiguates: "first" → 50,
-    // "second" → 150. The test expects "first".
+    // assertion が区別できるよう delta を別々にする: "first" → 50、
+    // "second" → 150。テストは "first" を期待する。
     const restoreNav = stubRect(nav, { top: 0, bottom: 100 });
     const restoreFirst = stubRect(firstLink, { top: 100, bottom: 150 });
     const restoreSecond = stubRect(secondLink, { top: 200, bottom: 250 });
@@ -274,9 +274,9 @@ describe("Toc", () => {
     replaceState.mockRestore();
   });
 
-  // The callback ref exists so the listener attaches even when <nav> mounts
-  // on a later render — e.g., the first render returned null because
-  // entries.length < 2. A useEffect with [] deps would miss this case.
+  // コールバック ref は、<nav> が後の render で mount するとき — 例えば
+  // entries.length < 2 のため最初の render が null を返したとき — でも listener が
+  // 付くために存在する。[] deps の useEffect ではこのケースを取り逃す。
   it("attaches click delegation when the nav mounts after a later render", () => {
     const { rerender } = render(<Toc entries={SINGLE_ENTRY} />);
     expect(screen.queryByRole("navigation")).toBeNull();

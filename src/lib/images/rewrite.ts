@@ -18,9 +18,9 @@ const NAMED_ENTITIES: Record<string, string> = {
   apos: "'",
 };
 
-// Reverses the HTML escaping that the serializer applies inside the src
-// attribute (e.g. `&` -> `&amp;`). Handles the named entities a URL can
-// contain plus numeric (decimal/hex) character references.
+// シリアライザが src 属性内に適用する HTML エスケープ (例: `&` -> `&amp;`) を
+// 元に戻す。URL が含みうる名前付き実体に加え、数値 (10 進/16 進) 文字参照も
+// 扱う。
 function decodeHtmlEntities(src: string): string {
   if (!src.includes("&")) return src;
   return src.replaceAll(/&(#x[0-9a-f]+|#[0-9]+|[a-z]+);/giu, (whole, body: string) => {
@@ -44,10 +44,10 @@ export function rewriteImgSrcInHtml(
   return html.replace(
     IMG_TAG_RE,
     (whole, before: string, quote: string, src: string, after: string) => {
-      // The map is keyed by the raw (decoded) path, but the serializer escapes
-      // the src: URL chars are percent-encoded (spaces -> %20) and `&` becomes
-      // the `&amp;` entity. Try the exact src, then progressively undo each
-      // layer of escaping so a raw key like `Q&A note.png` still matches.
+      // map のキーは raw (デコード済み) のパスだが、シリアライザは src を
+      // エスケープする: URL 文字はパーセントエンコードされ (空白 -> %20)、`&` は
+      // `&amp;` 実体になる。まず src をそのまま試し、次にエスケープの各レイヤーを
+      // 順に元に戻していくことで、`Q&A note.png` のような raw キーでも一致する。
       const entityDecoded = decodeHtmlEntities(src);
       const replacement =
         rawToPublic.get(src) ??
@@ -61,13 +61,14 @@ export function rewriteImgSrcInHtml(
 }
 
 /**
- * Rewrites a rendered item's HTML so each in-content `<img src>` points at its
- * public path. Builds a per-item rawPath -> publicPath map from the item's own
- * `images` (external images are skipped) and applies it via rewriteImgSrcInHtml.
+ * レンダリング済み item の HTML を書き換え、コンテンツ内の各 `<img src>` がその
+ * public path を指すようにする。item 自身の `images` から item ごとの
+ * rawPath -> publicPath マップを構築し (外部画像はスキップ)、
+ * rewriteImgSrcInHtml 経由で適用する。
  *
- * `resolvedToPublic` is the global resolvedAbsolutePath -> publicPath mapping
- * (see buildResolvedToPublicMap). This is the single source of truth for the
- * src rewrite, shared by the SSR dataset build and post-build.
+ * `resolvedToPublic` はグローバルな resolvedAbsolutePath -> publicPath の対応
+ * (buildResolvedToPublicMap を参照)。これは src 書き換えの単一の情報源であり、
+ * SSR dataset ビルドと post-build で共有される。
  */
 export function rewriteItemHtml(
   html: string,

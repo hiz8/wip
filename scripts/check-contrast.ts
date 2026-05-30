@@ -1,10 +1,9 @@
 /*
- * Compute WCAG 2.x relative luminance and contrast ratio for the design
- * tokens shipped to production. Used during Phase 8 to verify that text,
- * links, focus rings, code blocks, and callouts meet AA in both light and
- * dark themes.
+ * 本番に出すデザイントークンについて、WCAG 2.x の相対輝度とコントラスト比を
+ * 計算する。Phase 8 で、テキスト・リンク・focus ring・コードブロック・callout が
+ * light/dark 両テーマで AA を満たすことを検証するために使う。
  *
- * Run: npx tsx scripts/check-contrast.ts
+ * 実行: npx tsx scripts/check-contrast.ts
  */
 
 interface Token {

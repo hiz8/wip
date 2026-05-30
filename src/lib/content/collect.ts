@@ -40,10 +40,10 @@ export async function collectMarkdownFiles(options: CollectOptions): Promise<str
   return matches.toSorted();
 }
 
-// Generic collection pipeline shared by Notes / Glossary / Books.
-// Enumerates markdown files, parses frontmatter, runs the type-specific
-// validator, drops non-published items, derives slugs, and verifies that
-// slugs are unique within the type.
+// Notes / Glossary / Books で共有する汎用の収集パイプライン。
+// markdown ファイルを列挙し、frontmatter をパースし、タイプ固有の validator を
+// 実行し、published でない item を除外し、slug を導出し、slug がタイプ内で
+// 一意であることを検証する。
 export async function collectContentItems<F extends BaseFrontmatter>(
   spec: CollectContentSpec<F>,
 ): Promise<ContentItem<F>[]> {

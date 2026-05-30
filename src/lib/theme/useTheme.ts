@@ -86,7 +86,7 @@ export function useTheme(): UseThemeResult {
     try {
       window.localStorage.setItem(STORAGE_KEY, next);
     } catch {
-      /* ignore */
+      /* 無視する */
     }
     window.dispatchEvent(
       new StorageEvent("storage", {

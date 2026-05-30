@@ -14,8 +14,8 @@ const styles = stylex.create({
     top: space.s5,
     maxHeight: `calc(100vh - ${space.s7})`,
     overflowY: "auto",
-    // reset.css sets `scroll-behavior: smooth` on <html>, but TOC self-scroll
-    // happens inside <nav>, so the property is also needed here.
+    // reset.css は <html> に `scroll-behavior: smooth` を設定しているが、TOC の
+    // 自己スクロールは <nav> 内で起きるため、このプロパティはここにも必要。
     scrollBehavior: "smooth",
     fontSize: typography.fontSizeSm,
     color: colors.textSecondary,
@@ -67,14 +67,13 @@ export function Toc({ entries }: TocProps) {
   const navRef = useRef<HTMLElement>(null);
 
   const topActiveId = useMemo(() => {
-    // Prefer the first active h3 over the parent h2. `rehypeSectionize` nests
-    // each h3 section inside its parent h2 section, so the h2 stays in
-    // `activeIds` for the entire span of its h3 children. Picking strictly
-    // by entries order would strand sync-scroll on the h2 even after the
-    // reader has progressed deep into the h3 subsections, hiding later h3
-    // links below the nav's visible area. Falling back to the first active
-    // entry preserves the guide-mandated "topmost active" behavior for
-    // sibling h2 transitions where no h3 is involved.
+    // 親 h2 よりも最初の active な h3 を優先する。`rehypeSectionize` は各 h3
+    // section を親 h2 section の内側にネストするため、h2 はその h3 子要素の
+    // 範囲全体にわたって `activeIds` に残り続ける。entries の順序で厳密に選ぶと、
+    // 読者が h3 サブセクションの奥深くまで進んだ後でも sync-scroll が h2 に
+    // 取り残され、nav の可視領域より下にある後続の h3 リンクを隠してしまう。
+    // 最初の active な entry にフォールバックすることで、h3 が関与しない兄弟 h2
+    // 間の遷移についてはガイドが定める「最上位の active」挙動を保つ。
     let firstActive: string | undefined;
     for (const entry of entries) {
       if (!activeIds.has(entry.id)) continue;
@@ -90,10 +89,10 @@ export function Toc({ entries }: TocProps) {
     if (!nav) return;
     const link = nav.querySelector<HTMLAnchorElement>(`[data-toc-id="${CSS.escape(topActiveId)}"]`);
     if (!link) return;
-    // Scroll only the nav, not the document. scrollIntoView walks every
-    // ancestor scroll container, so when the sticky nav has temporarily
-    // drifted out of view it would rewind <html> to pull the nav back in —
-    // which the reader perceives as the page being yanked to the top.
+    // document ではなく nav だけをスクロールする。scrollIntoView はすべての祖先
+    // スクロールコンテナをたどるため、sticky な nav が一時的に画面外へ逸れている
+    // とき nav を引き戻そうとして <html> を巻き戻してしまう — 読者にはページが
+    // 先頭へ引っ張られたように見える。
     const linkRect = link.getBoundingClientRect();
     const navRect = nav.getBoundingClientRect();
     let delta = 0;
@@ -102,17 +101,16 @@ export function Toc({ entries }: TocProps) {
     if (delta !== 0 && typeof nav.scrollBy === "function") nav.scrollBy({ top: delta });
   }, [topActiveId]);
 
-  // Delegate clicks at the nav level instead of attaching per-anchor handlers.
-  // Wired through a callback ref so the listener attaches exactly when the
-  // <nav> mounts. A `useEffect` with `[]` deps would miss the case where the
-  // first render returns null (e.g., entries.length < 2) and a later render
-  // mounts the <nav>: the empty-deps effect runs only after the initial
-  // commit, when navRef.current is still null, and never re-runs.
+  // anchor ごとに handler を付けるのではなく、nav レベルで click を委譲する。
+  // <nav> が mount した瞬間に listener が付くよう、コールバック ref を介して
+  // 配線する。`[]` deps の `useEffect` では、最初の render が null を返し
+  // (例: entries.length < 2) 後の render で <nav> が mount するケースを取り逃す:
+  // 空 deps の effect は初回 commit 後 (navRef.current がまだ null のとき) に
+  // 一度だけ走り、再実行されない。
   //
-  // React 19 invokes the returned cleanup on unmount instead of re-calling
-  // the ref with null, so all setup lives in the mounted branch and the
-  // cleanup is the single place where the listener detaches and navRef is
-  // released.
+  // React 19 は unmount 時に ref を null で再呼び出しせず、返した cleanup を
+  // 呼ぶため、すべての setup を mount 分岐に置き、listener の detach と navRef の
+  // 解放は cleanup の一箇所にまとめている。
   const handleNavRef = useCallback((node: HTMLElement | null) => {
     if (!node) return;
     navRef.current = node;

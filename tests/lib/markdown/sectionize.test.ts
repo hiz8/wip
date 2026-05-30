@@ -27,7 +27,7 @@ describe("rehypeSectionize", () => {
     const html = await render(["## A", "para a", "## B", "para b"].join("\n\n"));
     expect(html).toContain('<section data-heading-id="a"><h2 id="a">A</h2>');
     expect(html).toContain('<section data-heading-id="b"><h2 id="b">B</h2>');
-    // Two top-level sections, no nesting
+    // トップレベルの section が 2 つ、ネストなし
     expect(html.match(/<section /gu)?.length).toBe(2);
   });
 
@@ -35,12 +35,12 @@ describe("rehypeSectionize", () => {
     const html = await render(
       ["## A", "### A1", "para a1", "### A2", "para a2", "## B", "para b"].join("\n\n"),
     );
-    // Outer h2 sections plus nested h3 sections = 4
+    // 外側の h2 section とネストした h3 section で 4 つ
     expect(html.match(/<section /gu)?.length).toBe(4);
     expect(html).toContain('<section data-heading-id="a"><h2 id="a">A</h2>');
     expect(html).toContain('<section data-heading-id="a1"><h3 id="a1">A1</h3>');
     expect(html).toContain('<section data-heading-id="a2"><h3 id="a2">A2</h3>');
-    // a2 section must close before b section opens
+    // a2 の section は b の section が開く前に閉じなければならない
     const a2Open = html.indexOf('data-heading-id="a2"');
     const bOpen = html.indexOf('data-heading-id="b"');
     expect(a2Open).toBeGreaterThan(-1);
@@ -58,7 +58,7 @@ describe("rehypeSectionize", () => {
 
   it("h4 and below stay inside the nearest h2/h3 section", async () => {
     const html = await render(["## A", "### A1", "#### Deep", "para"].join("\n\n"));
-    // The h4 must appear inside the h3 section (which is inside the h2 section)
+    // h4 は (h2 section の内側にある) h3 section の内側に現れなければならない
     const a1Open = html.indexOf('data-heading-id="a1"');
     const deep = html.indexOf("<h4");
     expect(a1Open).toBeGreaterThan(-1);
