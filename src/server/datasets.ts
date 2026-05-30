@@ -1,4 +1,8 @@
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import type {
+  BaseFrontmatter,
+  ContentItem,
   ImageRef,
   RenderedBook,
   RenderedGlossaryTerm,
@@ -7,13 +11,14 @@ import type {
 import type { SiteConfigParsed } from "@/lib/config/schema.ts";
 import { resolveConfig } from "@/lib/config/index.ts";
 import { collectBooks, collectGlossary, collectNotes } from "@/lib/content/index.ts";
+import { parseMarkdownFile } from "@/lib/content/parse.ts";
 import {
   pickBooksTitle,
   pickGlossaryTitle,
   pickNotesTitle,
   renderContentDrafts,
 } from "@/lib/markdown/pipeline.ts";
-import { buildContentIndex } from "@/lib/linkgraph/resolve.ts";
+import { buildContentIndex, type ContentIndex } from "@/lib/linkgraph/resolve.ts";
 import { attachBacklinks, buildBacklinks } from "@/lib/linkgraph/graph.ts";
 import { compareByUpdatedDesc } from "@/lib/content/sort.ts";
 import {
@@ -43,6 +48,13 @@ export interface SiteDataset {
   };
   imageMapping: readonly ImageMappingEntry[];
   coverBySlug: ReadonlyMap<string, string>;
+  // トップページ固有コンテンツ (`_site/home.md` / `_site/about.md`)。Notes 収集の
+  // 対象外なので直接読み込み、コンテンツグラフ index 込みでフル解決する。ファイル
+  // 不在時は null となり、トップページ側で該当セクションを描画しない。
+  siteContent: {
+    introHtml: string | null;
+    aboutHtml: string | null;
+  };
 }
 
 let cached: Promise<SiteDataset> | null = null;
@@ -59,6 +71,12 @@ async function build(): Promise<SiteDataset> {
 
   const allItems = [...notesItems, ...glossaryItems, ...booksItems];
   const index = buildContentIndex(allItems);
+
+  // `_site` の本文も同じ index でレンダリングし、wiki-link / embed をフル解決する。
+  const [introHtml, aboutHtml] = await Promise.all([
+    renderSiteMarkdown(config, index, config.pages?.home?.introMarkdown),
+    renderSiteMarkdown(config, index, config.pages?.home?.aboutMarkdown),
+  ]);
 
   const notesDrafts = await renderContentDrafts({
     items: notesItems,
@@ -117,7 +135,37 @@ async function build(): Promise<SiteDataset> {
     },
     imageMapping,
     coverBySlug,
+    siteContent: { introHtml, aboutHtml },
   };
+}
+
+// `_site/home.md` / `_site/about.md` を 1 ファイルだけ Markdown→HTML へ変換する。
+// `index` は collection 全体から構築済みのものを渡すことで、本文中の wiki-link /
+// embed が公開コンテンツへ解決される。relPath 未指定・ファイル不在では null。
+async function renderSiteMarkdown(
+  config: SiteConfigParsed,
+  index: ContentIndex,
+  relPath: string | undefined,
+): Promise<string | null> {
+  if (relPath === undefined || relPath === "") return null;
+  const absolutePath = resolve(config.content.vaultRoot, relPath);
+  if (!existsSync(absolutePath)) return null;
+  const parsed = await parseMarkdownFile(absolutePath, config.content.vaultRoot);
+  const item: ContentItem<BaseFrontmatter> = {
+    type: "notes",
+    slug: relPath,
+    filePath: parsed.filePath,
+    absolutePath: parsed.absolutePath,
+    frontmatter: {},
+    body: parsed.body,
+  };
+  const drafts = await renderContentDrafts<BaseFrontmatter>({
+    items: [item],
+    config,
+    index,
+    pickTitle: () => "",
+  });
+  return drafts[0]?.html ?? null;
 }
 
 function computeImageArtifacts(
@@ -205,6 +253,13 @@ export function getSiteDataset(): Promise<SiteDataset> {
     });
   }
   return cached;
+}
+
+// `getSiteDataset` と同じ config ソース (テストの override を含む) を返す。config
+// 由来の値 (author.socialLinks など) を dataset 外で参照したい呼び出し元のための
+// アクセサ。resolveConfig は冪等なので再評価コストは無視できる。
+export function getResolvedConfig(): SiteConfigParsed {
+  return configOverride ?? resolveConfig(siteConfigInput);
 }
 
 export function __resetSiteDatasetForTests(): void {
