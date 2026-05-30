@@ -17,6 +17,18 @@ const isoDateString = z.preprocess(
   }),
 );
 
+// Obsidian のプロパティ機能は数値を文字列としてクォート保存することがある (例: `pubYear: "2013"`)。
+// 数値として解釈できる文字列は数値へ正規化する。解釈できない文字列はそのまま渡し、型不一致エラーとする。
+const yearNumber = z.preprocess((value) => {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed === "") return value;
+    const parsed = Number(trimmed);
+    return Number.isNaN(parsed) ? value : parsed;
+  }
+  return value;
+}, z.number().int());
+
 const baseFrontmatterShape = {
   status: statusSchema.optional(),
   tags: z.array(z.string()).optional(),
@@ -46,7 +58,7 @@ const booksFrontmatterSchema = z.object({
   authors: z.array(z.string()).min(1, "must have at least one author"),
   isbn: z.string().optional(),
   read_date: isoDateString.optional(),
-  pubYear: z.number().int().optional(),
+  pubYear: yearNumber.optional(),
   publisher: z.string().optional(),
   cover: z.string().optional(),
 });
