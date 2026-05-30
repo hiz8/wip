@@ -951,6 +951,42 @@ Phase 9 着手前に環境を `npm run dev` で改めて起動して判明した
 - 左右振り分け規則を変えるなら `src/lib/markdown/plugins/marginalia-side.ts` の `sideFor()` を差し替え。CSS は `[data-side="left"]` 分岐をそのまま使える
 - ガター幅 (12rem) を変更する場合は `DetailLayout.tsx` の grid と `content.css` の `width: 11rem` / `margin-inline-end: -12.5rem` を同期させること
 
+## トップページ 6 セクション化 ✅ (2026-05-30)
+
+### 達成範囲
+
+- Phase 4 以降プレースホルダ (サイト名 + 説明 + Browse notes リンク) だったトップページ (`src/routes/index.tsx`) を、`docs/ui-spec.md:171-193` が定める 6 セクション構成へ実装
+  1. 自己紹介 (`_site/home.md` 本文)
+  2. このサイトについて (`_site/about.md` 本文)
+  3. 最近更新 (Notes/Glossary/Books 横断、`updated` 降順 上位 5 件、type アイコン + 更新日)
+  4. コンテンツタイプ別の入り口 (各タイプへの導線 + 公開件数)
+  5. Featured (frontmatter `featured: true`、`updated` 降順)
+  6. 外部リンク (`site.config.ts` の `author.socialLinks`)
+- `_site/home.md` / `_site/about.md` 本文は Notes と同じパイプライン + リンクグラフ index で `[[wiki-link]]` / `![[embed]]` をフル解決する
+- ファイル不在・featured 0 件・socialLinks 空のセクションは描画しない (graceful skip)。実 Vault で `_site/*` や featured・socialLinks が未整備の場合は該当セクションが自動的に非表示になる
+
+### 公開 API
+
+- `getHomePageData` (`createServerFn`) / `projectHomePage()` / 型 `HomePageData`・`HomeRecentItem`・`HomeFeaturedItem`・`HomeCounts`・`HomeSocialLink` — `src/server/home.ts`
+- `getResolvedConfig()` — `src/server/datasets.ts`。`getSiteDataset` と同じ config ソース (テスト override 含む) を返すアクセサ
+- `SiteDataset.siteContent: { introHtml, aboutHtml }` を追加
+
+### 主要ファイル
+
+- `src/server/datasets.ts` — `SiteDataset.siteContent` 追加。`build()` 内で `_site/home.md` / `_site/about.md` を `renderSiteMarkdown(config, index, relPath)` により index 込みでレンダリング (1 回のみキャッシュ)。`getResolvedConfig()` を export
+- `src/server/home.ts` — 新規。recent (updated 非空のみ横断ソート上位 5)・counts (published length)・featured (`featured:true` 抽出)・socialLinks (config projection)・intro/about HTML を返す純ヘルパ + server fn
+- `src/components/home/` — 新規。`MarkdownProse` (本文 HTML、`data-content-body` のみ・検索対象外)、`HomeSection` (見出しラッパ)、`RecentSection`、`ContentTypeEntries`、`FeaturedSection`、`SocialLinks`、`ContentLink` (type 別 router params 出し分け)
+- `src/routes/index.tsx` — loader 配線・6 セクション合成・null/空 skip・`makeTitle`
+- `tests/server/home.test.ts` — 新規 (recent ソート/件数/featured/不在 skip/socialLinks)。fixture は `note-a.md` に `featured: true`、`_site/home.md` に `[[note-a]]` を追加
+
+### 設計判断メモ
+
+1. **home/about は dataset 構築内でレンダリング** — wiki-link フル解決には `buildContentIndex(allItems)` の index が必要。これが揃うのは `datasets.ts` の `build()` 内のみなので、そこで 1 回だけレンダリングしてキャッシュする。`_site/**` は notes 収集の exclude 対象なので `parseMarkdownFile` で直接読む (strict モードの影響を受けない)
+2. **updated 無しの扱い** — recent は `updated` を持つアイテムのみを候補にする (Glossary は持たないことが多い)。featured は `updated ?? ""` でソートし、未設定は末尾へ
+3. **socialLinks は projection 経由** — `static.ts` の手動ミラーには追加しない (配列は drift guard と相性が悪い)。SSG なのでローダーがサーバー値を埋め込む
+4. **Link は type+slug を渡す** — 型安全な router params を保つため href 文字列を作らず、`ContentLink` が type で `/notes/$slug`・`/books/$isbn`・`/glossary/$slug` を出し分ける (`Backlinks.tsx` と同方針)
+5. **トップページ本文は検索対象外** — `MarkdownProse` は `data-content-body` のみ付与し `data-pagefind-body` は付けない
+
 ## ログ更新ルール
 
 - フェーズ完了時にこのファイルを更新する (達成範囲・公開 API・主要ファイル・設計判断)
