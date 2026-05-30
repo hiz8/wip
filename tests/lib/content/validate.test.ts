@@ -161,9 +161,20 @@ describe("validateBooksFrontmatter", () => {
     );
   });
 
-  it("pubYear が文字列だと BuildError", () => {
+  it("pubYear が数値文字列なら数値へ正規化される (Obsidian のクォート保存に対応)", () => {
+    const fm = validateBooksFrontmatter(
+      { aliases: ["x"], authors: ["a"], pubYear: "2013" },
+      "Books/9784873116105.md",
+    );
+    expect(fm.pubYear).toBe(2013);
+  });
+
+  it("pubYear が数値でない文字列だと BuildError", () => {
     expect(() =>
-      validateBooksFrontmatter({ aliases: ["x"], authors: ["a"], pubYear: "2019" }, "Books/bad.md"),
+      validateBooksFrontmatter(
+        { aliases: ["x"], authors: ["a"], pubYear: "発行年不明" },
+        "Books/bad.md",
+      ),
     ).toThrowError(BuildError);
   });
 
