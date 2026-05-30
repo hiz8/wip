@@ -6,6 +6,7 @@ tags:
   - frontend
   - frontend/react
 summary: テスト用の標準的な Notes
+featured: true
 ---
 
 # Note A
