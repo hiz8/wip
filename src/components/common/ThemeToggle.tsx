@@ -1,35 +1,9 @@
 import { useCallback } from "react";
 import * as stylex from "@stylexjs/stylex";
-import { colors, radius } from "@/styles/tokens.stylex.ts";
+import { a11y } from "@/styles/a11y.ts";
+import { navChrome } from "@/styles/navChrome.ts";
 import { useTheme } from "@/lib/theme/useTheme.ts";
 import { nextPreference, type Preference } from "@/lib/theme/constants.ts";
-
-const styles = stylex.create({
-  button: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "2.25rem",
-    height: "2.25rem",
-    borderRadius: radius.lg,
-    // ナビレール (深ブルー) に同居するため nav 系トークンで可読化する。
-    color: { default: colors.navIcon, ":hover": colors.navIconActive },
-    backgroundColor: { default: "transparent", ":hover": colors.navItemHoverBg },
-    transitionProperty: "color, background-color",
-    transitionDuration: "120ms",
-  },
-  srOnly: {
-    position: "absolute",
-    width: "1px",
-    height: "1px",
-    padding: 0,
-    margin: "-1px",
-    overflow: "hidden",
-    clip: "rect(0, 0, 0, 0)",
-    whiteSpace: "nowrap",
-    borderWidth: 0,
-  },
-});
 
 const LABEL: Record<Preference, string> = {
   system: "テーマ: システム",
@@ -95,10 +69,10 @@ export function ThemeToggle() {
       aria-label={LABEL[preference]}
       title={LABEL[preference]}
       onClick={handleClick}
-      {...stylex.props(styles.button)}
+      {...stylex.props(navChrome.iconButton)}
     >
       <Icon preference={preference} />
-      <span {...stylex.props(styles.srOnly)}>{LABEL[preference]}</span>
+      <span {...stylex.props(a11y.srOnly)}>{LABEL[preference]}</span>
     </button>
   );
 }

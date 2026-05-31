@@ -1,8 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { Link, useMatches } from "@tanstack/react-router";
 import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
-import { ContentTypeIcon } from "@/components/common/ContentTypeIcon.tsx";
-import { HomeIcon } from "@/components/common/HomeIcon.tsx";
+import { NAV_SECTIONS } from "./navSections.tsx";
 
 // モバイル (< 768px) 限定。≥ 768 では非表示にしデスクトップの IconNav に戻す。
 // 同一ファイルのフラットな文字列 const (StyleX media-query order の制約)。
@@ -63,37 +62,17 @@ const styles = stylex.create({
 export function MobileBottomNav() {
   const matches = useMatches();
   const path = matches.at(-1)?.pathname ?? "/";
-  const onHome = path === "/";
-  const onNotes = path === "/notes" || path.startsWith("/notes/");
-  const onGlossary = path === "/glossary" || path.startsWith("/glossary/");
-  const onBooks = path === "/books" || path.startsWith("/books/");
 
   return (
     <nav {...stylex.props(styles.nav)} aria-label="Site sections">
-      <Link to="/" {...stylex.props(styles.tab)}>
-        <span {...stylex.props(styles.inner, onHome && styles.innerActive)}>
-          <HomeIcon size={22} />
-          <span {...stylex.props(styles.label)}>Home</span>
-        </span>
-      </Link>
-      <Link to="/notes" {...stylex.props(styles.tab)}>
-        <span {...stylex.props(styles.inner, onNotes && styles.innerActive)}>
-          <ContentTypeIcon type="notes" size={22} />
-          <span {...stylex.props(styles.label)}>Notes</span>
-        </span>
-      </Link>
-      <Link to="/glossary" {...stylex.props(styles.tab)}>
-        <span {...stylex.props(styles.inner, onGlossary && styles.innerActive)}>
-          <ContentTypeIcon type="glossary" size={22} />
-          <span {...stylex.props(styles.label)}>Glossary</span>
-        </span>
-      </Link>
-      <Link to="/books" {...stylex.props(styles.tab)}>
-        <span {...stylex.props(styles.inner, onBooks && styles.innerActive)}>
-          <ContentTypeIcon type="books" size={22} />
-          <span {...stylex.props(styles.label)}>Books</span>
-        </span>
-      </Link>
+      {NAV_SECTIONS.map((section) => (
+        <Link key={section.to} to={section.to} {...stylex.props(styles.tab)}>
+          <span {...stylex.props(styles.inner, section.isActive(path) && styles.innerActive)}>
+            {section.renderIcon(22)}
+            <span {...stylex.props(styles.label)}>{section.label}</span>
+          </span>
+        </Link>
+      ))}
     </nav>
   );
 }

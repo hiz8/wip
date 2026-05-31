@@ -18,7 +18,6 @@ export const colors = stylex.defineVars({
   focusRing: { default: "#0D78AD", [DARK]: "#2DBFEF" },
   codeBg: "var(--code-bg)",
   codeBorder: "var(--code-border)",
-  selection: { default: "#DFE6F2", [DARK]: "#2C3650" },
   // Tree / TOC の現在地ハイライト。bgElevated はサイドバー背景に使うため、
   // ハイライトが埋もれないよう専用トークンを設ける。
   selectedBg: { default: "#DFE6F2", [DARK]: "#2C3650" },
