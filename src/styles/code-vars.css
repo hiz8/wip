@@ -9,12 +9,12 @@
  */
 @layer base {
   :root {
-    --code-bg: #f4f1ea;
-    --code-border: #918a7a;
+    --code-bg: #eaeef6;
+    --code-border: #7c849c;
   }
 
   [data-theme-resolved="dark"] {
-    --code-bg: #13161e;
+    --code-bg: #2a3247;
     --code-border: #7a8090;
   }
 }

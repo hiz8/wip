@@ -4,7 +4,7 @@ import { resolveConfig } from "@/lib/config/index.ts";
 import type { SiteConfigParsed } from "@/lib/config/schema.ts";
 import siteConfigInput from "../../site.config.ts";
 import { __resetSiteDatasetForTests, __setSiteDatasetConfigForTests } from "@/server/datasets.ts";
-import { projectHomePage } from "@/server/home.ts";
+import { projectHomePage } from "@/server/projectHomePage.ts";
 
 const fixturesVault = resolve(__dirname, "../fixtures/vault");
 
@@ -77,6 +77,18 @@ describe("projectHomePage (home page loader)", () => {
     const data = await projectHomePage();
 
     expect(data.aboutHtml).toBeNull();
+  });
+
+  it("著者名は config.author.name を返す (スカイバナーのフッター用)", async () => {
+    const base = loadFixtureConfig();
+    const config: SiteConfigParsed = {
+      ...base,
+      author: { ...base.author, name: "テスト著者" },
+    };
+    __setSiteDatasetConfigForTests(config);
+    const data = await projectHomePage();
+
+    expect(data.authorName).toBe("テスト著者");
   });
 
   it("外部リンクは config の author.socialLinks をそのまま返す", async () => {

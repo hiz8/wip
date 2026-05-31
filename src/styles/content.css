@@ -27,7 +27,7 @@
   }
 
   [data-content-body] :is(h1, h2, h3, h4, h5, h6) {
-    font-family: var(--font-sans);
+    font-family: var(--font-brand);
     line-height: 1.3;
     font-weight: 700;
     margin-block: 2rem 0.75rem;
@@ -170,6 +170,8 @@
   [data-content-body] a[data-footnote-ref] {
     text-decoration: none;
     padding-inline: 0.15em;
+    color: var(--prose-sidenote);
+    font-weight: 500;
   }
 
   [data-content-body] a[data-footnote-ref]:hover,
@@ -274,7 +276,7 @@
     [data-content-body] aside.footnote-aside::before {
       counter-increment: fn-num;
       content: counter(fn-num) ". ";
-      color: var(--prose-accent);
+      color: var(--prose-sidenote);
       font-weight: 600;
       margin-inline-end: 0.25rem;
     }

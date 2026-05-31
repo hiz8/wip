@@ -34,7 +34,7 @@ const styles = stylex.create({
     paddingInline: space.s2,
     paddingBlock: 0,
     borderRadius: radius.pill,
-    backgroundColor: colors.bgElevated,
+    backgroundColor: colors.tagBg,
     color: { default: colors.textSecondary, ":hover": colors.link },
     fontSize: typography.fontSizeXs,
     textDecoration: { default: "none", ":hover": "underline" },
