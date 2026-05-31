@@ -5,7 +5,6 @@
  * Font stacks are constant across light/dark, so no theme overrides.
  */
 @layer base {
-
   :root {
     --font-sans:
       "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", system-ui, -apple-system,
