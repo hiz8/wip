@@ -11,9 +11,10 @@ const styles = stylex.create({
     justifyContent: "center",
     width: "2.25rem",
     height: "2.25rem",
-    borderRadius: radius.md,
-    color: colors.textSecondary,
-    backgroundColor: { default: "transparent", ":hover": colors.bgElevated },
+    borderRadius: radius.lg,
+    // ナビレール (深ブルー) に同居するため nav 系トークンで可読化する。
+    color: { default: colors.navIcon, ":hover": colors.navIconActive },
+    backgroundColor: { default: "transparent", ":hover": colors.navItemHoverBg },
     transitionProperty: "color, background-color",
     transitionDuration: "120ms",
   },

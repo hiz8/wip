@@ -5,6 +5,7 @@ import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-r
 // (@layer のカスケード順序自体は下の LAYER_ORDER_HTML で別途固定しており、
 // それが injection 順に関係なく StyleX を勝たせ続ける根拠となる。)
 import "@/styles/reset.css";
+import "@/styles/brand-vars.css";
 import "@/styles/callout-vars.css";
 import "@/styles/code-vars.css";
 import "@/styles/font-vars.css";
@@ -37,12 +38,12 @@ export const Route = createRootRoute({
       {
         name: "theme-color",
         media: "(prefers-color-scheme: light)",
-        content: "#fefefb",
+        content: "#FBFCFE",
       },
       {
         name: "theme-color",
         media: "(prefers-color-scheme: dark)",
-        content: "#0e1014",
+        content: "#1B2030",
       },
     ],
     links: [

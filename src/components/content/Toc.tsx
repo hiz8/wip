@@ -56,9 +56,12 @@ const styles = stylex.create({
     paddingInlineStart: space.s4,
   },
   linkActive: {
-    color: colors.accent,
-    backgroundColor: colors.bgElevated,
+    // デザイン同様、現在地はテキストを primary に保ち、accent は左ボーダーのみに使う。
+    color: colors.textPrimary,
+    backgroundColor: colors.selectedBg,
     borderInlineStartColor: colors.accent,
+    borderTopRightRadius: "4px",
+    borderBottomRightRadius: "4px",
   },
 });
 

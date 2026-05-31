@@ -42,11 +42,13 @@ const styles = stylex.create({
     borderRadius: radius.sm,
     color: colors.textSecondary,
     cursor: "pointer",
-    backgroundColor: { default: "transparent", ":hover": colors.bgElevated },
+    backgroundColor: { default: "transparent", ":hover": colors.hoverBg },
   },
   rowSelected: {
-    color: colors.accent,
-    backgroundColor: colors.bgElevated,
+    // デザイン同様、選択行はテキスト色を primary に保ち、背景 + ウェイトで強調する
+    // (accent をテキストにするとダークで selectedBg に対し AA を割る)。
+    color: colors.textPrimary,
+    backgroundColor: colors.selectedBg,
     fontWeight: typography.weightMedium,
   },
   rowFocused: {

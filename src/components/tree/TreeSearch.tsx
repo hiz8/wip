@@ -18,7 +18,7 @@ const styles = stylex.create({
     paddingInline: space.s3,
     paddingBlock: space.s2,
     borderRadius: radius.md,
-    backgroundColor: colors.bgElevated,
+    backgroundColor: colors.bgSurface,
     borderWidth: 1,
     borderStyle: "solid",
     borderColor: colors.borderSubtle,

@@ -71,7 +71,7 @@ const styles = stylex.create({
     borderInlineEndWidth: 1,
     borderInlineEndStyle: "solid",
     borderInlineEndColor: colors.borderSubtle,
-    backgroundColor: colors.bgSurface,
+    backgroundColor: colors.bgElevated,
     minHeight: "100vh",
   },
   mainArea: {
@@ -82,6 +82,12 @@ const styles = stylex.create({
     minWidth: 0,
     paddingInline: { default: space.s4, [BP_TABLET]: space.s6 },
     paddingBlock: space.s5,
+  },
+  // home はバナー列をナビに密着させ、内側の余白を home route 側で管理するため
+  // main の padding を持たせない。
+  mainAreaHome: {
+    paddingInline: 0,
+    paddingBlock: 0,
   },
   rightArea: {
     gridRowStart: "right",
@@ -112,7 +118,9 @@ export function AppShell({ variant, treeSidebar, rightSidebar, children }: AppSh
         )}
       >
         {showTree ? <aside {...stylex.props(styles.treeArea)}>{treeSidebar}</aside> : null}
-        <div {...stylex.props(styles.mainArea)}>{children}</div>
+        <div {...stylex.props(styles.mainArea, variant === "home" && styles.mainAreaHome)}>
+          {children}
+        </div>
         {showRight ? <aside {...stylex.props(styles.rightArea)}>{rightSidebar}</aside> : null}
       </div>
     </div>
