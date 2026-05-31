@@ -1,0 +1,24 @@
+/*
+ * hiz.blue ブランド / バナー用の named CSS 変数。スカイバナー (HomeBanner) の
+ * グラデーションやブランドマークで使う固定色。テーマ (light/dark) では変化しない
+ * ブランド色なので dark override は持たない。多段グラデーションは StyleX トークンに
+ * しづらいため CSS var として定義する。
+ */
+@layer base {
+  :root {
+    --brand: #091581;
+    --brand-mid: #2b91ef;
+    --brand-cyan: #13d5e7;
+    --brand-lavender: #7e94ce;
+    --brand-cream: #f0f7d8;
+    --brand-tooltip: #545ca6;
+    --brand-on-dark: #f7f9f9;
+    --banner-gradient: linear-gradient(
+      180deg,
+      #7e94ce 0%,
+      #13d5e7 48.96%,
+      #13d5e7 81.25%,
+      #f0f7d8 100%
+    );
+  }
+}

@@ -7,20 +7,23 @@
  */
 @layer base {
   :root {
-    --prose-link: #0a5dad;
-    --prose-link-hover: #073f76;
-    --prose-border: #c9c5b8;
-    --prose-border-subtle: #e8e6df;
-    --prose-muted: #6b7079;
+    --prose-link: #0d78ad;
+    --prose-link-hover: #0b6593;
+    --prose-border: #c2cadd;
+    --prose-border-subtle: #dfe4ee;
+    --prose-muted: #6b7185;
     --prose-accent: var(--prose-link);
+    /* 脚注 (Tufte sidenote) マーカー色。 */
+    --prose-sidenote: #b22222;
   }
 
   [data-theme-resolved="dark"] {
-    --prose-link: #7cb1e8;
-    --prose-link-hover: #a6cbf0;
-    --prose-border: #3a3f4d;
-    --prose-border-subtle: #262a36;
-    --prose-muted: #838897;
+    --prose-link: #2dbfef;
+    --prose-link-hover: #5fd0f4;
+    --prose-border: #454d66;
+    --prose-border-subtle: #343c52;
+    --prose-muted: #9aa0b4;
     --prose-accent: var(--prose-link);
+    --prose-sidenote: #ff8a8a;
   }
 }
