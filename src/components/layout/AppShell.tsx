@@ -2,6 +2,8 @@ import * as stylex from "@stylexjs/stylex";
 import type { ReactNode } from "react";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 import { IconNav } from "./IconNav.tsx";
+import { MobileTopBar } from "./MobileTopBar.tsx";
+import { MobileBottomNav } from "./MobileBottomNav.tsx";
 
 export type AppShellVariant = "home" | "list" | "detail";
 
@@ -39,6 +41,10 @@ const styles = stylex.create({
     display: "grid",
     gridTemplateColumns: "1fr",
     gridTemplateAreas: '"main"',
+    // モバイルでは固定の MobileTopBar / MobileBottomNav にコンテンツが隠れないよう
+    // 上下に余白を確保する (高さは各バーのコンポーネントと同期)。≥768 では不要。
+    paddingBlockStart: { default: "3rem", [BP_TABLET]: 0 },
+    paddingBlockEnd: { default: "calc(3.5rem + env(safe-area-inset-bottom))", [BP_TABLET]: 0 },
   },
   bodyWithTree: {
     gridTemplateColumns: {
@@ -111,6 +117,7 @@ export function AppShell({ variant, treeSidebar, rightSidebar, children }: AppSh
   return (
     <div {...stylex.props(styles.root)}>
       <IconNav />
+      <MobileTopBar />
       <div
         {...stylex.props(
           styles.body,
@@ -123,6 +130,7 @@ export function AppShell({ variant, treeSidebar, rightSidebar, children }: AppSh
         </div>
         {showRight ? <aside {...stylex.props(styles.rightArea)}>{rightSidebar}</aside> : null}
       </div>
+      <MobileBottomNav />
     </div>
   );
 }

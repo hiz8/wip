@@ -4,13 +4,18 @@ import { Link, useMatches } from "@tanstack/react-router";
 import { colors, radius, space } from "@/styles/tokens.stylex.ts";
 import { ThemeToggle } from "@/components/common/ThemeToggle.tsx";
 import { ContentTypeIcon } from "@/components/common/ContentTypeIcon.tsx";
+import { HomeIcon } from "@/components/common/HomeIcon.tsx";
 import { SearchIcon } from "@/components/common/SearchIcon.tsx";
 import { SearchDialog } from "@/components/common/SearchDialog.tsx";
 import { bindSlashShortcut } from "@/lib/search/slashShortcut.ts";
 
+// モバイル (< 768px) ではレールを隠し、MobileTopBar / MobileBottomNav に置き換える。
+// 同一ファイルのフラットな文字列 const にする (StyleX media-query order の制約)。
+const BP_TABLET = "@media (min-width: 768px)";
+
 const styles = stylex.create({
   nav: {
-    display: "flex",
+    display: { default: "none", [BP_TABLET]: "flex" },
     flexDirection: "column",
     alignItems: "center",
     gap: space.s2,
@@ -59,20 +64,6 @@ const styles = stylex.create({
     borderWidth: 0,
   },
 });
-
-function HomeIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 export function IconNav() {
   const matches = useMatches();
