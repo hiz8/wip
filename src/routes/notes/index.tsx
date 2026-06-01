@@ -53,6 +53,7 @@ function NotesIndex() {
       <Link to="/notes/tags" {...stylex.props(styles.tagsLink)}>
         Browse tags →
       </Link>
+      {/* oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示 */}
       <ul {...stylex.props(styles.grid)} role="list">
         {notes.map((note) => (
           <li key={note.slug}>

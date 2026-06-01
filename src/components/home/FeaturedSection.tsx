@@ -40,6 +40,7 @@ const styles = stylex.create({
 // Featured / Pinned コンテンツ (frontmatter featured:true、updated 降順)。
 export function FeaturedSection({ items }: FeaturedSectionProps) {
   return (
+    // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示
     <ul {...stylex.props(styles.list)} role="list">
       {items.map((item) => (
         <li key={`${item.type}:${item.slug}`} {...stylex.props(styles.item)}>

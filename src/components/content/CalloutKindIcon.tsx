@@ -30,6 +30,7 @@ export function CalloutKindIcon({ kind, size = 16 }: CalloutKindIconProps) {
       height={size}
       viewBox="0 0 24 24"
       fill="none"
+      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- currentColor 追従のインライン SVG は <img> 不可、aria-label 付き role="img" が正しい
       role="img"
       aria-label={LABELS[kind]}
     >

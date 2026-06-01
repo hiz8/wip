@@ -34,6 +34,7 @@ const styles = stylex.create({
 // 外部リンク (site.config.ts の author.socialLinks)。
 export function SocialLinks({ links }: SocialLinksProps) {
   return (
+    // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示
     <ul {...stylex.props(styles.list)} role="list">
       {links.map((link) => (
         <li key={link.url}>

@@ -67,6 +67,7 @@ const styles = stylex.create({
 // コンテンツタイプ別の入り口 (各タイプへの導線 + 公開件数)。
 export function ContentTypeEntries({ counts }: ContentTypeEntriesProps) {
   return (
+    // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示
     <ul {...stylex.props(styles.list)} role="list">
       {ENTRIES.map((entry) => (
         <li key={entry.type}>

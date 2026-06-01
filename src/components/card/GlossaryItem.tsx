@@ -96,6 +96,7 @@ export function GlossaryItem({ slug, term, furigana, summary, aliases, tags }: G
       {(aliases.length > 0 || tags.length > 0) && (
         <div {...stylex.props(styles.meta)}>
           {aliases.length > 0 && (
+            // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示
             <ul {...stylex.props(styles.pillList)} role="list" aria-label="Aliases">
               {aliases.map((alias) => (
                 <li key={`alias-${alias}`} {...stylex.props(styles.pill)}>

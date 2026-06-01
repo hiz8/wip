@@ -70,6 +70,7 @@ function BooksByTag() {
       {books.length === 0 ? (
         <p {...stylex.props(styles.empty)}>No books with this tag.</p>
       ) : (
+        // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示
         <ul {...stylex.props(styles.grid)} role="list">
           {books.map((book) => (
             <li key={book.slug}>
