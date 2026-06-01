@@ -45,6 +45,7 @@ const styles = stylex.create({
 // 最近更新されたコンテンツ (Notes/Glossary/Books 横断、updated 降順)。
 export function RecentSection({ items }: RecentSectionProps) {
   return (
+    // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示
     <ul {...stylex.props(styles.list)} role="list">
       {items.map((item) => (
         <li key={`${item.type}:${item.slug}`} {...stylex.props(styles.item)}>

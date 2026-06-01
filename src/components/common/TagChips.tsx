@@ -60,6 +60,7 @@ export function TagChips({ type, tags }: TagChipsProps) {
   const to = TAG_ROUTE[type];
   if (links.length === 0) return null;
   return (
+    // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示
     <ul {...stylex.props(styles.list)} role="list" aria-label="Tags">
       {links.map(({ tag, params }) => (
         <li key={tag}>

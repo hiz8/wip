@@ -97,6 +97,7 @@ function GlossaryIndex() {
         <p {...stylex.props(styles.empty)}>No published terms yet.</p>
       ) : (
         <>
+          {/* oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示 */}
           <ul {...stylex.props(styles.jumpNav)} role="list" aria-label="Jump to section">
             {sections.map((section) => (
               <li key={section.name} {...stylex.props(styles.jumpItem)}>
@@ -116,6 +117,7 @@ function GlossaryIndex() {
               {...stylex.props(styles.groupSection)}
             >
               <h2 {...stylex.props(styles.groupHeading)}>{section.name}</h2>
+              {/* oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示 */}
               <ul {...stylex.props(styles.list)} role="list">
                 {section.items.map((item) => (
                   <li key={item.slug}>

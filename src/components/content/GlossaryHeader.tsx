@@ -52,6 +52,7 @@ export function GlossaryHeader({ term, furigana, aliases }: GlossaryHeaderProps)
       )}
       <h1 {...stylex.props(styles.title)}>{term}</h1>
       {aliases.length > 0 && (
+        // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示
         <ul {...stylex.props(styles.aliasesRow)} role="list" aria-label="Aliases">
           {aliases.map((alias) => (
             <li key={alias} {...stylex.props(styles.alias)}>
