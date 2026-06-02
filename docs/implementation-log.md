@@ -987,6 +987,24 @@ Phase 9 着手前に環境を `npm run dev` で改めて起動して判明した
 4. **Link は type+slug を渡す** — 型安全な router params を保つため href 文字列を作らず、`ContentLink` が type で `/notes/$slug`・`/books/$isbn`・`/glossary/$slug` を出し分ける (`Backlinks.tsx` と同方針)
 5. **トップページ本文は検索対象外** — `MarkdownProse` は `data-content-body` のみ付与し `data-pagefind-body` は付けない
 
+## スカイバナーの dark mode 夜空対応 ✅ (2026-06-02)
+
+### 達成範囲
+
+- スカイバナー (`HomeBanner`) は light/dark で同一の昼空配色だったため、dark では明るすぎて dark ページから浮いていた。dark mode 時は夜空の配色へ切り替えるようにした
+- light = 昼空 (青→シアン→クリーム) + 太陽の光輪 + navy テキスト (従来どおり)
+- dark = ミッドナイトのグラデーション + 散らした星 + 月のひんやりした光輪 + 明るいテキスト
+
+### 主要ファイル
+
+- `src/styles/brand-vars.css` — バナー用に `--banner-gradient` / `--banner-glow` / `--banner-text` / `--banner-tagline` / `--banner-foot` / `--banner-foot-rule` を定義し、他の *-vars.css と同じ `[data-theme-resolved="dark"]` で夜空側を override。星は radial-gradient のレイヤーを夜空グラデーションに重ねて表現
+- `src/components/home/HomeBanner.tsx` — テキスト色・光輪をハードコード const から `var(--banner-*)` 参照へ変更 (背景は元から var 参照)。光輪が dark で月になるため StyleX キー `sun` → `glow` に改名
+
+### 設計判断メモ
+
+1. **CSS var + `[data-theme-resolved="dark"]` で統一** — バナー色はこれまで「ブランド固定 (テーマ非依存)」として TSX に const で持っていたが、夜空化のため code / callout / prose と同じ named CSS var + dark override 方式へ寄せた。StyleX の `createTheme` ではなく CSS var を使うのは、多段グラデーション (星のレイヤー + 線形) がトークン化しづらいため
+2. **星は背景レイヤーで表現** — DOM 要素を増やさず、dark の `--banner-gradient` 値に複数の radial-gradient を重ねる (`background-image` のレイヤーは先頭が手前)。月の光輪は既存の光輪要素を流用し radial を差し替えるだけ
+
 ## ログ更新ルール
 
 - フェーズ完了時にこのファイルを更新する (達成範囲・公開 API・主要ファイル・設計判断)
