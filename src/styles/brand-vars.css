@@ -1,8 +1,14 @@
 /*
- * hiz.blue ブランド / バナー用の named CSS 変数。スカイバナー (HomeBanner) の
- * グラデーションやブランドマークで使う固定色。テーマ (light/dark) では変化しない
- * ブランド色なので dark override は持たない。多段グラデーションは StyleX トークンに
- * しづらいため CSS var として定義する。
+ * hiz.blue ブランド / バナー用の named CSS 変数。
+ *
+ * --brand-* はブランドマークの固定色でテーマ (light/dark) では変化しない。
+ *
+ * バナー (HomeBanner) のスカイグラデーションと文字色はテーマで切り替える。
+ * light は昼の青空 (明るい青→シアン→クリーム) + 太陽の光輪、dark は夜空
+ * (ミッドナイトのグラデーション + 散らした星 + 月のひんやりした光輪) に変わる。
+ * 昼の配色をそのまま dark ページに重ねると明るすぎて浮くため。
+ * 多段グラデーションは StyleX トークンにしづらいので CSS var として定義し、
+ * dark override は他の *-vars.css と同じく [data-theme-resolved="dark"] で行う。
  */
 @layer base {
   :root {
@@ -13,6 +19,8 @@
     --brand-cream: #f0f7d8;
     --brand-tooltip: #545ca6;
     --brand-on-dark: #f7f9f9;
+
+    /* バナー — 昼 (light) */
     --banner-gradient: linear-gradient(
       180deg,
       #7e94ce 0%,
@@ -20,5 +28,48 @@
       #13d5e7 81.25%,
       #f0f7d8 100%
     );
+    /* 太陽の光輪 (右上)。 */
+    --banner-glow: radial-gradient(
+      circle at 50% 50%,
+      rgba(255, 255, 255, 0.92) 0%,
+      rgba(255, 255, 255, 0.55) 38%,
+      rgba(255, 255, 255, 0) 70%
+    );
+    --banner-text: #1c274c;
+    --banner-tagline: rgba(28, 39, 76, 0.78);
+    --banner-foot: rgba(28, 39, 76, 0.6);
+    --banner-foot-rule: rgba(28, 39, 76, 0.15);
+  }
+
+  /* バナー — 夜 (dark)。星のレイヤーをミッドナイトのグラデーションの上に重ねる
+     (background-image のレイヤーは先頭が手前)。 */
+  [data-theme-resolved="dark"] {
+    --banner-gradient:
+      radial-gradient(1.5px 1.5px at 14% 18%, rgba(255, 255, 255, 0.9) 50%, transparent 51%),
+      radial-gradient(1px 1px at 33% 11%, rgba(255, 255, 255, 0.7) 50%, transparent 51%),
+      radial-gradient(1px 1px at 47% 23%, rgba(220, 230, 255, 0.6) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 61% 13%, rgba(255, 255, 255, 0.85) 50%, transparent 51%),
+      radial-gradient(1px 1px at 76% 20%, rgba(255, 255, 255, 0.65) 50%, transparent 51%),
+      radial-gradient(1px 1px at 89% 12%, rgba(220, 230, 255, 0.55) 50%, transparent 51%),
+      radial-gradient(1px 1px at 9% 35%, rgba(255, 255, 255, 0.6) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 25% 42%, rgba(255, 255, 255, 0.8) 50%, transparent 51%),
+      radial-gradient(1px 1px at 52% 37%, rgba(220, 230, 255, 0.55) 50%, transparent 51%),
+      radial-gradient(1px 1px at 69% 45%, rgba(255, 255, 255, 0.6) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 83% 38%, rgba(255, 255, 255, 0.7) 50%, transparent 51%),
+      radial-gradient(1px 1px at 18% 53%, rgba(255, 255, 255, 0.5) 50%, transparent 51%),
+      radial-gradient(1px 1px at 43% 56%, rgba(220, 230, 255, 0.5) 50%, transparent 51%),
+      radial-gradient(1px 1px at 72% 58%, rgba(255, 255, 255, 0.55) 50%, transparent 51%),
+      linear-gradient(180deg, #060c26 0%, #0c1644 40%, #132152 70%, #1c2d66 100%);
+    /* 太陽 → 月: ひんやりと淡く、控えめな光輪。 */
+    --banner-glow: radial-gradient(
+      circle at 50% 50%,
+      rgba(220, 229, 255, 0.55) 0%,
+      rgba(160, 178, 236, 0.22) 38%,
+      rgba(160, 178, 236, 0) 70%
+    );
+    --banner-text: #eaefff;
+    --banner-tagline: rgba(223, 230, 255, 0.8);
+    --banner-foot: rgba(212, 221, 255, 0.62);
+    --banner-foot-rule: rgba(255, 255, 255, 0.16);
   }
 }

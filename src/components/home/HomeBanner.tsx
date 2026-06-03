@@ -7,11 +7,8 @@ interface HomeBannerProps {
   authorName: string;
 }
 
-// バナーの色はブランド固定 (テーマ非依存)。navy テキストをスカイグラデーション上に置く。
-const BANNER_TEXT = "#1C274C";
-const BANNER_TAGLINE = "rgba(28, 39, 76, 0.78)";
-const BANNER_FOOT = "rgba(28, 39, 76, 0.6)";
-const BANNER_FOOT_RULE = "rgba(28, 39, 76, 0.15)";
+// バナーのスカイ配色は brand-vars.css の --banner-* で管理し、light=昼空 / dark=夜空へ
+// 切り替わる (グラデーション・光輪・テキストすべて)。ここでは var() 参照のみ持つ。
 
 // 同一ファイルのフラットな文字列 const (StyleX media-query order の制約)。
 const BP_HOME_MID = "@media (min-width: 768px)";
@@ -23,14 +20,14 @@ const styles = stylex.create({
     gridRowEnd: "banner",
     gridColumnStart: "banner",
     gridColumnEnd: "banner",
-    // default の relative は sun glow (absolute) のアンカー兼ねる。広い画面では
+    // default の relative は glow (absolute) のアンカーを兼ねる。広い画面では
     // sticky な全高グラデーション列、狭い画面では上部の帯になる。
     position: { default: "relative", [BP_HOME_MID]: "sticky" },
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",
     backgroundImage: "var(--banner-gradient)",
-    color: BANNER_TEXT,
+    color: "var(--banner-text)",
     boxSizing: "border-box",
     paddingInline: { default: space.s5, [BP_HOME]: space.s6 },
     paddingBlock: { default: space.s6, [BP_HOME]: space.s7 },
@@ -38,15 +35,15 @@ const styles = stylex.create({
     alignSelf: { default: "stretch", [BP_HOME_MID]: "start" },
     height: { default: "auto", [BP_HOME_MID]: "100vh" },
   },
-  sun: {
+  // 右上の光輪。light では太陽、dark では月 (var(--banner-glow) で切替)。
+  glow: {
     position: "absolute",
     top: "-2.5rem",
     insetInlineEnd: "-3.125rem",
     width: "14.375rem",
     height: "14.375rem",
     borderRadius: "50%",
-    backgroundImage:
-      "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.55) 38%, rgba(255,255,255,0) 70%)",
+    backgroundImage: "var(--banner-glow)",
     pointerEvents: "none",
   },
   head: {
@@ -63,14 +60,14 @@ const styles = stylex.create({
     letterSpacing: "-0.02em",
     margin: 0,
     marginBlockEnd: space.s4,
-    color: BANNER_TEXT,
+    color: "var(--banner-text)",
   },
   tagline: {
     fontFamily: typography.fontSans,
     fontSize: typography.fontSizeSm,
     lineHeight: typography.lineHeightRelaxed,
     margin: 0,
-    color: BANNER_TAGLINE,
+    color: "var(--banner-tagline)",
     maxWidth: "16em",
   },
   foot: {
@@ -81,11 +78,11 @@ const styles = stylex.create({
     fontFamily: typography.fontSans,
     fontSize: typography.fontSizeXs,
     letterSpacing: "0.02em",
-    color: BANNER_FOOT,
+    color: "var(--banner-foot)",
     paddingBlockStart: space.s3,
     borderBlockStartWidth: "1px",
     borderBlockStartStyle: "solid",
-    borderBlockStartColor: BANNER_FOOT_RULE,
+    borderBlockStartColor: "var(--banner-foot-rule)",
   },
 });
 
@@ -93,7 +90,7 @@ const styles = stylex.create({
 export function HomeBanner({ title, tagline, authorName }: HomeBannerProps) {
   return (
     <div {...stylex.props(styles.banner)}>
-      <div aria-hidden="true" {...stylex.props(styles.sun)} />
+      <div aria-hidden="true" {...stylex.props(styles.glow)} />
       <div {...stylex.props(styles.head)}>
         <h1 {...stylex.props(styles.title)}>{title}</h1>
         <p {...stylex.props(styles.tagline)}>{tagline}</p>
