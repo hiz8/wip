@@ -997,7 +997,7 @@ Phase 9 着手前に環境を `npm run dev` で改めて起動して判明した
 
 ### 主要ファイル
 
-- `src/styles/brand-vars.css` — バナー用に `--banner-gradient` / `--banner-glow` / `--banner-text` / `--banner-tagline` / `--banner-foot` / `--banner-foot-rule` を定義し、他の *-vars.css と同じ `[data-theme-resolved="dark"]` で夜空側を override。星は radial-gradient のレイヤーを夜空グラデーションに重ねて表現
+- `src/styles/brand-vars.css` — バナー用に `--banner-gradient` / `--banner-glow` / `--banner-text` / `--banner-tagline` / `--banner-foot` / `--banner-foot-rule` を定義し、他の \*-vars.css と同じ `[data-theme-resolved="dark"]` で夜空側を override。星は radial-gradient のレイヤーを夜空グラデーションに重ねて表現
 - `src/components/home/HomeBanner.tsx` — テキスト色・光輪をハードコード const から `var(--banner-*)` 参照へ変更 (背景は元から var 参照)。光輪が dark で月になるため StyleX キー `sun` → `glow` に改名
 
 ### 設計判断メモ
