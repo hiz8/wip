@@ -1,11 +1,11 @@
 /*
- * Named CSS variables for callout colors. These are the single source of
- * truth — both raw CSS (content.css) and StyleX tokens (tokens.stylex.ts)
- * reference them via var(--callout-...).
+ * Callout 配色の named CSS 変数。これらが単一の真実の源 (single source of
+ * truth) であり、raw CSS (content.css) と StyleX トークン (tokens.stylex.ts)
+ * の双方が var(--callout-...) 経由で参照する。
  *
- * Dark-mode bg overrides are gated on [data-theme-resolved="dark"], which is
- * set on <html> by themeScript / useTheme. Border colors are intentionally
- * the same in both modes.
+ * dark モードの背景上書きは [data-theme-resolved="dark"] でゲートする。これは
+ * themeScript / useTheme が <html> に付与する。border 色は意図的に両モードで
+ * 同一にしている。
  */
 @layer base {
   :root {

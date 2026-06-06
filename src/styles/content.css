@@ -1,14 +1,13 @@
 /*
- * Callout colors come from src/styles/callout-vars.css. Both this file and
- * the StyleX tokens in tokens.stylex.ts reference the same --callout-* CSS
- * variables, so there is a single source of truth for the colors.
+ * Callout 配色は src/styles/callout-vars.css に由来する。このファイルと
+ * tokens.stylex.ts の StyleX トークンは同じ --callout-* CSS 変数を参照するため、
+ * 配色の真実の源は一つである。
  */
 @layer components {
-  /* The content body is injected as raw HTML (dangerouslySetInnerHTML), so
-     StyleX cannot style its descendants and reset.css has zeroed every
-     element's margins/padding. The rules below restore prose typography:
-     vertical rhythm, headings, lists, links, and block elements. Colors come
-     from prose-vars.css. */
+  /* コンテンツ本文は raw HTML (dangerouslySetInnerHTML) として注入されるため、
+     StyleX はその子孫をスタイルできず、reset.css が全要素の margin/padding を
+     ゼロにしている。以下のルールで prose のタイポグラフィ (縦のリズム、見出し、
+     リスト、リンク、ブロック要素) を復元する。配色は prose-vars.css に由来する。 */
   [data-content-body] {
     line-height: 1.75;
     counter-reset: fn-num;
@@ -66,7 +65,7 @@
     margin-block: 0.35rem;
   }
 
-  /* Tighten nested lists against their parent item. */
+  /* ネストしたリストを親アイテムに対して詰める。 */
   [data-content-body] li > :is(ul, ol) {
     margin-block: 0.35rem;
   }
@@ -92,8 +91,8 @@
     border-block-start: 1px solid var(--prose-border-subtle);
   }
 
-  /* Plain blockquotes only — callouts (blockquote[data-callout]) are styled
-     separately below. */
+  /* プレーンな blockquote のみ — callout (blockquote[data-callout]) は下で
+     別途スタイルする。 */
   [data-content-body] blockquote:not([data-callout]) {
     margin-block: 1rem;
     padding-inline-start: 1rem;
@@ -140,9 +139,9 @@
     line-height: 1.6;
   }
 
-  /* Shiki emits per-token colors as --shiki-light / --shiki-dark CSS
-     variables (see shiki.ts: defaultColor: false). Map them to the active
-     theme so syntax highlighting actually renders. */
+  /* Shiki はトークンごとの配色を --shiki-light / --shiki-dark の CSS 変数として
+     出力する (shiki.ts: defaultColor: false を参照)。シンタックスハイライトが
+     実際に描画されるよう、これらをアクティブなテーマに対応付ける。 */
   [data-content-body] pre code,
   [data-content-body] pre code span {
     color: var(--shiki-light);
@@ -237,14 +236,13 @@
     content: "⚠ " attr(data-callout-title, "Warning");
   }
 
-  /* Marginalia layout (Tufte CSS inspired): callouts and footnote asides
-     flow inline by default and float into the surrounding gutter at
-     >=1024px. Left/right alternation kicks in at >=1280px via
-     `data-side="left|right"` assigned at build time by
-     `assignMarginaliaSides`. On narrow viewports the inline footnote aside
-     is hidden — the trailing FootnoteSection takes over per
-     docs/ui-spec.md. The breakpoints mirror DetailLayout's
-     `BP_DESKTOP_WIDE` (1280px) and AppShell's `BP_DESKTOP` (1024px). */
+  /* Marginalia レイアウト (Tufte CSS に着想)。callout と脚注 aside は既定では
+     インラインで流れ、>=1024px で周囲のガターに float する。左右の振り分けは
+     >=1280px で有効になり、ビルド時に `assignMarginaliaSides` が付与する
+     `data-side="left|right"` で制御する。狭いビューポートではインラインの脚注
+     aside は隠れ、docs/ui-spec.md に従って末尾の FootnoteSection が引き継ぐ。
+     ブレークポイントは DetailLayout の `BP_DESKTOP_WIDE` (1280px) と AppShell の
+     `BP_DESKTOP` (1024px) をミラーする。 */
 
   [data-content-body] aside.footnote-aside {
     display: none;
@@ -271,8 +269,8 @@
       margin-block-end: 0;
     }
 
-    /* Number prefix matches the `<sup>` order; counter advances per aside in
-       document order, mirroring mdast-util-to-hast's <sup> numbering. */
+    /* 番号の接頭辞は `<sup>` の順序に一致する。カウンタはドキュメント順に aside
+       ごとに進み、mdast-util-to-hast の <sup> 採番をミラーする。 */
     [data-content-body] aside.footnote-aside::before {
       counter-increment: fn-num;
       content: counter(fn-num) ". ";
@@ -281,9 +279,9 @@
       margin-inline-end: 0.25rem;
     }
 
-    /* width + negative margin keeps the float box entirely outside the main
-       column (44rem fixed by DetailLayout's minmax) and lands inside the
-       12rem gutter column with a small buffer toward the RightSidebar. */
+    /* width + 負マージンにより、float ボックスをメインカラム (DetailLayout の
+       minmax で 44rem に固定) の完全に外側に保ち、12rem のガター列の内側に、
+       RightSidebar へ向けた小さなバッファを取って収める。 */
     [data-content-body] blockquote[data-callout],
     [data-content-body] aside.footnote-aside {
       float: right;
