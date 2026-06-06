@@ -7,7 +7,7 @@ interface HomeBannerProps {
 }
 
 // バナーのスカイ配色は brand-vars.css の --banner-* で管理し、light=昼空 / dark=夜空へ
-// 切り替わる (グラデーション・光輪・テキストすべて)。ここでは var() 参照のみ持つ。
+// 切り替わる (グラデーション・テキスト)。ここでは var() 参照のみ持つ。
 
 // 同一ファイルのフラットな文字列 const (StyleX media-query order の制約)。
 const BP_HOME_MID = "@media (min-width: 768px)";
@@ -19,8 +19,7 @@ const styles = stylex.create({
     gridRowEnd: "banner",
     gridColumnStart: "banner",
     gridColumnEnd: "banner",
-    // default の relative は glow (absolute) のアンカーを兼ねる。広い画面では
-    // sticky な全高グラデーション列、狭い画面では上部の帯になる。
+    // 広い画面では sticky な全高グラデーション列、狭い画面では上部の帯になる。
     position: { default: "relative", [BP_HOME_MID]: "sticky" },
     overflow: "hidden",
     display: "flex",
@@ -34,17 +33,6 @@ const styles = stylex.create({
     top: { default: "auto", [BP_HOME_MID]: 0 },
     alignSelf: { default: "stretch", [BP_HOME_MID]: "start" },
     height: { default: "auto", [BP_HOME_MID]: "100vh" },
-  },
-  // 右上の光輪。light では太陽、dark では月 (var(--banner-glow) で切替)。
-  glow: {
-    position: "absolute",
-    top: "-2.5rem",
-    insetInlineEnd: "-3.125rem",
-    width: "14.375rem",
-    height: "14.375rem",
-    borderRadius: "50%",
-    backgroundImage: "var(--banner-glow)",
-    pointerEvents: "none",
   },
   head: {
     position: "relative",
@@ -74,7 +62,6 @@ const styles = stylex.create({
 export function HomeBanner({ title, tagline }: HomeBannerProps) {
   return (
     <div {...stylex.props(styles.banner)}>
-      <div aria-hidden="true" {...stylex.props(styles.glow)} />
       <div {...stylex.props(styles.head)}>
         <h1 {...stylex.props(styles.title)}>{title}</h1>
         <p {...stylex.props(styles.tagline)}>{tagline}</p>
