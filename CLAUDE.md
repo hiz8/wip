@@ -193,8 +193,11 @@ npm run fmt
 ### コンポーネント
 
 - React 関数コンポーネントを使用
+- React 自体の情報を必要とする場合は <https://react.dev/llms.txt> を参照する
 - react-aria-components の Hook / Component を優先的に活用
+- react-aria もしくは react-aria-components を使用する際は <https://react-aria.adobe.com/llms.txt> を参照する
 - スタイリングは StyleX で記述。インラインスタイル / `style` 属性は原則使用しない
+- StyleX を使用する際は `docs/stylex-authoring.md` を参照する
 - コンポーネントは小さく分割し、責務を明確に
 
 ### Markdown 処理
