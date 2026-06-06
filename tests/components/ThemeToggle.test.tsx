@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ThemeToggle } from "@/components/common/ThemeToggle.tsx";
 import { STORAGE_KEY } from "@/lib/theme/constants.ts";
@@ -50,5 +51,15 @@ describe("ThemeToggle", () => {
     expect(document.documentElement.dataset["theme"]).toBe("light");
     fireEvent.click(screen.getByRole("button", { name: /ライト/u }));
     expect(document.documentElement.dataset["theme"]).toBe("dark");
+  });
+
+  it("exposes the label via a react-aria tooltip instead of a native title", async () => {
+    const user = userEvent.setup();
+    render(<ThemeToggle />);
+    const button = screen.getByRole("button", { name: /システム/u });
+    expect(button).not.toHaveAttribute("title");
+    await user.tab();
+    expect(button).toHaveFocus();
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("テーマ: システム");
   });
 });

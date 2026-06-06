@@ -5,6 +5,7 @@ import { colors, space } from "@/styles/tokens.stylex.ts";
 import { a11y } from "@/styles/a11y.ts";
 import { navChrome } from "@/styles/navChrome.ts";
 import { ThemeToggle } from "@/components/common/ThemeToggle.tsx";
+import { Tooltip } from "@/components/common/Tooltip.tsx";
 import { SearchIcon } from "@/components/common/SearchIcon.tsx";
 import { SearchDialog } from "@/components/common/SearchDialog.tsx";
 import { bindSlashShortcut } from "@/lib/search/slashShortcut.ts";
@@ -50,27 +51,30 @@ export function IconNav() {
   return (
     <>
       <nav {...stylex.props(styles.nav)} aria-label="Site sections">
-        <button
-          type="button"
-          onClick={openSearch}
-          aria-label="Search (press /)"
-          {...stylex.props(navChrome.iconButton)}
-        >
-          <SearchIcon />
-          <span {...stylex.props(a11y.srOnly)}>Search</span>
-        </button>
-        {NAV_SECTIONS.map((section) => (
-          <Link
-            key={section.to}
-            to={section.to}
-            {...stylex.props(
-              navChrome.iconButton,
-              section.isActive(path) && navChrome.iconButtonActive,
-            )}
+        <Tooltip label="Search">
+          <button
+            type="button"
+            onClick={openSearch}
+            aria-label="Search (press /)"
+            {...stylex.props(navChrome.iconButton)}
           >
-            {section.renderIcon(20)}
-            <span {...stylex.props(a11y.srOnly)}>{section.label}</span>
-          </Link>
+            <SearchIcon />
+            <span {...stylex.props(a11y.srOnly)}>Search</span>
+          </button>
+        </Tooltip>
+        {NAV_SECTIONS.map((section) => (
+          <Tooltip key={section.to} label={section.label}>
+            <Link
+              to={section.to}
+              {...stylex.props(
+                navChrome.iconButton,
+                section.isActive(path) && navChrome.iconButtonActive,
+              )}
+            >
+              {section.renderIcon(20)}
+              <span {...stylex.props(a11y.srOnly)}>{section.label}</span>
+            </Link>
+          </Tooltip>
         ))}
         <div {...stylex.props(styles.spacer)} />
         <ThemeToggle />
