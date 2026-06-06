@@ -1,11 +1,11 @@
 /*
- * Named CSS variables for code blocks. Same pattern as callout-vars.css:
- * raw CSS (content.css) and StyleX tokens (tokens.stylex.ts) both reference
- * --code-bg and --code-border, so the values live in one place.
+ * コードブロック用の named CSS 変数。callout-vars.css と同じパターンで、
+ * raw CSS (content.css) と StyleX トークン (tokens.stylex.ts) の双方が
+ * --code-bg と --code-border を参照するため、値は一箇所にまとめている。
  *
- * Border colors were picked to clear WCAG 2.2 SC 1.4.11 (3:1) against
- * both the surrounding page background and the code-block background in
- * each theme. See scripts/check-contrast.ts.
+ * border 色は、各テーマで周囲のページ背景とコードブロック背景の双方に対して
+ * WCAG 2.2 SC 1.4.11 (3:1) を満たすよう選定している。scripts/check-contrast.ts
+ * を参照。
  */
 @layer base {
   :root {

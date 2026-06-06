@@ -1,14 +1,14 @@
 /*
- * Overrides for Pagefind UI. The upstream stylesheet (loaded at runtime
- * from /pagefind/pagefind-ui.css) sets --pagefind-ui-* design tokens on
- * :root with fixed light-mode colors (#393939 text on #ffffff bg, etc.)
- * that are illegible on the dark theme and visually inconsistent with
- * the rest of the site.
+ * Pagefind UI 用の上書き。上流のスタイルシート (実行時に
+ * /pagefind/pagefind-ui.css から読み込まれる) は --pagefind-ui-* デザイン
+ * トークンを :root に、固定の light モード配色 (#ffffff 背景に #393939 文字など)
+ * で設定する。これらは dark テーマでは判読できず、サイトの他の部分と視覚的に
+ * 不整合になる。
  *
- * Here we re-declare the same tokens on .pagefind-ui (more specific than
- * :root) and switch them on [data-theme-resolved="dark"], so the search
- * dialog honours the active theme regardless of CSS load order. HEX
- * values mirror src/styles/tokens.stylex.ts.
+ * ここでは同じトークンを (:root より詳細度の高い) .pagefind-ui に再宣言し、
+ * [data-theme-resolved="dark"] で切り替える。これにより検索ダイアログは CSS の
+ * 読み込み順に関係なくアクティブなテーマを尊重する。HEX 値は
+ * src/styles/tokens.stylex.ts をミラーする。
  */
 @layer components {
   .pagefind-ui {
@@ -31,9 +31,8 @@
     --pagefind-ui-tag: #1d212c;
   }
 
-  /* Pagefind wraps matched terms in <mark>. The browser default (yellow
-     on dark text) is unreadable in dark mode. Use the same selection
-     swatch as the rest of the site. */
+  /* Pagefind は一致した語を <mark> で囲む。ブラウザの既定 (暗い文字に黄色) は
+     dark モードでは判読できない。サイトの他の部分と同じ選択色を使う。 */
   .pagefind-ui mark {
     background-color: #fde8c4;
     color: inherit;

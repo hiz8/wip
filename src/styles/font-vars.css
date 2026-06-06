@@ -1,8 +1,8 @@
 /*
- * Named CSS variables for font stacks. Same pattern as callout-vars.css:
- * raw CSS (content.css) and StyleX tokens (tokens.stylex.ts) both
- * reference these via var(--font-...), so there is one source of truth.
- * Font stacks are constant across light/dark, so no theme overrides.
+ * フォントスタック用の named CSS 変数。callout-vars.css と同じパターンで、
+ * raw CSS (content.css) と StyleX トークン (tokens.stylex.ts) の双方が
+ * var(--font-...) 経由で参照するため、真実の源は一つである。
+ * フォントスタックは light/dark で不変なので、テーマ上書きはない。
  */
 @layer base {
   :root {

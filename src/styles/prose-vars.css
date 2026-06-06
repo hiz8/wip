@@ -1,9 +1,9 @@
 /*
- * Named CSS variables for prose (the rendered Markdown body). The content
- * body is injected via dangerouslySetInnerHTML, so StyleX cannot reach its
- * descendant elements; raw CSS in content.css styles them instead and reads
- * its colors from here. Values mirror the StyleX theme tokens in
- * theme.stylex.ts so light/dark stay in sync with the rest of the UI.
+ * prose (レンダリング済みの Markdown 本文) 用の named CSS 変数。コンテンツ本文は
+ * dangerouslySetInnerHTML で注入されるため、StyleX はその子孫要素に到達できない。
+ * 代わりに content.css の raw CSS がそれらをスタイルし、配色はここから読み取る。
+ * 値は theme.stylex.ts の StyleX テーマトークンをミラーしており、light/dark が
+ * UI 全体と同期する。
  */
 @layer base {
   :root {
