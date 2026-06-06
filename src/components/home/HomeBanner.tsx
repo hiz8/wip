@@ -4,7 +4,6 @@ import { space, typography } from "@/styles/tokens.stylex.ts";
 interface HomeBannerProps {
   title: string;
   tagline: string;
-  authorName: string;
 }
 
 // バナーのスカイ配色は brand-vars.css の --banner-* で管理し、light=昼空 / dark=夜空へ
@@ -26,6 +25,7 @@ const styles = stylex.create({
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",
+    justifyContent: { default: "flex-start", [BP_HOME_MID]: "center" },
     backgroundImage: "var(--banner-gradient)",
     color: "var(--banner-text)",
     boxSizing: "border-box",
@@ -49,8 +49,6 @@ const styles = stylex.create({
   head: {
     position: "relative",
     zIndex: 1,
-    marginBlockStart: { default: 0, [BP_HOME_MID]: "auto" },
-    marginBlockEnd: space.s6,
   },
   title: {
     fontFamily: typography.fontBrand,
@@ -70,34 +68,16 @@ const styles = stylex.create({
     color: "var(--banner-tagline)",
     maxWidth: "16em",
   },
-  foot: {
-    position: "relative",
-    zIndex: 1,
-    display: "flex",
-    justifyContent: "space-between",
-    fontFamily: typography.fontSans,
-    fontSize: typography.fontSizeXs,
-    letterSpacing: "0.02em",
-    color: "var(--banner-foot)",
-    paddingBlockStart: space.s3,
-    borderBlockStartWidth: "1px",
-    borderBlockStartStyle: "solid",
-    borderBlockStartColor: "var(--banner-foot-rule)",
-  },
 });
 
 // hiz.blue 風のスカイバナー列。ナビとメインコンテンツの間に置く全高グラデーション。
-export function HomeBanner({ title, tagline, authorName }: HomeBannerProps) {
+export function HomeBanner({ title, tagline }: HomeBannerProps) {
   return (
     <div {...stylex.props(styles.banner)}>
       <div aria-hidden="true" {...stylex.props(styles.glow)} />
       <div {...stylex.props(styles.head)}>
         <h1 {...stylex.props(styles.title)}>{title}</h1>
         <p {...stylex.props(styles.tagline)}>{tagline}</p>
-      </div>
-      <div {...stylex.props(styles.foot)}>
-        <span>{authorName}</span>
-        <span>Digital Garden</span>
       </div>
     </div>
   );

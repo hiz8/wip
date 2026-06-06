@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout/AppShell.tsx";
 import { ContentTypeEntries } from "@/components/home/ContentTypeEntries.tsx";
 import { FeaturedSection } from "@/components/home/FeaturedSection.tsx";
 import { HomeBanner } from "@/components/home/HomeBanner.tsx";
+import { HomeCredit } from "@/components/home/HomeCredit.tsx";
 import { HomeSection } from "@/components/home/HomeSection.tsx";
 import { MarkdownProse } from "@/components/home/MarkdownProse.tsx";
 import { RecentSection } from "@/components/home/RecentSection.tsx";
@@ -41,10 +42,14 @@ const styles = stylex.create({
     minWidth: 0,
     display: "flex",
     flexDirection: "column",
-    gap: space.s7,
-    maxWidth: "46rem",
     paddingInline: { default: space.s4, [BP_HOME_MID]: space.s6 },
     paddingBlock: space.s7,
+  },
+  sections: {
+    display: "flex",
+    flexDirection: "column",
+    gap: space.s7,
+    maxWidth: "46rem",
   },
 });
 
@@ -61,38 +66,42 @@ function HomePage() {
   return (
     <AppShell variant="home">
       <div {...stylex.props(styles.grid)}>
-        <HomeBanner title={SITE_NAME} tagline={SITE_DESCRIPTION} authorName={data.authorName} />
+        <HomeBanner title={SITE_NAME} tagline={SITE_DESCRIPTION} />
 
         <div {...stylex.props(styles.content)}>
-          {data.introHtml !== null && <MarkdownProse html={data.introHtml} />}
+          <div {...stylex.props(styles.sections)}>
+            {data.introHtml !== null && <MarkdownProse html={data.introHtml} />}
 
-          {data.aboutHtml !== null && (
-            <HomeSection title="このサイトについて">
-              <MarkdownProse html={data.aboutHtml} />
+            {data.aboutHtml !== null && (
+              <HomeSection title="このサイトについて">
+                <MarkdownProse html={data.aboutHtml} />
+              </HomeSection>
+            )}
+
+            {data.recent.length > 0 && (
+              <HomeSection title="最近更新">
+                <RecentSection items={data.recent} />
+              </HomeSection>
+            )}
+
+            <HomeSection title="コンテンツ">
+              <ContentTypeEntries counts={data.counts} />
             </HomeSection>
-          )}
 
-          {data.recent.length > 0 && (
-            <HomeSection title="最近更新">
-              <RecentSection items={data.recent} />
-            </HomeSection>
-          )}
+            {data.featured.length > 0 && (
+              <HomeSection title="Featured">
+                <FeaturedSection items={data.featured} />
+              </HomeSection>
+            )}
 
-          <HomeSection title="コンテンツ">
-            <ContentTypeEntries counts={data.counts} />
-          </HomeSection>
+            {data.socialLinks.length > 0 && (
+              <HomeSection title="リンク">
+                <SocialLinks links={data.socialLinks} />
+              </HomeSection>
+            )}
+          </div>
 
-          {data.featured.length > 0 && (
-            <HomeSection title="Featured">
-              <FeaturedSection items={data.featured} />
-            </HomeSection>
-          )}
-
-          {data.socialLinks.length > 0 && (
-            <HomeSection title="リンク">
-              <SocialLinks links={data.socialLinks} />
-            </HomeSection>
-          )}
+          <HomeCredit authorName={data.authorName} />
         </div>
       </div>
     </AppShell>
