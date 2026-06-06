@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import * as stylex from "@stylexjs/stylex";
 import { a11y } from "@/styles/a11y.ts";
 import { navChrome } from "@/styles/navChrome.ts";
+import { Tooltip } from "@/components/common/Tooltip.tsx";
 import { useTheme } from "@/lib/theme/useTheme.ts";
 import { nextPreference, type Preference } from "@/lib/theme/constants.ts";
 
@@ -64,15 +65,16 @@ export function ThemeToggle() {
     setPreference(nextPreference(preference));
   }, [preference, setPreference]);
   return (
-    <button
-      type="button"
-      aria-label={LABEL[preference]}
-      title={LABEL[preference]}
-      onClick={handleClick}
-      {...stylex.props(navChrome.iconButton)}
-    >
-      <Icon preference={preference} />
-      <span {...stylex.props(a11y.srOnly)}>{LABEL[preference]}</span>
-    </button>
+    <Tooltip label={LABEL[preference]}>
+      <button
+        type="button"
+        aria-label={LABEL[preference]}
+        onClick={handleClick}
+        {...stylex.props(navChrome.iconButton)}
+      >
+        <Icon preference={preference} />
+        <span {...stylex.props(a11y.srOnly)}>{LABEL[preference]}</span>
+      </button>
+    </Tooltip>
   );
 }
