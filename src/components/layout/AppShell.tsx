@@ -29,7 +29,8 @@ const styles = stylex.create({
   root: {
     minHeight: "100vh",
     display: "grid",
-    gridTemplateColumns: "auto 1fr",
+    // IconNav が表示される ≥768px でのみ「レール + 本体」の 2 列にする。
+    gridTemplateColumns: { default: "1fr", [BP_TABLET]: "auto 1fr" },
     backgroundColor: colors.bgBase,
     color: colors.textPrimary,
     fontFamily: typography.fontSans,
