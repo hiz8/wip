@@ -20,14 +20,23 @@
     --brand-tooltip: #545ca6;
     --brand-on-dark: #f7f9f9;
 
-    /* バナー — 昼 (light) */
-    --banner-gradient: linear-gradient(
-      180deg,
-      #7e94ce 0%,
-      #13d5e7 48.96%,
-      #13d5e7 81.25%,
-      #f0f7d8 100%
-    );
+    /* バナー — 昼 (light)。昼空グラデーションの手前 (先頭レイヤー) に雲の png を
+       右下へ重ねる。位置 / サイズ / 繰り返しは banner の longhand から var で参照する
+       (1 レイヤー目=雲、2 レイヤー目=グラデーション)。dark では雲を持たないため、
+       これらの var は [data-theme-resolved="dark"] 側で上書きする。
+
+       雲は縮小せず本来サイズ (auto = 100%) で表示し、見え方は位置で調整する。
+       バナーの形がブレークポイントで変わるため位置を 2 通り持つ:
+       - -position      … モバイルの横帯。右下角を覗かせ、左寄りの文字を避ける。
+       - -position-wide … 768px 以上の縦列。右下 extern へ逃がし、占有を抑える。
+       いずれも 2 値目 (center) はグラデーション側に効く。*/
+    --banner-gradient:
+      url("/clouds_001.png"),
+      linear-gradient(180deg, #7e94ce 0%, #13d5e7 48.96%, #13d5e7 81.25%, #f0f7d8 100%);
+    --banner-bg-position: right calc(40vw - 350px) bottom -340px, center;
+    --banner-bg-position-wide: right -100px bottom min(40vh - 660px, -60px), center;
+    --banner-bg-size: auto, cover;
+    --banner-bg-repeat: no-repeat;
     --banner-text: #1c274c;
     --banner-tagline: rgba(28, 39, 76, 0.78);
     --banner-foot: rgba(28, 39, 76, 0.6);
@@ -53,6 +62,12 @@
       radial-gradient(1px 1px at 43% 56%, rgba(220, 230, 255, 0.5) 50%, transparent 51%),
       radial-gradient(1px 1px at 72% 58%, rgba(255, 255, 255, 0.55) 50%, transparent 51%),
       linear-gradient(180deg, #060c26 0%, #0c1644 40%, #132152 70%, #1c2d66 100%);
+    /* 夜空は雲を持たない。全レイヤー (星 + グラデーション) に効く 1 値へ戻し、
+       light の 2 値 (雲用) リストが星レイヤーに繰り返し適用されるのを防ぐ。 */
+    --banner-bg-position: center;
+    --banner-bg-position-wide: center;
+    --banner-bg-size: auto;
+    --banner-bg-repeat: no-repeat;
     --banner-text: #eaefff;
     --banner-tagline: rgba(223, 230, 255, 0.8);
     --banner-foot: rgba(212, 221, 255, 0.62);

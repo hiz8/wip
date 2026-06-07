@@ -26,6 +26,13 @@ const styles = stylex.create({
     flexDirection: "column",
     justifyContent: { default: "flex-start", [BP_HOME_MID]: "center" },
     backgroundImage: "var(--banner-gradient)",
+    backgroundRepeat: "var(--banner-bg-repeat)",
+    // 帯 (default) と縦列 (BP_HOME_MID 以上) で雲の最適位置が異なるため切り替える。
+    backgroundPosition: {
+      default: "var(--banner-bg-position)",
+      [BP_HOME_MID]: "var(--banner-bg-position-wide)",
+    },
+    backgroundSize: "var(--banner-bg-size)",
     color: "var(--banner-text)",
     boxSizing: "border-box",
     paddingInline: { default: space.s5, [BP_HOME]: space.s6 },
