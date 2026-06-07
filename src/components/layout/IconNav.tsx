@@ -62,6 +62,7 @@ export function IconNav() {
             <span {...stylex.props(a11y.srOnly)}>Search</span>
           </button>
         </Tooltip>
+        <div {...stylex.props(styles.spacer)} />
         {NAV_SECTIONS.map((section) => (
           <Tooltip key={section.to} label={section.label}>
             <Link
