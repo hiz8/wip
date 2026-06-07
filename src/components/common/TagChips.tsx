@@ -11,9 +11,8 @@ interface TagChipsProps {
   tags: readonly string[];
 }
 
-// コンテンツタイプごとの型安全な `to`。動的な `$tag` セグメントは `--` で
-// エスケープした tag slug を保持する。タグはタイプごとに名前空間が分離される
-// ため、リンクがタイプをまたぐことはない。
+// type ごとに名前空間が分離されたタグルート。リンクが type をまたがないよう、
+// type 専用の型付きルート文字列を持つ。
 const TAG_ROUTE = {
   notes: "/notes/tags/$tag",
   glossary: "/glossary/tags/$tag",

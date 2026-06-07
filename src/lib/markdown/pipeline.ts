@@ -128,10 +128,9 @@ export async function renderContentDrafts<F extends BaseFrontmatter>(
   return drafts;
 }
 
-// Embed のルックアップは歴史的に slug のみのキーを使っていた。Notes 限定の
-// レンダリングはその方式のままだが、cross-type のレンダリングは曖昧さを避ける
-// ため `${type}/${slug}` を使う。既存の applyEmbed シグネチャとの後方互換を
-// 保つため、ここでは slug をキーにした map を公開する。
+// applyEmbed は slug のみをキーにした map を期待する (後方互換)。一方 cross-type
+// のレンダリングは曖昧さを避けるため `${type}/${slug}` でスコープするので、ここで
+// slug キーへ畳み直して公開する。
 function bodiesForEmbed(scoped: Map<string, Root>): Map<string, Root> {
   const flat = new Map<string, Root>();
   for (const [key, value] of scoped.entries()) {

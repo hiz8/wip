@@ -4,13 +4,13 @@ import { SKIP, visit } from "unist-util-visit";
 export type MarginaliaSide = "left" | "right";
 
 // AST をドキュメント順にたどり、すべての callout (blockquote[data-callout]) と
-// 脚注参照に left/right を交互に割り当てる。偶数インデックスは right、奇数
-// インデックスは left。side は data.hProperties に書き込まれ、下流で remark-rehype
-// がそれを data-side という HTML 属性として実体化する。
+// 脚注参照に left/right を交互に割り当てる (割り当ては sideFor 参照)。side は
+// data.hProperties に書き込まれ、下流で remark-rehype が data-side 属性として
+// 実体化する。
 //
-// すべての blockquote で SKIP を返すことで、callout・embed・素の引用の内側に
-// ネストした脚注参照がグローバルカウンタを進めないようにする (それらの aside は
-// 独立した marginalia としてガターに到達することはない)。
+// すべての blockquote で SKIP を返すのは、callout・embed・素の引用の内側に
+// ネストした脚注参照でグローバルカウンタを進めないため。ネストした参照由来の
+// aside は独立した marginalia としてガターに到達しない。
 export function assignMarginaliaSides(tree: Root): void {
   let index = 0;
 

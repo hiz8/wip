@@ -1,9 +1,8 @@
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 // グローバルスタイルシートは router.tsx ではなく root route から import する。
-// こうすることで tanstack-start の dev style collector がそれらを SSR の <head>
-// に含め、dev サーバーの初回描画でスタイル未適用のちらつきが起きるのを防ぐ。
-// (@layer のカスケード順序自体は下の LAYER_ORDER_HTML で別途固定しており、
-// それが injection 順に関係なく StyleX を勝たせ続ける根拠となる。)
+// root route なら tanstack-start の dev style collector がスタイルシートを SSR の
+// <head> に含め、dev サーバー初回描画のスタイル未適用ちらつきを防ぐ。
+// (@layer のカスケード順序の固定は別途 LAYER_ORDER_HTML が担う。)
 import "@/styles/reset.css";
 import "@/styles/brand-vars.css";
 import "@/styles/callout-vars.css";
@@ -68,15 +67,14 @@ const STYLEX_DEV_CSS_HREF = "/virtual:stylex.css";
 
 // CSS の `@layer` カスケード順序を、<head> の最初の要素として前もって固定する。
 // @layer の優先順位は名前が最初に現れる順序で決まるため、ここで名前付きレイヤーを
-// 宣言しておけば、StyleX が後から出す `@layer priorityN` 宣言は常にそれらの後に
-// 追加され、結果として勝つ — スタイルシートの injection 順序に関係なく。
+// 宣言しておけば、StyleX が後から出す `@layer priorityN` 宣言は常に後へ追加され、
+// injection 順序に関係なく勝つ。
 //
-// これは dev で重要になる: hydration 後、TanStack は (同じ宣言を持っていた) SSR の
+// dev で重要になる: hydration 後、TanStack は (同じ宣言を持っていた) SSR の
 // style-collector <link> を取り除き、Vite はグローバルスタイルシートを StyleX の
-// virtual CSS link の *後* に <style> タグとして再 inject する。この固定宣言が
-// なければ順序が反転し (reset/base が StyleX を上書きしてしまう)、これはまさに
-// この宣言が防いでいる dev 限定のリグレッションである。src/styles/reset.css
-// 冒頭の宣言をミラーしている。
+// virtual CSS link の *後* に <style> として再 inject する。この固定宣言がなければ
+// 順序が反転し reset/base が StyleX を上書きする — dev 限定のリグレッションを防ぐ。
+// src/styles/reset.css 冒頭の宣言をミラーしている。
 const LAYER_ORDER_HTML = { __html: "@layer reset, base, components, utilities;" };
 
 function RootDocument() {

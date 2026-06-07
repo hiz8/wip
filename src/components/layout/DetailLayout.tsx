@@ -43,7 +43,7 @@ const styles = stylex.create({
       [BP_DESKTOP_WIDE]: '"left-margin main right-margin"',
     },
   },
-  // 確保用のガターセル。marginalia コンテンツはもうここには mount されない:
+  // 確保用のガターセル。marginalia コンテンツはここには mount されない:
   // callout と footnote の aside は main 列の HTML 内に存在し、負マージンの
   // float でこれらのセルへ逃げ出す。空の div は、float が着地する物理的な
   // スペースを grid が依然として割り当てるために存在する。

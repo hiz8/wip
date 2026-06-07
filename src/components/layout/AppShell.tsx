@@ -20,7 +20,7 @@ interface AppShellProps {
 // 参照として出力され、`enableMediaQueryOrder` をバイパスして重なり合うクエリを
 // ソース順で衝突させてしまう。同一ファイルの文字列 const は StyleX babel plugin
 // によって静的に inline 化され、`@stylexjs/eslint-plugin` の identifier
-// evaluator で解決される (これは `MemberExpression` をたどらないため、以前の
+// evaluator で解決される (evaluator は `MemberExpression` をたどらないため、以前の
 // `as const bp = { ... }` オブジェクトパターンは使えない)。
 const BP_TABLET = "@media (min-width: 768px)";
 const BP_DESKTOP = "@media (min-width: 1024px)";

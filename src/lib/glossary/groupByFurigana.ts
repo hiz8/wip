@@ -26,7 +26,7 @@ export const FURIGANA_GROUP_ORDER: readonly FuriganaGroup[] = [
 ];
 
 const HIRAGANA_TO_GROUP: Record<string, FuriganaGroup> = {
-  // あ行 (母音と小書きかな)
+  // あ行 (小書きかなを含む)
   あ: "あ行",
   い: "あ行",
   う: "あ行",
