@@ -128,7 +128,7 @@ export function furiganaGroupLabel(group: FuriganaGroup): string {
   return group === "その他" ? group : group.charAt(0);
 }
 
-export function groupByFurigana(furigana: string | undefined): FuriganaGroup {
+export function groupByFurigana(furigana: string | null | undefined): FuriganaGroup {
   if (!furigana) return "その他";
   const trimmed = furigana.trim();
   if (trimmed.length === 0) return "その他";

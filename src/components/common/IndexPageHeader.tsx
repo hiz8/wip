@@ -1,5 +1,5 @@
-import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
+import { Link } from "@tanstack/react-router";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 import { Breadcrumb } from "./Breadcrumb.tsx";
 
@@ -10,6 +10,8 @@ interface IndexPageHeaderProps {
   crumbCurrent: string;
   title: string;
   sub: string;
+  /** 指定するとタグ一覧への "Browse tags →" リンクを説明文の下に表示する。 */
+  tagsTo?: "/notes/tags" | "/glossary/tags" | "/books/tags";
 }
 
 const styles = stylex.create({
@@ -30,16 +32,33 @@ const styles = stylex.create({
     maxWidth: "32em",
     marginBottom: space.s4,
   },
+  tagsLink: {
+    display: "inline-block",
+    color: colors.link,
+    fontSize: typography.fontSizeSm,
+    textDecoration: { default: "none", ":hover": "underline" },
+    marginBottom: space.s4,
+  },
 });
 
-// 一覧ページ共通のヘッダ (パンくず + 大見出し + イタリックの説明文)。
-export function IndexPageHeader({ crumbRoot, crumbCurrent, title, sub }: IndexPageHeaderProps) {
-  const root = useMemo(() => ({ label: crumbRoot }), [crumbRoot]);
+// 一覧ページ共通のヘッダ (パンくず + 大見出し + イタリックの説明文 + タグ一覧リンク)。
+export function IndexPageHeader({
+  crumbRoot,
+  crumbCurrent,
+  title,
+  sub,
+  tagsTo,
+}: IndexPageHeaderProps) {
   return (
     <>
-      <Breadcrumb root={root} current={crumbCurrent} />
+      <Breadcrumb rootLabel={crumbRoot} current={crumbCurrent} />
       <h1 {...stylex.props(styles.heading)}>{title}</h1>
       <p {...stylex.props(styles.sub)}>{sub}</p>
+      {tagsTo !== undefined && (
+        <Link to={tagsTo} {...stylex.props(styles.tagsLink)}>
+          Browse tags →
+        </Link>
+      )}
     </>
   );
 }

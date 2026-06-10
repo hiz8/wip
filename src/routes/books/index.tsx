@@ -1,24 +1,17 @@
 import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
-import { Link, createFileRoute, useLoaderData } from "@tanstack/react-router";
+import { createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell.tsx";
 import { TreeSidebar } from "@/components/layout/TreeSidebar.tsx";
 import { BookTile } from "@/components/card/BookTile.tsx";
 import { IndexPageHeader } from "@/components/common/IndexPageHeader.tsx";
 import { getBooksIndexData } from "@/server/loaders.ts";
 import { makeTitle } from "@/lib/seo/title.ts";
-import { colors, space, typography } from "@/styles/tokens.stylex.ts";
+import { colors, space } from "@/styles/tokens.stylex.ts";
 
 const styles = stylex.create({
   wrap: {
     maxWidth: "1100px",
-  },
-  tagsLink: {
-    display: "inline-block",
-    color: colors.link,
-    fontSize: typography.fontSizeSm,
-    textDecoration: { default: "none", ":hover": "underline" },
-    marginBottom: space.s5,
   },
   grid: {
     display: "grid",
@@ -61,10 +54,8 @@ function BooksIndex() {
           crumbCurrent="一覧"
           title="読んだ本"
           sub="手を動かしながら読んだ本だけ。Notes から参照されることが多い。"
+          tagsTo="/books/tags"
         />
-        <Link to="/books/tags" {...stylex.props(styles.tagsLink)}>
-          Browse tags →
-        </Link>
 
         {books.length === 0 ? (
           <p {...stylex.props(styles.empty)}>No published books yet.</p>

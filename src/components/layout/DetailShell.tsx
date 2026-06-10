@@ -6,6 +6,7 @@ import { RightSidebar } from "./RightSidebar.tsx";
 import { TreeSidebar } from "./TreeSidebar.tsx";
 import { FootnoteSection } from "@/components/content/FootnoteSection.tsx";
 import { Breadcrumb } from "@/components/common/Breadcrumb.tsx";
+import type { CrumbRootTo } from "@/components/common/Breadcrumb.tsx";
 import { TagChips } from "@/components/common/TagChips.tsx";
 import type { TreeNode } from "@/lib/tree/buildTree.ts";
 import type {
@@ -17,11 +18,9 @@ import type {
 } from "@/types/content.ts";
 import { colors, space } from "@/styles/tokens.stylex.ts";
 
-type DetailCrumbTo = "/notes" | "/glossary" | "/books";
-
 /** 詳細ページのパンくず。to はカテゴリトップへ戻るリンクになる。 */
 export interface DetailCrumb {
-  to: DetailCrumbTo;
+  to: CrumbRootTo;
   label: string;
   /** 中間セグメント (Notes のフォルダ名、Glossary のかな行など)。null は省略。 */
   middle?: string | null;
@@ -77,13 +76,17 @@ export function DetailShell({
     [toc, backlinks],
   );
   const contentHtml = useMemo(() => ({ __html: html }), [html]);
-  const crumbRoot = useMemo(() => ({ label: crumb.label, to: crumb.to }), [crumb.label, crumb.to]);
   const hasMarginalia = callouts.length > 0 || footnotes.length > 0;
 
   return (
     <AppShell variant="detail" treeSidebar={treeSidebar} rightSidebar={rightSidebar}>
       <DetailLayout hasMarginalia={hasMarginalia}>
-        <Breadcrumb root={crumbRoot} middle={crumb.middle} current={crumb.current} />
+        <Breadcrumb
+          rootLabel={crumb.label}
+          rootTo={crumb.to}
+          middle={crumb.middle}
+          current={crumb.current}
+        />
         {header}
         {tags.length > 0 ? (
           <div {...stylex.props(styles.tags)}>

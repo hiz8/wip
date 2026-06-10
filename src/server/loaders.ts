@@ -3,33 +3,17 @@ import { z } from "zod";
 import { getAllNotes, getNoteBySlug } from "./notes.ts";
 import { getAllGlossaryTerms, getGlossaryTermBySlug } from "./glossary.ts";
 import { getAllBooks, getBookByIsbn, getBookCoverMap } from "./books.ts";
-import {
-  parentFolderName,
-  projectBooksIndex,
-  projectGlossaryIndex,
-  projectNotesIndex,
-} from "./projections.ts";
-import type {
-  BookListItem,
-  GlossaryGroupSectionDto,
-  GlossaryListItem,
-  NoteListItem,
-} from "./projections.ts";
+import { projectBooksIndex, projectGlossaryIndex, projectNotesIndex } from "./projections.ts";
+import type { BookListItem, GlossaryListItem, NoteListItem } from "./projections.ts";
+import { parentFolderName } from "@/lib/content/paths.ts";
 import { buildBooksTree } from "@/lib/tree/buildBooksTree.ts";
 import { buildGlossaryTree } from "@/lib/tree/buildGlossaryTree.ts";
 import { buildTreeFromRenderedNotes } from "@/lib/tree/buildTree.ts";
 import type { TreeNode } from "@/lib/tree/buildTree.ts";
 import { aggregateTags, decodeTagSlug, filterByTag } from "@/lib/tags/index.ts";
 import type { TagCount } from "@/lib/tags/index.ts";
+import type { FuriganaGroup } from "@/lib/glossary/groupByFurigana.ts";
 import type { BacklinkRef, CalloutEntry, FootnoteEntry, TocEntry } from "@/types/content.ts";
-
-export type { TagCount } from "@/lib/tags/index.ts";
-export type {
-  BookListItem,
-  GlossaryGroupSectionDto,
-  GlossaryListItem,
-  NoteListItem,
-} from "./projections.ts";
 
 export interface NoteDetail {
   slug: string;
@@ -79,8 +63,26 @@ export interface BookDetail {
   callouts: CalloutEntry[];
 }
 
+// 一覧ページの loader はページが表示するフィールドだけを返す。SSG では loader の
+// 戻り値がそのままページ HTML に埋め込まれるため、タグページ向けの全フィールド投影
+// (projectXxxIndex) から絞り込んでシリアライズ量を抑える。
+
+/** Notes 一覧 (NoteListRow) が使うフィールドのみ。 */
+export interface NoteIndexItem {
+  slug: string;
+  title: string;
+  updated: string;
+  folder: string | null;
+}
+
 export const getNotesIndexData = createServerFn({ method: "GET" }).handler(
-  (): Promise<NoteListItem[]> => projectNotesIndex(),
+  async (): Promise<NoteIndexItem[]> =>
+    (await projectNotesIndex()).map(({ slug, title, updated, folder }) => ({
+      slug,
+      title,
+      updated,
+      folder,
+    })),
 );
 
 const noteSlugSchema = z.object({ slug: z.string().min(1) });
@@ -113,8 +115,30 @@ export const getNotesTreeData = createServerFn({ method: "GET" }).handler(
   },
 );
 
+/** Glossary 索引 (GlossaryListRow) が使うフィールドのみ。 */
+export interface GlossaryIndexItem {
+  slug: string;
+  term: string;
+  furigana: string | null;
+  summary: string | null;
+}
+
+export interface GlossaryIndexSection {
+  name: FuriganaGroup;
+  items: GlossaryIndexItem[];
+}
+
 export const getGlossaryIndexData = createServerFn({ method: "GET" }).handler(
-  (): Promise<GlossaryGroupSectionDto[]> => projectGlossaryIndex(),
+  async (): Promise<GlossaryIndexSection[]> =>
+    (await projectGlossaryIndex()).map((section) => ({
+      name: section.name,
+      items: section.items.map(({ slug, term, furigana, summary }) => ({
+        slug,
+        term,
+        furigana,
+        summary,
+      })),
+    })),
 );
 
 const glossarySlugSchema = z.object({ slug: z.string().min(1) });
@@ -146,8 +170,24 @@ export const getGlossaryTreeData = createServerFn({ method: "GET" }).handler(
   },
 );
 
+/** Books 一覧 (BookTile) が使うフィールドのみ。 */
+export interface BookIndexItem {
+  slug: string;
+  title: string;
+  authors: string[];
+  readDate: string | null;
+  coverUrl: string | null;
+}
+
 export const getBooksIndexData = createServerFn({ method: "GET" }).handler(
-  (): Promise<BookListItem[]> => projectBooksIndex(),
+  async (): Promise<BookIndexItem[]> =>
+    (await projectBooksIndex()).map(({ slug, title, authors, readDate, coverUrl }) => ({
+      slug,
+      title,
+      authors,
+      readDate,
+      coverUrl,
+    })),
 );
 
 const bookIsbnSchema = z.object({ isbn: z.string().min(1) });

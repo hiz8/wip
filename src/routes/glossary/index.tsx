@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
-import { Link, createFileRoute, useLoaderData } from "@tanstack/react-router";
+import { createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell.tsx";
 import { TreeSidebar } from "@/components/layout/TreeSidebar.tsx";
 import { GlossaryListRow } from "@/components/card/GlossaryListRow.tsx";
@@ -13,13 +13,6 @@ import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
 const styles = stylex.create({
   wrap: {
     maxWidth: "45rem",
-  },
-  tagsLink: {
-    display: "inline-block",
-    color: colors.link,
-    fontSize: typography.fontSizeSm,
-    textDecoration: { default: "none", ":hover": "underline" },
-    marginBottom: space.s4,
   },
   // 五十音索引。エントリの有無を塗りで示すボタン列。
   kanaNav: {
@@ -109,10 +102,8 @@ function GlossaryIndex() {
           crumbCurrent="索引"
           title="単語帳"
           sub="Web 開発で「毎回ググっている」用語を、自分の言葉で定義し直したもの。Notes より粒度が細かく、Books からも参照される。"
+          tagsTo="/glossary/tags"
         />
-        <Link to="/glossary/tags" {...stylex.props(styles.tagsLink)}>
-          Browse tags →
-        </Link>
 
         {sections.length === 0 ? (
           <p {...stylex.props(styles.empty)}>No published terms yet.</p>

@@ -16,12 +16,10 @@ export {
   getNotesIndexData,
   getNotesTreeData,
 } from "./loaders.ts";
+export type { BookDetail, GlossaryDetail, NoteDetail } from "./loaders.ts";
 export type {
-  BookDetail,
   BookListItem,
-  GlossaryDetail,
   GlossaryGroupSectionDto,
   GlossaryListItem,
-  NoteDetail,
   NoteListItem,
-} from "./loaders.ts";
+} from "./projections.ts";

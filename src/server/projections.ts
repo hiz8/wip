@@ -3,6 +3,7 @@ import { getGlossaryGroupedIndex } from "./glossary.ts";
 import { getAllBooks, getBookCoverMap } from "./books.ts";
 import type { FuriganaGroup } from "@/lib/glossary/groupByFurigana.ts";
 import { compareByUpdatedDesc } from "@/lib/content/sort.ts";
+import { parentFolderName } from "@/lib/content/paths.ts";
 
 export interface NoteListItem {
   slug: string;
@@ -10,7 +11,6 @@ export interface NoteListItem {
   updated: string;
   summary: string | null;
   tags: string[];
-  featured: boolean;
   /** Vault 内の直近の親フォルダ名。Vault 直下のノートは null。 */
   folder: string | null;
 }
@@ -34,7 +34,6 @@ export interface BookListItem {
   title: string;
   authors: string[];
   pubYear: number | null;
-  publisher: string | null;
   readDate: string | null;
   summary: string | null;
   tags: string[];
@@ -52,16 +51,8 @@ export async function projectNotesIndex(): Promise<NoteListItem[]> {
     updated: note.frontmatter.updated,
     summary: note.frontmatter.summary ?? null,
     tags: note.frontmatter.tags ?? [],
-    featured: note.frontmatter.featured ?? false,
     folder: parentFolderName(note.filePath),
   }));
-}
-
-// filePath (Vault root 相対) から直近の親フォルダ名を取り出す。
-// 正規化は buildTree.ts と同じ規則 (先頭スラッシュ除去 + バックスラッシュ統一)。
-export function parentFolderName(filePath: string): string | null {
-  const segments = filePath.replace(/^\/+/u, "").replaceAll("\\", "/").split("/").filter(Boolean);
-  return segments.length > 1 ? (segments.at(-2) ?? null) : null;
 }
 
 export async function projectGlossaryIndex(): Promise<GlossaryGroupSectionDto[]> {
@@ -88,7 +79,6 @@ export async function projectBooksIndex(): Promise<BookListItem[]> {
       title: book.title,
       authors: book.frontmatter.authors,
       pubYear: book.frontmatter.pubYear ?? null,
-      publisher: book.frontmatter.publisher ?? null,
       readDate: book.frontmatter.read_date ?? null,
       summary: book.frontmatter.summary ?? null,
       tags: book.frontmatter.tags ?? [],

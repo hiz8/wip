@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { Link } from "@tanstack/react-router";
 import { ContentTypeIcon } from "@/components/common/ContentTypeIcon.tsx";
+import { CONTENT_TYPE_LABELS } from "@/components/common/contentTypeLabels.ts";
 import type { ContentType } from "@/types/content.ts";
 import type { HomeCounts } from "@/server/home.ts";
 import { colors, radius, shadow, space, typography } from "@/styles/tokens.stylex.ts";
@@ -12,28 +13,24 @@ interface ContentTypeEntriesProps {
 const ENTRIES: ReadonlyArray<{
   type: ContentType;
   to: "/notes" | "/glossary" | "/books";
-  label: string;
   jp: string;
   desc: string;
 }> = [
   {
     type: "notes",
     to: "/notes",
-    label: "Notes",
     jp: "ノート",
     desc: "学びを書き留めた育成中のノート。",
   },
   {
     type: "glossary",
     to: "/glossary",
-    label: "Glossary",
     jp: "単語帳",
     desc: "毎回ググる用語を自分の言葉で定義。",
   },
   {
     type: "books",
     to: "/books",
-    label: "Books",
     jp: "読書",
     desc: "手を動かしながら読んだ本だけ。",
   },
@@ -133,7 +130,7 @@ export function ContentTypeEntries({ counts }: ContentTypeEntriesProps) {
             </span>
             <span {...stylex.props(styles.body)}>
               <span {...stylex.props(styles.name)}>
-                {entry.label}
+                {CONTENT_TYPE_LABELS[entry.type]}
                 <span {...stylex.props(styles.jp)}>{entry.jp}</span>
               </span>
               <span {...stylex.props(styles.desc)}>{entry.desc}</span>

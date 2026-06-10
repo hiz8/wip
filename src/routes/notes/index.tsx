@@ -1,24 +1,16 @@
 import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
-import { Link, createFileRoute, useLoaderData } from "@tanstack/react-router";
+import { createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell.tsx";
 import { TreeSidebar } from "@/components/layout/TreeSidebar.tsx";
 import { NoteListRow } from "@/components/card/NoteListRow.tsx";
 import { IndexPageHeader } from "@/components/common/IndexPageHeader.tsx";
 import { getNotesIndexData } from "@/server/loaders.ts";
 import { makeTitle } from "@/lib/seo/title.ts";
-import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 
 const styles = stylex.create({
   wrap: {
     maxWidth: "46em",
-  },
-  tagsLink: {
-    display: "inline-block",
-    color: colors.link,
-    fontSize: typography.fontSizeSm,
-    textDecoration: { default: "none", ":hover": "underline" },
-    marginBottom: space.s4,
   },
   list: {
     listStyle: "none",
@@ -54,10 +46,8 @@ function NotesIndex() {
           crumbCurrent="最近の更新"
           title="Notes"
           sub="学んだことを書き留めた育成中のノート。更新の新しい順に並んでいる。"
+          tagsTo="/notes/tags"
         />
-        <Link to="/notes/tags" {...stylex.props(styles.tagsLink)}>
-          Browse tags →
-        </Link>
 
         {/* oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示 */}
         <ul {...stylex.props(styles.list)} role="list">

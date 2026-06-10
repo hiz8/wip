@@ -2,11 +2,12 @@ import * as stylex from "@stylexjs/stylex";
 import { Link } from "@tanstack/react-router";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 
-type CrumbRootTo = "/notes" | "/glossary" | "/books";
+export type CrumbRootTo = "/notes" | "/glossary" | "/books";
 
 interface BreadcrumbProps {
-  /** 先頭セグメント。to を与えるとカテゴリトップへのリンクになる。 */
-  root: { label: string; to?: CrumbRootTo };
+  /** 先頭セグメントのラベル。rootTo を与えるとカテゴリトップへのリンクになる。 */
+  rootLabel: string;
+  rootTo?: CrumbRootTo;
   /** 中間セグメント (Notes のフォルダ名、Glossary のかな行など)。null は省略。 */
   middle?: string | null | undefined;
   current: string;
@@ -35,20 +36,20 @@ const styles = stylex.create({
 });
 
 // パンくず (root / middle / current)。
-export function Breadcrumb({ root, middle, current }: BreadcrumbProps) {
+export function Breadcrumb({ rootLabel, rootTo, middle, current }: BreadcrumbProps) {
   return (
     <p {...stylex.props(styles.crumb)}>
-      {root.to === undefined ? (
-        <span>{root.label}</span>
+      {rootTo === undefined ? (
+        <span>{rootLabel}</span>
       ) : (
-        <Link to={root.to} {...stylex.props(styles.rootLink)}>
-          {root.label}
+        <Link to={rootTo} {...stylex.props(styles.rootLink)}>
+          {rootLabel}
         </Link>
       )}
       <span {...stylex.props(styles.sep)} aria-hidden="true">
         /
       </span>
-      {middle !== undefined && middle !== null && middle !== "" && (
+      {middle !== undefined && middle !== null && (
         <>
           <span>{middle}</span>
           <span {...stylex.props(styles.sep)} aria-hidden="true">

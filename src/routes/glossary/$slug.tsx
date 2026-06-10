@@ -39,7 +39,7 @@ function GlossaryDetail() {
     () => ({
       to: "/glossary",
       label: "Glossary",
-      middle: furiganaGroupLabel(groupByFurigana(term.furigana ?? undefined)),
+      middle: furiganaGroupLabel(groupByFurigana(term.furigana)),
       current: term.term,
     }),
     [term.furigana, term.term],
