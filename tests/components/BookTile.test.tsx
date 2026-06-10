@@ -10,7 +10,7 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
-import { BookCard } from "@/components/card/BookCard.tsx";
+import { BookTile } from "@/components/card/BookTile.tsx";
 
 function renderWithRouter(ui: ReactNode) {
   const rootRoute = createRootRoute({ component: () => <Outlet /> });
@@ -35,32 +35,37 @@ const BASE_PROPS = {
   slug: "9784873119045",
   title: "リファクタリング",
   authors: ["Martin Fowler"],
-  pubYear: 2019,
-  summary: null,
-  tags: ["software/engineering"],
+  readDate: "2024-05-01",
 } as const;
 
-describe("BookCard", () => {
-  it("renders a placeholder div when coverUrl is null", async () => {
-    renderWithRouter(<BookCard {...BASE_PROPS} coverUrl={null} />);
+// 書影なしのプレースホルダはタイトル・著者を載せた装飾なので aria-hidden で探す。
+function findPlaceholder() {
+  return Array.from(document.querySelectorAll('span[aria-hidden="true"]')).find((el) =>
+    el.textContent?.includes("リファクタリング"),
+  );
+}
+
+describe("BookTile", () => {
+  it("renders a pseudo-cover placeholder when coverUrl is null", async () => {
+    renderWithRouter(<BookTile {...BASE_PROPS} coverUrl={null} />);
     await waitFor(() =>
-      expect(screen.getByRole("link", { name: "リファクタリング" })).toBeInTheDocument(),
+      expect(screen.getByRole("link", { name: /リファクタリング/u })).toBeInTheDocument(),
     );
     expect(document.querySelector('img[loading="lazy"]')).toBeNull();
-    const placeholder = document.querySelector('div[aria-hidden="true"]');
-    expect(placeholder).not.toBeNull();
-    expect(placeholder?.textContent).toBe("リファクタリング");
+    const placeholder = findPlaceholder();
+    expect(placeholder).toBeDefined();
+    expect(placeholder?.textContent).toContain("Martin Fowler");
   });
 
   it("renders an <img> when coverUrl is provided", async () => {
-    renderWithRouter(<BookCard {...BASE_PROPS} coverUrl="/images/sample-cover.png" />);
+    renderWithRouter(<BookTile {...BASE_PROPS} coverUrl="/images/sample-cover.png" />);
     await waitFor(() =>
-      expect(screen.getByRole("link", { name: "リファクタリング" })).toBeInTheDocument(),
+      expect(screen.getByRole("link", { name: /リファクタリング/u })).toBeInTheDocument(),
     );
     const img = document.querySelector('img[loading="lazy"]');
     expect(img).not.toBeNull();
     expect(img?.getAttribute("src")).toBe("/images/sample-cover.png");
     expect(img?.getAttribute("alt")).toBe("");
-    expect(document.querySelector('div[aria-hidden="true"]')).toBeNull();
+    expect(findPlaceholder()).toBeUndefined();
   });
 });

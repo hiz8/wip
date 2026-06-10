@@ -18,8 +18,12 @@ export {
 } from "./loaders.ts";
 export type { BookDetail, GlossaryDetail, NoteDetail } from "./loaders.ts";
 export type {
+  BookIndexItem,
   BookListItem,
   GlossaryGroupSectionDto,
+  GlossaryIndexItem,
+  GlossaryIndexSection,
   GlossaryListItem,
+  NoteIndexItem,
   NoteListItem,
 } from "./projections.ts";

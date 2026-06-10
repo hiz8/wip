@@ -3,13 +3,16 @@ import * as stylex from "@stylexjs/stylex";
 import { Link, createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell.tsx";
 import { TreeSidebar } from "@/components/layout/TreeSidebar.tsx";
-import { GlossaryItem } from "@/components/card/GlossaryItem.tsx";
+import { GlossaryListRow } from "@/components/card/GlossaryListRow.tsx";
 import { getGlossaryByTagData } from "@/server/loaders.ts";
 import { decodeTagSlug } from "@/lib/tags/index.ts";
 import { makeTitle } from "@/lib/seo/title.ts";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 
 const styles = stylex.create({
+  wrap: {
+    maxWidth: "45rem",
+  },
   back: {
     display: "inline-flex",
     alignItems: "center",
@@ -25,9 +28,6 @@ const styles = stylex.create({
     marginBottom: space.s5,
   },
   list: {
-    display: "grid",
-    gridTemplateColumns: "1fr",
-    gap: space.s4,
     listStyle: "none",
     margin: 0,
     padding: 0,
@@ -63,29 +63,30 @@ function GlossaryByTag() {
 
   return (
     <AppShell variant="list" treeSidebar={treeSidebar}>
-      <Link to="/glossary/tags" {...stylex.props(styles.back)}>
-        ← Glossary Tags
-      </Link>
-      <h1 {...stylex.props(styles.heading)}>#{decodedTag}</h1>
-      {terms.length === 0 ? (
-        <p {...stylex.props(styles.empty)}>No terms with this tag.</p>
-      ) : (
-        // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示
-        <ul {...stylex.props(styles.list)} role="list">
-          {terms.map((term) => (
-            <li key={term.slug}>
-              <GlossaryItem
-                slug={term.slug}
-                term={term.term}
-                furigana={term.furigana}
-                summary={term.summary}
-                aliases={term.aliases}
-                tags={term.tags}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      <div {...stylex.props(styles.wrap)}>
+        <Link to="/glossary/tags" {...stylex.props(styles.back)}>
+          ← Glossary Tags
+        </Link>
+        <h1 {...stylex.props(styles.heading)}>#{decodedTag}</h1>
+        {terms.length === 0 ? (
+          <p {...stylex.props(styles.empty)}>No terms with this tag.</p>
+        ) : (
+          // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示
+          <ul {...stylex.props(styles.list)} role="list">
+            {terms.map((term, index) => (
+              <li key={term.slug}>
+                <GlossaryListRow
+                  slug={term.slug}
+                  term={term.term}
+                  furigana={term.furigana}
+                  summary={term.summary}
+                  showDivider={index > 0}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </AppShell>
   );
 }

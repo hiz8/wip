@@ -3,13 +3,16 @@ import * as stylex from "@stylexjs/stylex";
 import { Link, createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell.tsx";
 import { TreeSidebar } from "@/components/layout/TreeSidebar.tsx";
-import { NoteCard } from "@/components/card/NoteCard.tsx";
+import { NoteListRow } from "@/components/card/NoteListRow.tsx";
 import { getNotesByTagData } from "@/server/loaders.ts";
 import { decodeTagSlug } from "@/lib/tags/index.ts";
 import { makeTitle } from "@/lib/seo/title.ts";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 
 const styles = stylex.create({
+  wrap: {
+    maxWidth: "46em",
+  },
   back: {
     display: "inline-flex",
     alignItems: "center",
@@ -24,10 +27,7 @@ const styles = stylex.create({
     fontWeight: typography.weightSemibold,
     marginBottom: space.s5,
   },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "1fr",
-    gap: space.s4,
+  list: {
     listStyle: "none",
     margin: 0,
     padding: 0,
@@ -63,28 +63,30 @@ function NotesByTag() {
 
   return (
     <AppShell variant="list" treeSidebar={treeSidebar}>
-      <Link to="/notes/tags" {...stylex.props(styles.back)}>
-        ← Notes Tags
-      </Link>
-      <h1 {...stylex.props(styles.heading)}>#{decodedTag}</h1>
-      {notes.length === 0 ? (
-        <p {...stylex.props(styles.empty)}>No notes with this tag.</p>
-      ) : (
-        // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示
-        <ul {...stylex.props(styles.grid)} role="list">
-          {notes.map((note) => (
-            <li key={note.slug}>
-              <NoteCard
-                slug={note.slug}
-                title={note.title}
-                summary={note.summary}
-                tags={note.tags}
-                updated={note.updated}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      <div {...stylex.props(styles.wrap)}>
+        <Link to="/notes/tags" {...stylex.props(styles.back)}>
+          ← Notes Tags
+        </Link>
+        <h1 {...stylex.props(styles.heading)}>#{decodedTag}</h1>
+        {notes.length === 0 ? (
+          <p {...stylex.props(styles.empty)}>No notes with this tag.</p>
+        ) : (
+          // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示
+          <ul {...stylex.props(styles.list)} role="list">
+            {notes.map((note, index) => (
+              <li key={note.slug}>
+                <NoteListRow
+                  slug={note.slug}
+                  title={note.title}
+                  folder={note.folder}
+                  updated={note.updated}
+                  showDivider={index > 0}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </AppShell>
   );
 }
