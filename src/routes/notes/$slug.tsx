@@ -2,12 +2,11 @@ import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
 import { createFileRoute, notFound, useLoaderData } from "@tanstack/react-router";
 import { DetailShell } from "@/components/layout/DetailShell.tsx";
+import type { DetailCrumb } from "@/components/layout/DetailShell.tsx";
 import { getNoteDetailData } from "@/server/loaders.ts";
 import { makeTitle } from "@/lib/seo/title.ts";
 import { SITE_DESCRIPTION } from "@/lib/config/static.ts";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
-
-const BACK = { to: "/notes", label: "Notes" } as const;
 
 const styles = stylex.create({
   header: {
@@ -68,6 +67,10 @@ function NoteDetail() {
     ),
     [note.title, note.created, note.updated],
   );
+  const crumb = useMemo<DetailCrumb>(
+    () => ({ to: "/notes", label: "Notes", middle: note.folder, current: note.title }),
+    [note.folder, note.title],
+  );
 
   return (
     <DetailShell
@@ -76,7 +79,7 @@ function NoteDetail() {
       activeSlug={note.slug}
       toc={note.toc}
       backlinks={note.incomingLinks}
-      back={BACK}
+      crumb={crumb}
       tags={note.tags}
       html={note.html}
       header={header}

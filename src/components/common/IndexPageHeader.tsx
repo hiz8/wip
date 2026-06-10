@@ -1,5 +1,7 @@
+import { useMemo } from "react";
 import * as stylex from "@stylexjs/stylex";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
+import { Breadcrumb } from "./Breadcrumb.tsx";
 
 interface IndexPageHeaderProps {
   /** パンくずの先頭 (コンテンツタイプ名)。 */
@@ -11,20 +13,6 @@ interface IndexPageHeaderProps {
 }
 
 const styles = stylex.create({
-  crumb: {
-    display: "flex",
-    alignItems: "center",
-    gap: space.s2,
-    fontSize: typography.fontSizeXs,
-    color: colors.textMuted,
-    marginBottom: space.s5,
-  },
-  crumbSep: {
-    opacity: 0.5,
-  },
-  crumbCurrent: {
-    color: colors.textPrimary,
-  },
   heading: {
     fontFamily: typography.fontBrand,
     fontSize: typography.fontSize3xl,
@@ -46,15 +34,10 @@ const styles = stylex.create({
 
 // 一覧ページ共通のヘッダ (パンくず + 大見出し + イタリックの説明文)。
 export function IndexPageHeader({ crumbRoot, crumbCurrent, title, sub }: IndexPageHeaderProps) {
+  const root = useMemo(() => ({ label: crumbRoot }), [crumbRoot]);
   return (
     <>
-      <p {...stylex.props(styles.crumb)}>
-        <span>{crumbRoot}</span>
-        <span {...stylex.props(styles.crumbSep)} aria-hidden="true">
-          /
-        </span>
-        <span {...stylex.props(styles.crumbCurrent)}>{crumbCurrent}</span>
-      </p>
+      <Breadcrumb root={root} current={crumbCurrent} />
       <h1 {...stylex.props(styles.heading)}>{title}</h1>
       <p {...stylex.props(styles.sub)}>{sub}</p>
     </>

@@ -59,7 +59,7 @@ export async function projectNotesIndex(): Promise<NoteListItem[]> {
 
 // filePath (Vault root 相対) から直近の親フォルダ名を取り出す。
 // 正規化は buildTree.ts と同じ規則 (先頭スラッシュ除去 + バックスラッシュ統一)。
-function parentFolderName(filePath: string): string | null {
+export function parentFolderName(filePath: string): string | null {
   const segments = filePath.replace(/^\/+/u, "").replaceAll("\\", "/").split("/").filter(Boolean);
   return segments.length > 1 ? (segments.at(-2) ?? null) : null;
 }

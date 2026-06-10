@@ -123,6 +123,11 @@ const KATAKANA_OFFSET = 0x60;
 const KATAKANA_START = 0x30a1;
 const KATAKANA_END = 0x30fa;
 
+// 索引ボタン・節見出し・パンくずの表示ラベル (「あ行」→「あ」。「その他」はそのまま)。
+export function furiganaGroupLabel(group: FuriganaGroup): string {
+  return group === "その他" ? group : group.charAt(0);
+}
+
 export function groupByFurigana(furigana: string | undefined): FuriganaGroup {
   if (!furigana) return "その他";
   const trimmed = furigana.trim();

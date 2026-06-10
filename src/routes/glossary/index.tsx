@@ -5,8 +5,7 @@ import { AppShell } from "@/components/layout/AppShell.tsx";
 import { TreeSidebar } from "@/components/layout/TreeSidebar.tsx";
 import { GlossaryListRow } from "@/components/card/GlossaryListRow.tsx";
 import { IndexPageHeader } from "@/components/common/IndexPageHeader.tsx";
-import { FURIGANA_GROUP_ORDER } from "@/lib/glossary/groupByFurigana.ts";
-import type { FuriganaGroup } from "@/lib/glossary/groupByFurigana.ts";
+import { FURIGANA_GROUP_ORDER, furiganaGroupLabel } from "@/lib/glossary/groupByFurigana.ts";
 import { getGlossaryIndexData } from "@/server/loaders.ts";
 import { makeTitle } from "@/lib/seo/title.ts";
 import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
@@ -79,11 +78,6 @@ const styles = stylex.create({
   },
 });
 
-// 索引ボタンと節見出しの表示ラベル (「あ行」→「あ」。「その他」はそのまま)。
-function groupLabel(name: FuriganaGroup): string {
-  return name === "その他" ? name : name.charAt(0);
-}
-
 export const Route = createFileRoute("/glossary/")({
   loader: () => getGlossaryIndexData(),
   head: () => ({
@@ -132,11 +126,11 @@ function GlossaryIndex() {
                     href={`#group-${encodeURIComponent(name)}`}
                     {...stylex.props(styles.kanaCell, styles.kanaActive)}
                   >
-                    {groupLabel(name)}
+                    {furiganaGroupLabel(name)}
                   </a>
                 ) : (
                   <span key={name} {...stylex.props(styles.kanaCell, styles.kanaInactive)}>
-                    {groupLabel(name)}
+                    {furiganaGroupLabel(name)}
                   </span>
                 ),
               )}
@@ -148,7 +142,7 @@ function GlossaryIndex() {
                 id={`group-${encodeURIComponent(section.name)}`}
                 {...stylex.props(styles.groupSection)}
               >
-                <h2 {...stylex.props(styles.groupHeading)}>{groupLabel(section.name)}</h2>
+                <h2 {...stylex.props(styles.groupHeading)}>{furiganaGroupLabel(section.name)}</h2>
                 {/* oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示 */}
                 <ul {...stylex.props(styles.list)} role="list">
                   {section.items.map((item, index) => (

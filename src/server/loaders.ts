@@ -3,7 +3,12 @@ import { z } from "zod";
 import { getAllNotes, getNoteBySlug } from "./notes.ts";
 import { getAllGlossaryTerms, getGlossaryTermBySlug } from "./glossary.ts";
 import { getAllBooks, getBookByIsbn, getBookCoverMap } from "./books.ts";
-import { projectBooksIndex, projectGlossaryIndex, projectNotesIndex } from "./projections.ts";
+import {
+  parentFolderName,
+  projectBooksIndex,
+  projectGlossaryIndex,
+  projectNotesIndex,
+} from "./projections.ts";
 import type {
   BookListItem,
   GlossaryGroupSectionDto,
@@ -33,6 +38,8 @@ export interface NoteDetail {
   updated: string;
   tags: string[];
   summary: string | null;
+  /** Vault 内の直近の親フォルダ名 (パンくず用)。Vault 直下のノートは null。 */
+  folder: string | null;
   html: string;
   toc: TocEntry[];
   incomingLinks: BacklinkRef[];
@@ -90,6 +97,7 @@ export const getNoteDetailData = createServerFn({ method: "GET" })
       updated: note.frontmatter.updated,
       tags: note.frontmatter.tags ?? [],
       summary: note.frontmatter.summary ?? null,
+      folder: parentFolderName(note.filePath),
       html: note.html,
       toc: note.toc,
       incomingLinks: note.incomingLinks,
