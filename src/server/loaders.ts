@@ -1,29 +1,30 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getAllNotes, getNoteBySlug } from "./notes.ts";
-import { getAllGlossaryTerms, getGlossaryGroupedIndex, getGlossaryTermBySlug } from "./glossary.ts";
+import { getAllGlossaryTerms, getGlossaryTermBySlug } from "./glossary.ts";
 import { getAllBooks, getBookByIsbn, getBookCoverMap } from "./books.ts";
+import { projectBooksIndex, projectGlossaryIndex, projectNotesIndex } from "./projections.ts";
+import type {
+  BookListItem,
+  GlossaryGroupSectionDto,
+  GlossaryListItem,
+  NoteListItem,
+} from "./projections.ts";
 import { buildBooksTree } from "@/lib/tree/buildBooksTree.ts";
 import { buildGlossaryTree } from "@/lib/tree/buildGlossaryTree.ts";
 import { buildTreeFromRenderedNotes } from "@/lib/tree/buildTree.ts";
 import type { TreeNode } from "@/lib/tree/buildTree.ts";
-import type { FuriganaGroup } from "@/lib/glossary/groupByFurigana.ts";
 import { aggregateTags, decodeTagSlug, filterByTag } from "@/lib/tags/index.ts";
 import type { TagCount } from "@/lib/tags/index.ts";
 import type { BacklinkRef, CalloutEntry, FootnoteEntry, TocEntry } from "@/types/content.ts";
 
 export type { TagCount } from "@/lib/tags/index.ts";
-
-export interface NoteListItem {
-  slug: string;
-  title: string;
-  updated: string;
-  summary: string | null;
-  tags: string[];
-  featured: boolean;
-  /** Vault 内の直近の親フォルダ名。Vault 直下のノートは null。 */
-  folder: string | null;
-}
+export type {
+  BookListItem,
+  GlossaryGroupSectionDto,
+  GlossaryListItem,
+  NoteListItem,
+} from "./projections.ts";
 
 export interface NoteDetail {
   slug: string;
@@ -39,20 +40,6 @@ export interface NoteDetail {
   callouts: CalloutEntry[];
 }
 
-export interface GlossaryListItem {
-  slug: string;
-  term: string;
-  furigana: string | null;
-  summary: string | null;
-  tags: string[];
-  aliases: string[];
-}
-
-export interface GlossaryGroupSectionDto {
-  name: FuriganaGroup;
-  items: GlossaryListItem[];
-}
-
 export interface GlossaryDetail {
   slug: string;
   term: string;
@@ -65,17 +52,6 @@ export interface GlossaryDetail {
   incomingLinks: BacklinkRef[];
   footnotes: FootnoteEntry[];
   callouts: CalloutEntry[];
-}
-
-export interface BookListItem {
-  slug: string;
-  title: string;
-  authors: string[];
-  pubYear: number | null;
-  publisher: string | null;
-  summary: string | null;
-  tags: string[];
-  coverUrl: string | null;
 }
 
 export interface BookDetail {
@@ -94,59 +70,6 @@ export interface BookDetail {
   incomingLinks: BacklinkRef[];
   footnotes: FootnoteEntry[];
   callouts: CalloutEntry[];
-}
-
-// index loaders と tag loaders で共有する素の投影ヘルパ。
-// (createServerFn の handler は inline でなければならず、tag loaders は index の
-// server fn を直接呼べないため、代わりにこれらのプリミティブを呼ぶ。)
-async function projectNotesIndex(): Promise<NoteListItem[]> {
-  const notes = await getAllNotes();
-  return notes.map((note) => ({
-    slug: note.slug,
-    title: note.title,
-    updated: note.frontmatter.updated,
-    summary: note.frontmatter.summary ?? null,
-    tags: note.frontmatter.tags ?? [],
-    featured: note.frontmatter.featured ?? false,
-    folder: parentFolderName(note.filePath),
-  }));
-}
-
-// filePath (Vault root 相対) から直近の親フォルダ名を取り出す。
-// 正規化は buildTree.ts と同じ規則 (先頭スラッシュ除去 + バックスラッシュ統一)。
-function parentFolderName(filePath: string): string | null {
-  const segments = filePath.replace(/^\/+/u, "").replaceAll("\\", "/").split("/").filter(Boolean);
-  return segments.length > 1 ? (segments.at(-2) ?? null) : null;
-}
-
-async function projectGlossaryIndex(): Promise<GlossaryGroupSectionDto[]> {
-  const groups = await getGlossaryGroupedIndex();
-  return groups.map((g) => ({
-    name: g.name,
-    items: g.items.map((term) => ({
-      slug: term.slug,
-      term: term.title,
-      furigana: term.frontmatter.furigana ?? null,
-      summary: term.frontmatter.summary ?? null,
-      tags: term.frontmatter.tags ?? [],
-      aliases: term.frontmatter.aliases ?? [],
-    })),
-  }));
-}
-
-async function projectBooksIndex(): Promise<BookListItem[]> {
-  const books = await getAllBooks();
-  const covers = await getBookCoverMap();
-  return books.map((book) => ({
-    slug: book.slug,
-    title: book.title,
-    authors: book.frontmatter.authors,
-    pubYear: book.frontmatter.pubYear ?? null,
-    publisher: book.frontmatter.publisher ?? null,
-    summary: book.frontmatter.summary ?? null,
-    tags: book.frontmatter.tags ?? [],
-    coverUrl: covers.get(book.slug) ?? null,
-  }));
 }
 
 export const getNotesIndexData = createServerFn({ method: "GET" }).handler(
