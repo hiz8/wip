@@ -79,12 +79,15 @@ function HomePage() {
             )}
 
             {data.recent.length > 0 && (
-              <HomeSection title="最近更新">
+              <HomeSection
+                title="最近の更新"
+                note={`カテゴリを横断した直近 ${data.recent.length} 件`}
+              >
                 <RecentSection items={data.recent} />
               </HomeSection>
             )}
 
-            <HomeSection title="コンテンツ">
+            <HomeSection title="カテゴリ">
               <ContentTypeEntries counts={data.counts} />
             </HomeSection>
 
