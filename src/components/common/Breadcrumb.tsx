@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import { Breadcrumb as AriaBreadcrumb, Breadcrumbs } from "react-aria-components";
 import { Link } from "@tanstack/react-router";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 
@@ -14,14 +15,24 @@ interface BreadcrumbProps {
 }
 
 const styles = stylex.create({
-  crumb: {
+  nav: {
+    marginBottom: space.s5,
+  },
+  crumbs: {
     display: "flex",
     alignItems: "center",
     flexWrap: "wrap",
     gap: space.s2,
+    listStyle: "none",
+    margin: 0,
+    padding: 0,
     fontSize: typography.fontSizeXs,
     color: colors.textMuted,
-    marginBottom: space.s5,
+  },
+  item: {
+    display: "flex",
+    alignItems: "center",
+    gap: space.s2,
   },
   rootLink: {
     color: { default: colors.textMuted, ":hover": colors.link },
@@ -35,29 +46,39 @@ const styles = stylex.create({
   },
 });
 
-// パンくず (root / middle / current)。
+// パンくず (root / middle / current)。react-aria-components の Breadcrumbs が
+// ol/li を描画する。リンクは型安全な params を保つため RAC Link ではなく
+// TanStack の Link を子として合成する (ContentLink.tsx と同じ方針)。
 export function Breadcrumb({ rootLabel, rootTo, middle, current }: BreadcrumbProps) {
   return (
-    <p {...stylex.props(styles.crumb)}>
-      {rootTo === undefined ? (
-        <span>{rootLabel}</span>
-      ) : (
-        <Link to={rootTo} {...stylex.props(styles.rootLink)}>
-          {rootLabel}
-        </Link>
-      )}
-      <span {...stylex.props(styles.sep)} aria-hidden="true">
-        /
-      </span>
-      {middle !== undefined && middle !== null && (
-        <>
-          <span>{middle}</span>
+    <nav aria-label="パンくず" {...stylex.props(styles.nav)}>
+      <Breadcrumbs {...stylex.props(styles.crumbs)}>
+        <AriaBreadcrumb {...stylex.props(styles.item)}>
+          {rootTo === undefined ? (
+            <span>{rootLabel}</span>
+          ) : (
+            <Link to={rootTo} {...stylex.props(styles.rootLink)}>
+              {rootLabel}
+            </Link>
+          )}
           <span {...stylex.props(styles.sep)} aria-hidden="true">
             /
           </span>
-        </>
-      )}
-      <span {...stylex.props(styles.current)}>{current}</span>
-    </p>
+        </AriaBreadcrumb>
+        {middle !== undefined && middle !== null && (
+          <AriaBreadcrumb {...stylex.props(styles.item)}>
+            <span>{middle}</span>
+            <span {...stylex.props(styles.sep)} aria-hidden="true">
+              /
+            </span>
+          </AriaBreadcrumb>
+        )}
+        <AriaBreadcrumb {...stylex.props(styles.item)}>
+          <span {...stylex.props(styles.current)} aria-current="page">
+            {current}
+          </span>
+        </AriaBreadcrumb>
+      </Breadcrumbs>
+    </nav>
   );
 }
