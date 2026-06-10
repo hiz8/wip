@@ -3,59 +3,73 @@ import * as stylex from "@stylexjs/stylex";
 import { Link, createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell.tsx";
 import { TreeSidebar } from "@/components/layout/TreeSidebar.tsx";
-import { GlossaryItem } from "@/components/card/GlossaryItem.tsx";
+import { GlossaryListRow } from "@/components/card/GlossaryListRow.tsx";
+import { IndexPageHeader } from "@/components/common/IndexPageHeader.tsx";
+import { FURIGANA_GROUP_ORDER } from "@/lib/glossary/groupByFurigana.ts";
+import type { FuriganaGroup } from "@/lib/glossary/groupByFurigana.ts";
 import { getGlossaryIndexData } from "@/server/loaders.ts";
 import { makeTitle } from "@/lib/seo/title.ts";
 import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
 
 const styles = stylex.create({
-  heading: {
-    fontSize: typography.fontSize2xl,
-    fontWeight: typography.weightSemibold,
-    marginBottom: space.s3,
+  wrap: {
+    maxWidth: "45rem",
   },
   tagsLink: {
     display: "inline-block",
     color: colors.link,
     fontSize: typography.fontSizeSm,
     textDecoration: { default: "none", ":hover": "underline" },
-    marginBottom: space.s5,
+    marginBottom: space.s4,
   },
-  jumpNav: {
+  // 五十音索引。エントリの有無を塗りで示すボタン列。
+  kanaNav: {
     display: "flex",
     flexWrap: "wrap",
-    gap: space.s2,
-    listStyle: "none",
-    margin: 0,
-    marginBottom: space.s5,
-    padding: 0,
+    gap: space.s1,
+    marginBottom: space.s6,
+    paddingBottom: space.s4,
+    borderBottomWidth: 1,
+    borderBottomStyle: "solid",
+    borderBottomColor: colors.borderSubtle,
   },
-  jumpItem: {
-    display: "inline-block",
-  },
-  jumpLink: {
-    display: "inline-block",
-    paddingInline: space.s3,
-    paddingBlock: space.s1,
-    borderRadius: radius.pill,
-    backgroundColor: colors.bgElevated,
-    color: colors.textSecondary,
+  kanaCell: {
+    display: "grid",
+    placeItems: "center",
+    minWidth: "2rem",
+    height: "2rem",
+    paddingInline: space.s2,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderStyle: "solid",
+    fontFamily: typography.fontBrand,
     fontSize: typography.fontSizeSm,
-    textDecoration: { default: "none", ":hover": "underline" },
+  },
+  kanaActive: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accent,
+    color: colors.bgSurface,
+    textDecoration: "none",
+  },
+  kanaInactive: {
+    borderColor: colors.borderSubtle,
+    color: colors.textMuted,
   },
   groupSection: {
     marginBottom: space.s6,
   },
   groupHeading: {
-    fontSize: typography.fontSizeLg,
-    fontWeight: typography.weightSemibold,
+    fontFamily: typography.fontBrand,
+    fontSize: typography.fontSize2xl,
+    fontWeight: typography.weightMedium,
+    color: colors.accent,
+    paddingBottom: space.s2,
     marginBottom: space.s3,
-    color: colors.textPrimary,
+    borderBottomWidth: 2,
+    borderBottomStyle: "solid",
+    borderBottomColor: colors.accent,
   },
   list: {
-    display: "grid",
-    gridTemplateColumns: "1fr",
-    gap: space.s4,
     listStyle: "none",
     margin: 0,
     padding: 0,
@@ -64,6 +78,11 @@ const styles = stylex.create({
     color: colors.textMuted,
   },
 });
+
+// 索引ボタンと節見出しの表示ラベル (「あ行」→「あ」。「その他」はそのまま)。
+function groupLabel(name: FuriganaGroup): string {
+  return name === "その他" ? name : name.charAt(0);
+}
 
 export const Route = createFileRoute("/glossary/")({
   loader: () => getGlossaryIndexData(),
@@ -86,56 +105,69 @@ function GlossaryIndex() {
     () => <TreeSidebar tree={tree} activeSlug={null} treeKind="glossary" />,
     [tree],
   );
+  const activeGroups = useMemo(() => new Set(sections.map((s) => s.name)), [sections]);
 
   return (
     <AppShell variant="list" treeSidebar={treeSidebar}>
-      <h1 {...stylex.props(styles.heading)}>Glossary</h1>
-      <Link to="/glossary/tags" {...stylex.props(styles.tagsLink)}>
-        Browse tags →
-      </Link>
-      {sections.length === 0 ? (
-        <p {...stylex.props(styles.empty)}>No published terms yet.</p>
-      ) : (
-        <>
-          {/* oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示 */}
-          <ul {...stylex.props(styles.jumpNav)} role="list" aria-label="Jump to section">
+      <div {...stylex.props(styles.wrap)}>
+        <IndexPageHeader
+          crumbRoot="Glossary"
+          crumbCurrent="索引"
+          title="単語帳"
+          sub="Web 開発で「毎回ググっている」用語を、自分の言葉で定義し直したもの。Notes より粒度が細かく、Books からも参照される。"
+        />
+        <Link to="/glossary/tags" {...stylex.props(styles.tagsLink)}>
+          Browse tags →
+        </Link>
+
+        {sections.length === 0 ? (
+          <p {...stylex.props(styles.empty)}>No published terms yet.</p>
+        ) : (
+          <>
+            <nav {...stylex.props(styles.kanaNav)} aria-label="五十音索引">
+              {FURIGANA_GROUP_ORDER.map((name) =>
+                activeGroups.has(name) ? (
+                  <a
+                    key={name}
+                    href={`#group-${encodeURIComponent(name)}`}
+                    {...stylex.props(styles.kanaCell, styles.kanaActive)}
+                  >
+                    {groupLabel(name)}
+                  </a>
+                ) : (
+                  <span key={name} {...stylex.props(styles.kanaCell, styles.kanaInactive)}>
+                    {groupLabel(name)}
+                  </span>
+                ),
+              )}
+            </nav>
+
             {sections.map((section) => (
-              <li key={section.name} {...stylex.props(styles.jumpItem)}>
-                <a
-                  href={`#group-${encodeURIComponent(section.name)}`}
-                  {...stylex.props(styles.jumpLink)}
-                >
-                  {section.name}
-                </a>
-              </li>
+              <section
+                key={section.name}
+                id={`group-${encodeURIComponent(section.name)}`}
+                {...stylex.props(styles.groupSection)}
+              >
+                <h2 {...stylex.props(styles.groupHeading)}>{groupLabel(section.name)}</h2>
+                {/* oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示 */}
+                <ul {...stylex.props(styles.list)} role="list">
+                  {section.items.map((item, index) => (
+                    <li key={item.slug}>
+                      <GlossaryListRow
+                        slug={item.slug}
+                        term={item.term}
+                        furigana={item.furigana}
+                        summary={item.summary}
+                        showDivider={index > 0}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </section>
             ))}
-          </ul>
-          {sections.map((section) => (
-            <section
-              key={section.name}
-              id={`group-${encodeURIComponent(section.name)}`}
-              {...stylex.props(styles.groupSection)}
-            >
-              <h2 {...stylex.props(styles.groupHeading)}>{section.name}</h2>
-              {/* oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示 */}
-              <ul {...stylex.props(styles.list)} role="list">
-                {section.items.map((item) => (
-                  <li key={item.slug}>
-                    <GlossaryItem
-                      slug={item.slug}
-                      term={item.term}
-                      furigana={item.furigana}
-                      summary={item.summary}
-                      aliases={item.aliases}
-                      tags={item.tags}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
-        </>
-      )}
+          </>
+        )}
+      </div>
     </AppShell>
   );
 }
