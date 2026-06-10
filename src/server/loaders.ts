@@ -21,6 +21,8 @@ export interface NoteListItem {
   summary: string | null;
   tags: string[];
   featured: boolean;
+  /** Vault 内の直近の親フォルダ名。Vault 直下のノートは null。 */
+  folder: string | null;
 }
 
 export interface NoteDetail {
@@ -106,7 +108,15 @@ async function projectNotesIndex(): Promise<NoteListItem[]> {
     summary: note.frontmatter.summary ?? null,
     tags: note.frontmatter.tags ?? [],
     featured: note.frontmatter.featured ?? false,
+    folder: parentFolderName(note.filePath),
   }));
+}
+
+// filePath (Vault root 相対) から直近の親フォルダ名を取り出す。
+// 正規化は buildTree.ts と同じ規則 (先頭スラッシュ除去 + バックスラッシュ統一)。
+function parentFolderName(filePath: string): string | null {
+  const segments = filePath.replace(/^\/+/u, "").replaceAll("\\", "/").split("/").filter(Boolean);
+  return segments.length > 1 ? (segments.at(-2) ?? null) : null;
 }
 
 async function projectGlossaryIndex(): Promise<GlossaryGroupSectionDto[]> {
