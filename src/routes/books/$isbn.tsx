@@ -1,12 +1,11 @@
 import { useMemo } from "react";
 import { createFileRoute, notFound, useLoaderData } from "@tanstack/react-router";
 import { DetailShell } from "@/components/layout/DetailShell.tsx";
+import type { DetailCrumb } from "@/components/layout/DetailShell.tsx";
 import { BookHeader } from "@/components/content/BookHeader.tsx";
 import { getBookDetailData } from "@/server/loaders.ts";
 import { makeTitle } from "@/lib/seo/title.ts";
 import { SITE_DESCRIPTION } from "@/lib/config/static.ts";
-
-const BACK = { to: "/books", label: "Books" } as const;
 
 export const Route = createFileRoute("/books/$isbn")({
   loader: async ({ params }) => {
@@ -53,6 +52,10 @@ function BookDetail() {
       book.coverUrl,
     ],
   );
+  const crumb = useMemo<DetailCrumb>(
+    () => ({ to: "/books", label: "Books", current: book.title }),
+    [book.title],
+  );
 
   return (
     <DetailShell
@@ -61,7 +64,7 @@ function BookDetail() {
       activeSlug={book.slug}
       toc={book.toc}
       backlinks={book.incomingLinks}
-      back={BACK}
+      crumb={crumb}
       tags={book.tags}
       html={book.html}
       header={header}

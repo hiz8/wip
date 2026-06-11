@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { ContentTypeIcon } from "@/components/common/ContentTypeIcon.tsx";
+import { CONTENT_TYPE_LABELS } from "@/components/common/contentTypeLabels.ts";
 import { HomeIcon } from "@/components/common/HomeIcon.tsx";
 
 // アイコンナビ (IconNav) とモバイルボトムナビ (MobileBottomNav) が共有するセクション
@@ -25,19 +26,19 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     to: "/notes",
-    label: "Notes",
+    label: CONTENT_TYPE_LABELS.notes,
     renderIcon: (size) => <ContentTypeIcon type="notes" size={size} />,
     isActive: sectionActive("/notes"),
   },
   {
     to: "/glossary",
-    label: "Glossary",
+    label: CONTENT_TYPE_LABELS.glossary,
     renderIcon: (size) => <ContentTypeIcon type="glossary" size={size} />,
     isActive: sectionActive("/glossary"),
   },
   {
     to: "/books",
-    label: "Books",
+    label: CONTENT_TYPE_LABELS.books,
     renderIcon: (size) => <ContentTypeIcon type="books" size={size} />,
     isActive: sectionActive("/books"),
   },

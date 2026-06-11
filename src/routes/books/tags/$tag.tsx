@@ -3,13 +3,16 @@ import * as stylex from "@stylexjs/stylex";
 import { Link, createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell.tsx";
 import { TreeSidebar } from "@/components/layout/TreeSidebar.tsx";
-import { BookCard } from "@/components/card/BookCard.tsx";
+import { BookTile } from "@/components/card/BookTile.tsx";
 import { getBooksByTagData } from "@/server/loaders.ts";
 import { decodeTagSlug } from "@/lib/tags/index.ts";
 import { makeTitle } from "@/lib/seo/title.ts";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 
 const styles = stylex.create({
+  wrap: {
+    maxWidth: "1100px",
+  },
   back: {
     display: "inline-flex",
     alignItems: "center",
@@ -26,8 +29,9 @@ const styles = stylex.create({
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-    gap: space.s4,
+    gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+    rowGap: space.s6,
+    columnGap: space.s5,
     listStyle: "none",
     margin: 0,
     padding: 0,
@@ -63,30 +67,30 @@ function BooksByTag() {
 
   return (
     <AppShell variant="list" treeSidebar={treeSidebar}>
-      <Link to="/books/tags" {...stylex.props(styles.back)}>
-        ← Books Tags
-      </Link>
-      <h1 {...stylex.props(styles.heading)}>#{decodedTag}</h1>
-      {books.length === 0 ? (
-        <p {...stylex.props(styles.empty)}>No books with this tag.</p>
-      ) : (
-        // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示
-        <ul {...stylex.props(styles.grid)} role="list">
-          {books.map((book) => (
-            <li key={book.slug}>
-              <BookCard
-                slug={book.slug}
-                title={book.title}
-                authors={book.authors}
-                pubYear={book.pubYear}
-                summary={book.summary}
-                tags={book.tags}
-                coverUrl={book.coverUrl}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      <div {...stylex.props(styles.wrap)}>
+        <Link to="/books/tags" {...stylex.props(styles.back)}>
+          ← Books Tags
+        </Link>
+        <h1 {...stylex.props(styles.heading)}>#{decodedTag}</h1>
+        {books.length === 0 ? (
+          <p {...stylex.props(styles.empty)}>No books with this tag.</p>
+        ) : (
+          // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示
+          <ul {...stylex.props(styles.grid)} role="list">
+            {books.map((book) => (
+              <li key={book.slug}>
+                <BookTile
+                  slug={book.slug}
+                  title={book.title}
+                  authors={book.authors}
+                  readDate={book.readDate}
+                  coverUrl={book.coverUrl}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </AppShell>
   );
 }

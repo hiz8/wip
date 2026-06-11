@@ -1,27 +1,28 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getAllNotes, getNoteBySlug } from "./notes.ts";
-import { getAllGlossaryTerms, getGlossaryGroupedIndex, getGlossaryTermBySlug } from "./glossary.ts";
+import { getAllGlossaryTerms, getGlossaryTermBySlug } from "./glossary.ts";
 import { getAllBooks, getBookByIsbn, getBookCoverMap } from "./books.ts";
+import {
+  omitTags,
+  projectBooksIndex,
+  projectGlossaryIndex,
+  projectNotesIndex,
+} from "./projections.ts";
+import type {
+  BookIndexItem,
+  GlossaryIndexItem,
+  GlossaryIndexSection,
+  NoteIndexItem,
+} from "./projections.ts";
+import { parentFolderName } from "@/lib/content/paths.ts";
 import { buildBooksTree } from "@/lib/tree/buildBooksTree.ts";
 import { buildGlossaryTree } from "@/lib/tree/buildGlossaryTree.ts";
 import { buildTreeFromRenderedNotes } from "@/lib/tree/buildTree.ts";
 import type { TreeNode } from "@/lib/tree/buildTree.ts";
-import type { FuriganaGroup } from "@/lib/glossary/groupByFurigana.ts";
 import { aggregateTags, decodeTagSlug, filterByTag } from "@/lib/tags/index.ts";
 import type { TagCount } from "@/lib/tags/index.ts";
 import type { BacklinkRef, CalloutEntry, FootnoteEntry, TocEntry } from "@/types/content.ts";
-
-export type { TagCount } from "@/lib/tags/index.ts";
-
-export interface NoteListItem {
-  slug: string;
-  title: string;
-  updated: string;
-  summary: string | null;
-  tags: string[];
-  featured: boolean;
-}
 
 export interface NoteDetail {
   slug: string;
@@ -30,25 +31,13 @@ export interface NoteDetail {
   updated: string;
   tags: string[];
   summary: string | null;
+  /** Vault 内の直近の親フォルダ名 (パンくず用)。Vault 直下のノートは null。 */
+  folder: string | null;
   html: string;
   toc: TocEntry[];
   incomingLinks: BacklinkRef[];
   footnotes: FootnoteEntry[];
   callouts: CalloutEntry[];
-}
-
-export interface GlossaryListItem {
-  slug: string;
-  term: string;
-  furigana: string | null;
-  summary: string | null;
-  tags: string[];
-  aliases: string[];
-}
-
-export interface GlossaryGroupSectionDto {
-  name: FuriganaGroup;
-  items: GlossaryListItem[];
 }
 
 export interface GlossaryDetail {
@@ -63,17 +52,6 @@ export interface GlossaryDetail {
   incomingLinks: BacklinkRef[];
   footnotes: FootnoteEntry[];
   callouts: CalloutEntry[];
-}
-
-export interface BookListItem {
-  slug: string;
-  title: string;
-  authors: string[];
-  pubYear: number | null;
-  publisher: string | null;
-  summary: string | null;
-  tags: string[];
-  coverUrl: string | null;
 }
 
 export interface BookDetail {
@@ -94,53 +72,12 @@ export interface BookDetail {
   callouts: CalloutEntry[];
 }
 
-// index loaders と tag loaders で共有する素の投影ヘルパ。
-// (createServerFn の handler は inline でなければならず、tag loaders は index の
-// server fn を直接呼べないため、代わりにこれらのプリミティブを呼ぶ。)
-async function projectNotesIndex(): Promise<NoteListItem[]> {
-  const notes = await getAllNotes();
-  return notes.map((note) => ({
-    slug: note.slug,
-    title: note.title,
-    updated: note.frontmatter.updated,
-    summary: note.frontmatter.summary ?? null,
-    tags: note.frontmatter.tags ?? [],
-    featured: note.frontmatter.featured ?? false,
-  }));
-}
-
-async function projectGlossaryIndex(): Promise<GlossaryGroupSectionDto[]> {
-  const groups = await getGlossaryGroupedIndex();
-  return groups.map((g) => ({
-    name: g.name,
-    items: g.items.map((term) => ({
-      slug: term.slug,
-      term: term.title,
-      furigana: term.frontmatter.furigana ?? null,
-      summary: term.frontmatter.summary ?? null,
-      tags: term.frontmatter.tags ?? [],
-      aliases: term.frontmatter.aliases ?? [],
-    })),
-  }));
-}
-
-async function projectBooksIndex(): Promise<BookListItem[]> {
-  const books = await getAllBooks();
-  const covers = await getBookCoverMap();
-  return books.map((book) => ({
-    slug: book.slug,
-    title: book.title,
-    authors: book.frontmatter.authors,
-    pubYear: book.frontmatter.pubYear ?? null,
-    publisher: book.frontmatter.publisher ?? null,
-    summary: book.frontmatter.summary ?? null,
-    tags: book.frontmatter.tags ?? [],
-    coverUrl: covers.get(book.slug) ?? null,
-  }));
-}
+// 一覧・タグ別一覧の loader は、投影からタグ集計・フィルタ専用の tags を
+// omitTags で取り除き、ページが表示するフィールドだけを返す (SSG では loader の
+// 戻り値がそのままページ HTML に埋め込まれるため)。
 
 export const getNotesIndexData = createServerFn({ method: "GET" }).handler(
-  (): Promise<NoteListItem[]> => projectNotesIndex(),
+  async (): Promise<NoteIndexItem[]> => (await projectNotesIndex()).map((item) => omitTags(item)),
 );
 
 const noteSlugSchema = z.object({ slug: z.string().min(1) });
@@ -157,6 +94,7 @@ export const getNoteDetailData = createServerFn({ method: "GET" })
       updated: note.frontmatter.updated,
       tags: note.frontmatter.tags ?? [],
       summary: note.frontmatter.summary ?? null,
+      folder: parentFolderName(note.filePath),
       html: note.html,
       toc: note.toc,
       incomingLinks: note.incomingLinks,
@@ -173,7 +111,11 @@ export const getNotesTreeData = createServerFn({ method: "GET" }).handler(
 );
 
 export const getGlossaryIndexData = createServerFn({ method: "GET" }).handler(
-  (): Promise<GlossaryGroupSectionDto[]> => projectGlossaryIndex(),
+  async (): Promise<GlossaryIndexSection[]> =>
+    (await projectGlossaryIndex()).map((section) => ({
+      name: section.name,
+      items: section.items.map((item) => omitTags(item)),
+    })),
 );
 
 const glossarySlugSchema = z.object({ slug: z.string().min(1) });
@@ -206,7 +148,7 @@ export const getGlossaryTreeData = createServerFn({ method: "GET" }).handler(
 );
 
 export const getBooksIndexData = createServerFn({ method: "GET" }).handler(
-  (): Promise<BookListItem[]> => projectBooksIndex(),
+  async (): Promise<BookIndexItem[]> => (await projectBooksIndex()).map((item) => omitTags(item)),
 );
 
 const bookIsbnSchema = z.object({ isbn: z.string().min(1) });
@@ -254,8 +196,8 @@ export const getNotesTagsData = createServerFn({ method: "GET" }).handler(
 export const getNotesByTagData = createServerFn({ method: "GET" })
   .inputValidator((value: unknown) => tagSlugSchema.parse(value))
   .handler(
-    async ({ data }): Promise<NoteListItem[]> =>
-      filterByTag(await projectNotesIndex(), decodeTagSlug(data.tag)),
+    async ({ data }): Promise<NoteIndexItem[]> =>
+      filterByTag(await projectNotesIndex(), decodeTagSlug(data.tag)).map((item) => omitTags(item)),
   );
 
 export const getGlossaryTagsData = createServerFn({ method: "GET" }).handler(
@@ -267,12 +209,12 @@ export const getGlossaryTagsData = createServerFn({ method: "GET" }).handler(
 
 export const getGlossaryByTagData = createServerFn({ method: "GET" })
   .inputValidator((value: unknown) => tagSlugSchema.parse(value))
-  .handler(async ({ data }): Promise<GlossaryListItem[]> => {
+  .handler(async ({ data }): Promise<GlossaryIndexItem[]> => {
     const sections = await projectGlossaryIndex();
     return filterByTag(
       sections.flatMap((section) => section.items),
       decodeTagSlug(data.tag),
-    );
+    ).map((item) => omitTags(item));
   });
 
 export const getBooksTagsData = createServerFn({ method: "GET" }).handler(
@@ -282,6 +224,6 @@ export const getBooksTagsData = createServerFn({ method: "GET" }).handler(
 export const getBooksByTagData = createServerFn({ method: "GET" })
   .inputValidator((value: unknown) => tagSlugSchema.parse(value))
   .handler(
-    async ({ data }): Promise<BookListItem[]> =>
-      filterByTag(await projectBooksIndex(), decodeTagSlug(data.tag)),
+    async ({ data }): Promise<BookIndexItem[]> =>
+      filterByTag(await projectBooksIndex(), decodeTagSlug(data.tag)).map((item) => omitTags(item)),
   );

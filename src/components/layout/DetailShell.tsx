@@ -1,11 +1,12 @@
 import * as stylex from "@stylexjs/stylex";
 import { useMemo, type ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
 import { AppShell } from "./AppShell.tsx";
 import { DetailLayout } from "./DetailLayout.tsx";
 import { RightSidebar } from "./RightSidebar.tsx";
 import { TreeSidebar } from "./TreeSidebar.tsx";
 import { FootnoteSection } from "@/components/content/FootnoteSection.tsx";
+import { Breadcrumb } from "@/components/common/Breadcrumb.tsx";
+import type { CrumbRootTo } from "@/components/common/Breadcrumb.tsx";
 import { TagChips } from "@/components/common/TagChips.tsx";
 import type { TreeNode } from "@/lib/tree/buildTree.ts";
 import type {
@@ -15,9 +16,16 @@ import type {
   FootnoteEntry,
   TocEntry,
 } from "@/types/content.ts";
-import { colors, space, typography } from "@/styles/tokens.stylex.ts";
+import { colors, space } from "@/styles/tokens.stylex.ts";
 
-type DetailBackTo = "/notes" | "/glossary" | "/books";
+/** 詳細ページのパンくず。to はカテゴリトップへ戻るリンクになる。 */
+export interface DetailCrumb {
+  to: CrumbRootTo;
+  label: string;
+  /** 中間セグメント (Notes のフォルダ名、Glossary のかな行など)。null は省略。 */
+  middle?: string | null;
+  current: string;
+}
 
 interface DetailShellProps {
   tree: readonly TreeNode[];
@@ -25,7 +33,7 @@ interface DetailShellProps {
   activeSlug: string;
   toc: readonly TocEntry[];
   backlinks: readonly BacklinkRef[];
-  back: { to: DetailBackTo; label: string };
+  crumb: DetailCrumb;
   header: ReactNode;
   tags: readonly string[];
   html: string;
@@ -34,15 +42,6 @@ interface DetailShellProps {
 }
 
 const styles = stylex.create({
-  back: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: space.s1,
-    color: colors.link,
-    fontSize: typography.fontSizeSm,
-    textDecoration: { default: "none", ":hover": "underline" },
-    marginBottom: space.s4,
-  },
   tags: {
     marginTop: space.s2,
     marginBottom: space.s4,
@@ -58,7 +57,7 @@ export function DetailShell({
   activeSlug,
   toc,
   backlinks,
-  back,
+  crumb,
   header,
   tags,
   html,
@@ -82,9 +81,12 @@ export function DetailShell({
   return (
     <AppShell variant="detail" treeSidebar={treeSidebar} rightSidebar={rightSidebar}>
       <DetailLayout hasMarginalia={hasMarginalia}>
-        <Link to={back.to} {...stylex.props(styles.back)}>
-          ← {back.label}
-        </Link>
+        <Breadcrumb
+          rootLabel={crumb.label}
+          rootTo={crumb.to}
+          middle={crumb.middle}
+          current={crumb.current}
+        />
         {header}
         {tags.length > 0 ? (
           <div {...stylex.props(styles.tags)}>
