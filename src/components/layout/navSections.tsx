@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
-import { ContentTypeIcon } from "@/components/common/ContentTypeIcon.tsx";
 import { CONTENT_TYPE_LABELS } from "@/components/common/contentTypeLabels.ts";
-import { HomeIcon } from "@/components/common/HomeIcon.tsx";
+import { Icon } from "@/components/common/Icon.tsx";
 
 // アイコンナビ (IconNav) とモバイルボトムナビ (MobileBottomNav) が共有するセクション
 // 定義。ナビ構造とアクティブ判定をここに一元化し、各コンポーネントは見た目だけを担う。
@@ -21,25 +20,25 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     to: "/",
     label: "Home",
-    renderIcon: (size) => <HomeIcon size={size} />,
+    renderIcon: (size) => <Icon type="home" size={size} />,
     isActive: sectionActive("/"),
   },
   {
     to: "/notes",
     label: CONTENT_TYPE_LABELS.notes,
-    renderIcon: (size) => <ContentTypeIcon type="notes" size={size} />,
+    renderIcon: (size) => <Icon type="notebook" size={size} />,
     isActive: sectionActive("/notes"),
   },
   {
     to: "/glossary",
     label: CONTENT_TYPE_LABELS.glossary,
-    renderIcon: (size) => <ContentTypeIcon type="glossary" size={size} />,
+    renderIcon: (size) => <Icon type="notes" size={size} />,
     isActive: sectionActive("/glossary"),
   },
   {
     to: "/books",
     label: CONTENT_TYPE_LABELS.books,
-    renderIcon: (size) => <ContentTypeIcon type="books" size={size} />,
+    renderIcon: (size) => <Icon type="book" size={size} />,
     isActive: sectionActive("/books"),
   },
 ];

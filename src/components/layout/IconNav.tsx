@@ -6,7 +6,7 @@ import { a11y } from "@/styles/a11y.ts";
 import { navChrome } from "@/styles/navChrome.ts";
 import { ThemeToggle } from "@/components/common/ThemeToggle.tsx";
 import { Tooltip } from "@/components/common/Tooltip.tsx";
-import { SearchIcon } from "@/components/common/SearchIcon.tsx";
+import { Icon } from "@/components/common/Icon.tsx";
 import { SearchDialog } from "@/components/common/SearchDialog.tsx";
 import { bindSlashShortcut } from "@/lib/search/slashShortcut.ts";
 import { NAV_SECTIONS } from "./navSections.tsx";
@@ -20,7 +20,7 @@ const styles = stylex.create({
     display: { default: "none", [BP_TABLET]: "flex" },
     flexDirection: "column",
     alignItems: "center",
-    gap: space.s2,
+    gap: space.s4,
     paddingBlock: space.s3,
     paddingInline: space.s2,
     width: "3.75rem",
@@ -58,7 +58,7 @@ export function IconNav() {
             aria-label="Search (press /)"
             {...stylex.props(navChrome.iconButton)}
           >
-            <SearchIcon />
+            <Icon type="search" size={28} />
             <span {...stylex.props(a11y.srOnly)}>Search</span>
           </button>
         </Tooltip>
@@ -72,7 +72,7 @@ export function IconNav() {
                 section.isActive(path) && navChrome.iconButtonActive,
               )}
             >
-              {section.renderIcon(20)}
+              {section.renderIcon(28)}
               <span {...stylex.props(a11y.srOnly)}>{section.label}</span>
             </Link>
           </Tooltip>

@@ -3,7 +3,24 @@ import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Icon, type IconType } from "@/components/common/Icon.tsx";
 
-const TYPES: readonly IconType[] = ["home", "github", "global", "works", "blog", "externalLink"];
+const TYPES: readonly IconType[] = [
+  "home",
+  "homeBold",
+  "github",
+  "global",
+  "works",
+  "blog",
+  "notebook",
+  "notebookBold",
+  "notes",
+  "notesBold",
+  "book",
+  "bookBold",
+  "externalLink",
+  "search",
+  "sun",
+  "moon",
+];
 
 describe("Icon", () => {
   for (const type of TYPES) {
