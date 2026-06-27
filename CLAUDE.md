@@ -260,6 +260,6 @@ npm run fmt
 - Vault の構造に依存する処理は、テストで Vault パスをモックできるように設計する
 - Cloudflare Workers の制約 (ファイルサイズ、ルーティング上限など) を考慮する
 
-## コミットメッセージ・README・コード内コメントの言語
+## README・コミットメッセージ・コード内コメントの言語
 
-コミットメッセージと README は英語で記述してください。コード内のコメント (JSDoc を含む) は日本語で記述してください。`// @vitest-environment jsdom` や `// oxlint-disable-next-line …` のような機械可読ディレクティブ、識別子・API 名・属性名は原表記を保ちます。
+README は英語で記述してください。コミットメッセージとコード内のコメント (JSDoc を含む) は日本語で記述してください。`// @vitest-environment jsdom` や `// oxlint-disable-next-line …` のような機械可読ディレクティブ、識別子・API 名・属性名は原表記を保ちます。
