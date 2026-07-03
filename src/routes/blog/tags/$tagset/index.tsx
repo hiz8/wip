@@ -1,6 +1,8 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { useMemo } from "react";
+import { createFileRoute, notFound, useLoaderData } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell.tsx";
 import { BlogListPage } from "@/components/blog/BlogListPage.tsx";
+import { BlogTagTreeSidebar } from "@/components/blog/BlogTagTreeSidebar.tsx";
 import { getBlogTagsetData } from "@/server/loaders.ts";
 import { makeTitle } from "@/lib/seo/title.ts";
 
@@ -16,11 +18,15 @@ export const Route = createFileRoute("/blog/tags/$tagset/")({
   component: BlogTagsetPage,
 });
 
-// treeSidebar (タグツリー) は Task 10 で差し込む。それまでは AppShell のツリー列なしで表示する。
 function BlogTagsetPage() {
   const data = Route.useLoaderData();
+  const tree = useLoaderData({ from: "/blog" });
+  const treeSidebar = useMemo(
+    () => <BlogTagTreeSidebar tree={tree} currentTagset={data.tagset} />,
+    [tree, data.tagset],
+  );
   return (
-    <AppShell variant="list">
+    <AppShell variant="list" treeSidebar={treeSidebar}>
       <BlogListPage data={data} />
     </AppShell>
   );
