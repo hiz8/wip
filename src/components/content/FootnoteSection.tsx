@@ -5,6 +5,8 @@ import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 
 interface FootnoteSectionProps {
   footnotes: readonly FootnoteEntry[];
+  /** id 名前空間の接頭辞 (Blog は記事ごとに固有の空間を持つ)。省略時は既定の `user-content-`。 */
+  idPrefix?: string;
 }
 
 const styles = stylex.create({
@@ -38,27 +40,28 @@ const styles = stylex.create({
   },
 });
 
-function FootnoteItem({ footnote }: { footnote: FootnoteEntry }) {
+function FootnoteItem({ footnote, idPrefix }: { footnote: FootnoteEntry; idPrefix: string }) {
   // プロジェクトの react-perf lint ルール (jsx-no-new-object-as-prop) を満たすため、
   // dangerouslySetInnerHTML の prop オブジェクトをメモ化する。
   const html = useMemo(() => ({ __html: footnote.html }), [footnote.html]);
   return (
     <li
-      id={`user-content-fn-${footnote.id}`}
+      id={`${idPrefix}fn-${footnote.id}`}
       {...stylex.props(styles.item)}
       dangerouslySetInnerHTML={html}
     />
   );
 }
 
-export function FootnoteSection({ footnotes }: FootnoteSectionProps) {
+export function FootnoteSection({ footnotes, idPrefix }: FootnoteSectionProps) {
   if (footnotes.length === 0) return null;
+  const prefix = idPrefix ?? "user-content-";
   return (
     <section {...stylex.props(styles.section)} data-footnote-section aria-label="Footnotes">
       <h2 {...stylex.props(styles.heading)}>Footnotes</h2>
       <ol {...stylex.props(styles.list)}>
         {footnotes.map((footnote) => (
-          <FootnoteItem key={footnote.id} footnote={footnote} />
+          <FootnoteItem key={footnote.id} footnote={footnote} idPrefix={prefix} />
         ))}
       </ol>
     </section>

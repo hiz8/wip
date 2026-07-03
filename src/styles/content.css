@@ -13,6 +13,11 @@
     counter-reset: fn-num;
   }
 
+  /* Blog: 記事ブロック境界で float (Marginalia) を切り、前後の記事と混ざらないようにする */
+  [data-blog-article] {
+    clear: both;
+  }
+
   [data-content-body] > :first-child {
     margin-block-start: 0;
   }

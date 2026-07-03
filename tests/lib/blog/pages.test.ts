@@ -5,6 +5,7 @@ import {
   locateArticle,
   pageCount,
   pageSlice,
+  parsePageParam,
   remainingTokens,
 } from "@/lib/blog/pages.ts";
 
@@ -82,6 +83,24 @@ describe("locateArticle", () => {
   it("存在しない組み合わせは null", () => {
     const pages = enumerateFacetPages(articles);
     expect(locateArticle(pages, "映画", "2025-12-11 0930")).toBeNull();
+  });
+});
+
+describe("parsePageParam", () => {
+  it("2 以上の整数を受け付ける", () => {
+    expect(parsePageParam("2")).toBe(2);
+    expect(parsePageParam("10")).toBe(10);
+    expect(parsePageParam("123")).toBe(123);
+  });
+
+  it("1・0 埋め・非数値・負数・小数は null (404)", () => {
+    expect(parsePageParam("1")).toBeNull();
+    expect(parsePageParam("0")).toBeNull();
+    expect(parsePageParam("02")).toBeNull();
+    expect(parsePageParam("abc")).toBeNull();
+    expect(parsePageParam("-2")).toBeNull();
+    expect(parsePageParam("2.5")).toBeNull();
+    expect(parsePageParam("")).toBeNull();
   });
 });
 

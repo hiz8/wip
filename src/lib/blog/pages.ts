@@ -82,6 +82,18 @@ export function locateArticle(
   return { tagset, page: Math.floor(index / BLOG_PAGE_SIZE) + 1 };
 }
 
+// ページネーション URL セグメント (`/page/$n`) の解析。1 は /blog(/tags/…) に
+// 正規化して生成しないため受け付けず、0 埋め・非数値・非整数もすべて 404 とする
+// (docs/blog-spec.md「ページネーション」)。ルート層 (blog/page/$n.tsx と
+// blog/tags/$tagset/page/$n.tsx) で共用する。
+export function parsePageParam(n: string): number | null {
+  // 先頭ゼロ・非数値を弾く (`[2-9]\d*` は先頭 1 桁だけを見るため "10" 等の複数桁を
+  // 誤って拒否してしまう。先頭は 1-9 のいずれかを許容してから 2 以上かを判定する)。
+  if (!/^[1-9]\d*$/u.test(n)) return null;
+  const page = Number(n);
+  return page >= 2 ? page : null;
+}
+
 export interface RemainingToken {
   token: string;
   /** 表示ラベル: 現在ページが親ファセットを含む階層タグは残りセグメントのみ */
