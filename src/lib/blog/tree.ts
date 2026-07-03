@@ -133,9 +133,11 @@ export function filterBlogTree(
     const kept: BlogTreeNode[] = [];
     for (const node of nodes) {
       const selfMatch = node.label.toLowerCase().includes(q);
-      const children = walk(node.children);
+      // 自己一致サブツリーは配下を再帰しない (無駄な走査と余計な祖先 id の混入を防ぐ)
+      const children = selfMatch ? node.children : walk(node.children);
       if (selfMatch) {
-        // 一致ノードは配下をそのまま見せる (既存 filterTree と同方針)
+        // 一致ノードは配下をそのまま見せ、展開対象に自身も含める (既存 filterTree と同方針)
+        matchedIds.push(node.id);
         kept.push(node);
       } else if (children.length > 0) {
         matchedIds.push(node.id);

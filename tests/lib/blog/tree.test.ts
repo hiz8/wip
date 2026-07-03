@@ -122,7 +122,23 @@ describe("filterBlogTree", () => {
     // トップ一致 / 子孫一致での温存を両方確認する
     expect(labels(filtered)).toContain("ライティング");
     expect(labels(filtered)).toContain("UI-UX");
-    expect(matchedIds.length).toBeGreaterThan(0);
+    // 展開対象 = 一致ノード自身 + 子孫一致で温存される祖先 (仕様イメージ A から手で導出)。
+    // スターウォーズ / デザインシステム / 映画 の枝には ライティング が現れないため含まれない
+    expect(new Set(matchedIds)).toEqual(
+      new Set([
+        // 自己一致ノード (label = ライティング)
+        "ライティング",
+        "UI-UX|ライティング",
+        "UI-UX|マイクロコピー|ライティング",
+        "マイクロコピー|ライティング",
+        "マイクロコピー|UI-UX|ライティング",
+        // 子孫一致で温存される祖先
+        "UI-UX",
+        "UI-UX|マイクロコピー",
+        "マイクロコピー",
+        "マイクロコピー|UI-UX",
+      ]),
+    );
   });
 
   it("空クエリは全ツリーを返す", () => {
