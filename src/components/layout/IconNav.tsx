@@ -65,14 +65,8 @@ export function IconNav() {
         <div {...stylex.props(styles.spacer)} />
         {NAV_SECTIONS.map((section) => (
           <Tooltip key={section.to} label={section.label}>
-            <Link
-              to={section.to}
-              {...stylex.props(
-                navChrome.iconButton,
-                section.isActive(path) && navChrome.iconButtonActive,
-              )}
-            >
-              {section.renderIcon(28)}
+            <Link to={section.to} {...stylex.props(navChrome.iconButton)}>
+              <Icon type={section.isActive(path) ? section.iconActive : section.icon} size={28} />
               <span {...stylex.props(a11y.srOnly)}>{section.label}</span>
             </Link>
           </Tooltip>

@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { Link, useMatches } from "@tanstack/react-router";
 import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
+import { Icon } from "@/components/common/Icon.tsx";
 import { NAV_SECTIONS } from "./navSections.tsx";
 
 // モバイル (< 768px) 限定。≥ 768 では非表示にしデスクトップの IconNav に戻す。
@@ -45,12 +46,8 @@ const styles = stylex.create({
     paddingInline: space.s3,
     borderRadius: radius.lg,
     color: { default: colors.navIcon, ":hover": colors.navIconActive },
-    transitionProperty: "color, background-color",
+    transitionProperty: "color",
     transitionDuration: "120ms",
-  },
-  innerActive: {
-    color: colors.navIconActive,
-    backgroundColor: colors.navItemActiveBg,
   },
   label: {
     fontSize: "0.625rem",
@@ -67,8 +64,8 @@ export function MobileBottomNav() {
     <nav {...stylex.props(styles.nav)} aria-label="Site sections">
       {NAV_SECTIONS.map((section) => (
         <Link key={section.to} to={section.to} {...stylex.props(styles.tab)}>
-          <span {...stylex.props(styles.inner, section.isActive(path) && styles.innerActive)}>
-            {section.renderIcon(22)}
+          <span {...stylex.props(styles.inner)}>
+            <Icon type={section.isActive(path) ? section.iconActive : section.icon} size={22} />
             <span {...stylex.props(styles.label)}>{section.label}</span>
           </span>
         </Link>

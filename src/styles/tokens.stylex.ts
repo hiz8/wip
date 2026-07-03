@@ -28,7 +28,7 @@ export const colors = stylex.defineVars({
   tagBg: { default: "#E6EBF4", [DARK]: "#2E3650" },
   // ナビレールは両テーマで深ブルー固定 (テーマで変化しないため plain string)。
   navBg: "#091581",
-  navIcon: "rgba(255, 255, 255, 0.65)",
+  navIcon: "rgba(255, 255, 255, 0.85)",
   navIconActive: "#FFFFFF",
   navItemHoverBg: "rgba(255, 255, 255, 0.10)",
   navItemActiveBg: "rgba(255, 255, 255, 0.18)",

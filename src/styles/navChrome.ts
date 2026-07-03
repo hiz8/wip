@@ -16,8 +16,4 @@ export const navChrome = stylex.create({
     transitionProperty: "color, background-color",
     transitionDuration: "120ms",
   },
-  iconButtonActive: {
-    color: colors.navIconActive,
-    backgroundColor: colors.navItemActiveBg,
-  },
 });
