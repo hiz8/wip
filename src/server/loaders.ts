@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getAllNotes, getNoteBySlug } from "./notes.ts";
 import { getAllGlossaryTerms, getGlossaryTermBySlug } from "./glossary.ts";
 import { getAllBooks, getBookByIsbn, getBookCoverMap } from "./books.ts";
+import { getBlogModel, projectBlogListPage } from "./blog.ts";
+import type { BlogListPageDto } from "./blog.ts";
 import {
   omitTags,
   projectBooksIndex,
@@ -20,6 +22,7 @@ import { buildBooksTree } from "@/lib/tree/buildBooksTree.ts";
 import { buildGlossaryTree } from "@/lib/tree/buildGlossaryTree.ts";
 import { buildTreeFromRenderedNotes } from "@/lib/tree/buildTree.ts";
 import type { TreeNode } from "@/lib/tree/buildTree.ts";
+import type { BlogTreeNode } from "@/lib/blog/tree.ts";
 import { aggregateTags, decodeTagSlug, filterByTag } from "@/lib/tags/index.ts";
 import type { TagCount } from "@/lib/tags/index.ts";
 import type { BacklinkRef, CalloutEntry, FootnoteEntry, TocEntry } from "@/types/content.ts";
@@ -227,3 +230,31 @@ export const getBooksByTagData = createServerFn({ method: "GET" })
     async ({ data }): Promise<BookIndexItem[]> =>
       filterByTag(await projectBooksIndex(), decodeTagSlug(data.tag)).map((item) => omitTags(item)),
   );
+
+export const getBlogTreeData = createServerFn({ method: "GET" }).handler(
+  async (): Promise<BlogTreeNode[]> => {
+    const model = await getBlogModel();
+    return model.tree;
+  },
+);
+
+const blogIndexSchema = z.object({ page: z.number().int().min(1) });
+
+export const getBlogIndexData = createServerFn({ method: "GET" })
+  .inputValidator((value: unknown) => blogIndexSchema.parse(value))
+  .handler(async ({ data }): Promise<BlogListPageDto | null> => {
+    const model = await getBlogModel();
+    return projectBlogListPage(model, null, data.page);
+  });
+
+const blogTagsetSchema = z.object({ tagset: z.string().min(1), page: z.number().int().min(1) });
+
+export const getBlogTagsetData = createServerFn({ method: "GET" })
+  .inputValidator((value: unknown) => blogTagsetSchema.parse(value))
+  .handler(async ({ data }): Promise<BlogListPageDto | null> => {
+    const model = await getBlogModel();
+    return projectBlogListPage(model, data.tagset, data.page);
+  });
+
+export type { BlogArticleDto, BlogListPageDto } from "./blog.ts";
+export type { BlogTreeNode } from "@/lib/blog/tree.ts";

@@ -4,18 +4,20 @@ import type {
   BaseFrontmatter,
   ContentItem,
   ImageRef,
+  RenderedBlogArticle,
   RenderedBook,
   RenderedGlossaryTerm,
   RenderedNote,
 } from "@/types/content.ts";
 import type { SiteConfigParsed } from "@/lib/config/schema.ts";
 import { resolveConfig } from "@/lib/config/index.ts";
-import { collectBooks, collectGlossary, collectNotes } from "@/lib/content/index.ts";
+import { collectBlog, collectBooks, collectGlossary, collectNotes } from "@/lib/content/index.ts";
 import { parseMarkdownFile } from "@/lib/content/parse.ts";
 import {
   pickBooksTitle,
   pickGlossaryTitle,
   pickNotesTitle,
+  renderBlog,
   renderContentDrafts,
 } from "@/lib/markdown/pipeline.ts";
 import { buildContentIndex, type ContentIndex } from "@/lib/linkgraph/resolve.ts";
@@ -41,6 +43,9 @@ export interface SiteDataset {
   notes: RenderedNote[];
   glossary: RenderedGlossaryTerm[];
   books: RenderedBook[];
+  // 作成日時降順 (= slug 文字列降順)。Blog はリンクグラフに参加しない
+  // (index / backlinks の対象外) ため bySlug は持たない。
+  blog: RenderedBlogArticle[];
   bySlug: {
     notes: Map<string, RenderedNote>;
     glossary: Map<string, RenderedGlossaryTerm>;
@@ -63,12 +68,15 @@ let configOverride: SiteConfigParsed | null = null;
 async function build(): Promise<SiteDataset> {
   const config = configOverride ?? resolveConfig(siteConfigInput);
 
-  const [notesItems, glossaryItems, booksItems] = await Promise.all([
+  const [notesItems, glossaryItems, booksItems, blogItems] = await Promise.all([
     collectNotes(config),
     collectGlossary(config),
     collectBooks(config),
+    collectBlog(config),
   ]);
 
+  // Blog はリンクの受け手にならない (docs/blog-spec.md「リンクグラフへの参加」) ため、
+  // index にも backlinks 結合にも含めない。
   const allItems = [...notesItems, ...glossaryItems, ...booksItems];
   const index = buildContentIndex(allItems);
 
@@ -96,6 +104,9 @@ async function build(): Promise<SiteDataset> {
     index,
     pickTitle: pickBooksTitle,
   });
+  // renderBlog は index を Notes/Glossary/Books へのリンク解決にのみ使い、Blog 自身は
+  // 登録しない。backlinks も配線しない (incomingLinks は常に空) ので allDrafts には含めない。
+  const blogArticles = await renderBlog(blogItems, config, index);
 
   const allDrafts = [...notesDrafts, ...glossaryDrafts, ...booksDrafts];
   const backlinks = buildBacklinks(allDrafts);
@@ -103,11 +114,13 @@ async function build(): Promise<SiteDataset> {
   const notes = sortNotes(attachBacklinks(notesDrafts, backlinks));
   const glossary = sortGlossary(attachBacklinks(glossaryDrafts, backlinks));
   const books = sortBooks(attachBacklinks(booksDrafts, backlinks));
+  const blog = sortBlog(blogArticles);
 
   const { imageMapping, coverBySlug } = computeImageArtifacts(
     notes,
     glossary,
     books,
+    blog,
     config.content.vaultRoot,
   );
 
@@ -123,11 +136,13 @@ async function build(): Promise<SiteDataset> {
   const notesRewritten = notes.map((item) => rewriteHtml(item));
   const glossaryRewritten = glossary.map((item) => rewriteHtml(item));
   const booksRewritten = books.map((item) => rewriteHtml(item));
+  const blogRewritten = blog.map((item) => rewriteHtml(item));
 
   return {
     notes: notesRewritten,
     glossary: glossaryRewritten,
     books: booksRewritten,
+    blog: blogRewritten,
     bySlug: {
       notes: indexBySlug(notesRewritten),
       glossary: indexBySlug(glossaryRewritten),
@@ -172,12 +187,14 @@ function computeImageArtifacts(
   notes: readonly RenderedNote[],
   glossary: readonly RenderedGlossaryTerm[],
   books: readonly RenderedBook[],
+  blog: readonly RenderedBlogArticle[],
   vaultRoot: string,
 ): { imageMapping: readonly ImageMappingEntry[]; coverBySlug: ReadonlyMap<string, string> } {
   const refs: ImageRef[] = [];
   for (const item of notes) refs.push(...item.images);
   for (const item of glossary) refs.push(...item.images);
   for (const item of books) refs.push(...item.images);
+  for (const item of blog) refs.push(...item.images);
 
   const bookCoverRefs: Array<{ slug: string; ref: ImageRef }> = [];
   for (const book of books) {
@@ -242,6 +259,12 @@ function sortBooks(items: readonly RenderedBook[]): RenderedBook[] {
     if (by === undefined) return -1;
     return by - ay;
   });
+}
+
+// slug (= `YYYY-MM-DD HHmm`) は固定幅の日時フォーマットのため、文字列降順が
+// そのまま作成日時降順になる (docs/blog-spec.md)。
+function sortBlog(items: readonly RenderedBlogArticle[]): RenderedBlogArticle[] {
+  return items.toSorted((a, b) => (a.slug < b.slug ? 1 : a.slug > b.slug ? -1 : 0));
 }
 
 export function getSiteDataset(): Promise<SiteDataset> {
