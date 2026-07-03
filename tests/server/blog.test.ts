@@ -2,12 +2,22 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { makeConfig } from "../helpers/makeConfig.ts";
 import { __resetSiteDatasetForTests, __setSiteDatasetConfigForTests } from "@/server/datasets.ts";
 import { getBlogModel, projectBlogListPage } from "@/server/blog.ts";
+import { getNoteBySlug } from "@/server/notes.ts";
 
 beforeEach(() => {
   __setSiteDatasetConfigForTests(makeConfig("vault"));
 });
 afterEach(() => {
   __resetSiteDatasetForTests();
+});
+
+describe("datasets: Blog はリンクグラフに参加しない", () => {
+  it("Blog からの [[wiki-link]] はリンク先のバックリンク欄に出ない", async () => {
+    // fixture 上、note-a を参照するのは Blog の記事 (2025-12-11 0930) のみなので、
+    // backlinks に blog が混入すれば note-a の incomingLinks が非空になる。
+    const note = await getNoteBySlug("note-a");
+    expect(note?.incomingLinks).toEqual([]);
+  });
 });
 
 describe("getBlogModel", () => {
