@@ -8,16 +8,12 @@ export const navChrome = stylex.create({
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    width: "2.25rem",
-    height: "2.25rem",
+    width: "44px",
+    height: "44px",
     borderRadius: radius.lg,
     color: { default: colors.navIcon, ":hover": colors.navIconActive },
     backgroundColor: { default: "transparent", ":hover": colors.navItemHoverBg },
     transitionProperty: "color, background-color",
     transitionDuration: "120ms",
-  },
-  iconButtonActive: {
-    color: colors.navIconActive,
-    backgroundColor: colors.navItemActiveBg,
   },
 });

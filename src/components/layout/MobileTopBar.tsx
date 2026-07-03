@@ -4,7 +4,7 @@ import { colors, space } from "@/styles/tokens.stylex.ts";
 import { a11y } from "@/styles/a11y.ts";
 import { navChrome } from "@/styles/navChrome.ts";
 import { ThemeToggle } from "@/components/common/ThemeToggle.tsx";
-import { SearchIcon } from "@/components/common/SearchIcon.tsx";
+import { Icon } from "@/components/common/Icon.tsx";
 import { SearchDialog } from "@/components/common/SearchDialog.tsx";
 
 // モバイル (< 768px) 限定。レールから外した検索 / テーマ切替をここに置く。
@@ -43,7 +43,7 @@ export function MobileTopBar() {
           aria-label="Search"
           {...stylex.props(navChrome.iconButton)}
         >
-          <SearchIcon />
+          <Icon type="search" size={20} />
           <span {...stylex.props(a11y.srOnly)}>Search</span>
         </button>
         <ThemeToggle />

@@ -11,6 +11,7 @@ import {
   createRouter,
 } from "@tanstack/react-router";
 import { Backlinks } from "@/components/common/Backlinks.tsx";
+import { Icon } from "@/components/common/Icon.tsx";
 import type { BacklinkRef } from "@/types/content.ts";
 
 const NO_LINKS: readonly BacklinkRef[] = [];
@@ -60,12 +61,19 @@ describe("Backlinks", () => {
     expect(document.querySelector('a[href="/books/9784873119045"]')).not.toBeNull();
   });
 
-  it("renders a content-type icon for each backlink", async () => {
-    renderWithRouter(<Backlinks links={ALL_LINKS} />);
+  it("renders the matching content-type icon for each backlink", async () => {
+    const { container } = renderWithRouter(<Backlinks links={ALL_LINKS} />);
     await waitFor(() => expect(screen.getByText("Note A")).toBeInTheDocument());
-    const icons = document.querySelectorAll('svg[role="img"]');
-    expect(icons.length).toBe(ALL_LINKS.length);
-    const labels = Array.from(icons).map((node) => node.getAttribute("aria-label"));
-    expect(labels).toEqual(["Note", "Glossary", "Book"]);
+    // ContentTypeIcon は装飾的な Icon (span, aria-hidden ラッパー内) を行頭に 1 つ描画する。
+    const iconClasses = Array.from(container.querySelectorAll("li")).map(
+      (li) => li.querySelector("span > span")?.getAttribute("class") ?? "",
+    );
+    expect(iconClasses.length).toBe(ALL_LINKS.length);
+    // notes→notebook / glossary→notes / books→book のマッピングどおりのアイコンが出る。
+    const expected = (["notebook", "notes", "book"] as const).map((type) => {
+      const { container: ref } = render(<Icon type={type} />);
+      return ref.querySelector("span")?.getAttribute("class") ?? "";
+    });
+    expect(iconClasses).toEqual(expected);
   });
 });
