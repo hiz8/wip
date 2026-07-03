@@ -19,29 +19,47 @@ describe("validateBlogFrontmatter", () => {
 
   // 各行の frontmatter は欠損キー・型がまちまちなので、タプル型を明示して
   // it.each のオーバーロード解決 (行ごとのタプル型の union 化) を避ける。
-  it.each<[Record<string, unknown>, string]>([
-    [{ ...valid, tags: [] }, "tags 空"],
-    [{ ...valid, tags: ["a", "b", "c", "d", "e"] }, "5 トークン"],
-    [{ ...valid, tags: ["A/B/C"] }, "深さ 3"],
-    [{ ...valid, tags: ["a+b"] }, "+ 入り"],
-    [{ ...valid, tags: ["a--b"] }, "-- 入り"],
-    [{ ...valid, tags: ["page"] }, "予約語"],
-    [{ tags: valid.tags, status: "published" }, "updated 欠損"],
-    [{ tags: valid.tags, updated: valid.updated }, "status 欠損 (Blog は明示必須)"],
-    [{ ...valid, status: "public" }, "enum 違反"],
-    [{ ...valid, title: "x" }, "禁止キー title"],
-    [{ ...valid, summary: "x" }, "禁止キー summary"],
-    [{ ...valid, featured: true }, "禁止キー featured"],
-    [{ ...valid, created: "2025-01-01" }, "禁止キー created"],
-  ])("%# %s はビルドエラー", (raw) => {
-    expect(() => validateBlogFrontmatter(raw, path)).toThrowError(BuildError);
+  // BuildError の category / field / filePath まで検証し、エラー箇所の特定情報が
+  // 退化する regression (例: field を固定文字列に差し替える) を検出できるようにする。
+  it.each<[string, Record<string, unknown>, string]>([
+    ["tags 空", { ...valid, tags: [] }, "tags"],
+    ["5 トークン", { ...valid, tags: ["a", "b", "c", "d", "e"] }, "tags"],
+    ["深さ 3", { ...valid, tags: ["A/B/C"] }, "tags"],
+    ["+ 入り", { ...valid, tags: ["a+b"] }, "tags"],
+    ["-- 入り", { ...valid, tags: ["a--b"] }, "tags"],
+    ["予約語", { ...valid, tags: ["page"] }, "tags"],
+    ["updated 欠損", { tags: valid.tags, status: "published" }, "updated"],
+    ["status 欠損 (Blog は明示必須)", { tags: valid.tags, updated: valid.updated }, "status"],
+    ["enum 違反", { ...valid, status: "public" }, "status"],
+    ["禁止キー title", { ...valid, title: "x" }, "title"],
+    ["禁止キー summary", { ...valid, summary: "x" }, "summary"],
+    ["禁止キー featured", { ...valid, featured: true }, "featured"],
+    ["禁止キー created", { ...valid, created: "2025-01-01" }, "created"],
+  ])("%# %s はビルドエラー", (_label, raw, expectedField) => {
+    try {
+      validateBlogFrontmatter(raw, path);
+      expect.unreachable("expected to throw");
+    } catch (err) {
+      expect(err).toBeInstanceOf(BuildError);
+      const buildErr = err as BuildError;
+      expect(buildErr.category).toBe("invalid-frontmatter");
+      expect(buildErr.field).toBe(expectedField);
+      expect(buildErr.filePath).toBe(path);
+    }
   });
 
   it("ファイル名が YYYY-MM-DD HHmm 形式でないとビルドエラー", () => {
-    expect(() => validateBlogFrontmatter(valid, "Blog/メモ.md")).toThrowError(BuildError);
-    expect(() => validateBlogFrontmatter(valid, "Blog/2025-13-99 0930.md")).toThrowError(
-      BuildError,
-    );
+    for (const badPath of ["Blog/メモ.md", "Blog/2025-13-99 0930.md"]) {
+      try {
+        validateBlogFrontmatter(valid, badPath);
+        expect.unreachable("expected to throw");
+      } catch (err) {
+        expect(err).toBeInstanceOf(BuildError);
+        const buildErr = err as BuildError;
+        expect(buildErr.category).toBe("invalid-frontmatter");
+        expect(buildErr.filePath).toBe(badPath);
+      }
+    }
   });
 });
 
@@ -56,6 +74,9 @@ describe("collectBlog", () => {
   });
 
   it("不正なファイル名の Vault は BuildError で失敗する", async () => {
-    await expect(collectBlog(makeConfig("vault-blog-invalid"))).rejects.toBeInstanceOf(BuildError);
+    await expect(collectBlog(makeConfig("vault-blog-invalid"))).rejects.toMatchObject({
+      name: "BuildError",
+      category: "invalid-frontmatter",
+    });
   });
 });
