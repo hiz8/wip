@@ -9,8 +9,11 @@ import { unified, type Processor } from "unified";
 import type { SiteConfigParsed } from "@/lib/config/schema.ts";
 import { buildContentIndex, type ContentIndex } from "@/lib/linkgraph/resolve.ts";
 import { attachBacklinks, buildBacklinks, type RenderedItemDraft } from "@/lib/linkgraph/graph.ts";
+import { parseBlogSlugDate } from "@/lib/blog/filename.ts";
+import { blogArticleTitle } from "@/lib/blog/tagset.ts";
 import type {
   BaseFrontmatter,
+  BlogFrontmatter,
   BooksFrontmatter,
   CalloutEntry,
   ContentItem,
@@ -19,6 +22,7 @@ import type {
   ImageRef,
   NotesFrontmatter,
   OutgoingLink,
+  RenderedBlogArticle,
   RenderedBook,
   RenderedGlossaryTerm,
   RenderedNote,
@@ -29,6 +33,7 @@ import { applyEmbed } from "./plugins/embed.ts";
 import { applyFootnote } from "./plugins/footnote.ts";
 import { applyImage } from "./plugins/image.ts";
 import { assignMarginaliaSides } from "./plugins/marginalia-side.ts";
+import { rehypePrefixIds } from "./plugins/prefix-ids.ts";
 import { rehypeSectionize } from "./plugins/sectionize.ts";
 import { applyToc, extractFirstH1 } from "./plugins/toc.ts";
 import { applyWikiLink } from "./plugins/wiki-link.ts";
@@ -39,6 +44,8 @@ export interface RenderContentSpec<F extends BaseFrontmatter> {
   config: SiteConfigParsed;
   index: ContentIndex;
   pickTitle: (item: ContentItem<F>, tree: Root) => string;
+  /** 記事ごとの id 名前空間 (Blog 用)。返り値は "p-2025-12-11-0930-" のような末尾 "-" 付き */
+  idPrefix?: (item: ContentItem<F>) => string;
 }
 
 // Internal: コンテンツを draft へレンダリングする (backlinks は未付与)。呼び出し
@@ -100,12 +107,16 @@ export async function renderContentDrafts<F extends BaseFrontmatter>(
 
     assignMarginaliaSides(tree);
 
+    const prefix = spec.idPrefix?.(item);
+
     await applyFootnote(tree, {
       footnotes,
       renderHtml: (subtree) => renderSubtree(subRenderer, subtree),
+      ...(prefix === undefined ? {} : { idPrefix: prefix }),
     });
 
-    const html = await renderSubtree(finalRenderer, tree);
+    const renderer = prefix === undefined ? finalRenderer : createFinalRenderer(prefix);
+    const html = await renderSubtree(renderer, tree);
     const title = pickTitle(item, sourceTree);
 
     drafts.push({
@@ -186,13 +197,44 @@ export async function renderBooks(
   return attachBacklinks<BooksFrontmatter>(drafts, backlinks);
 }
 
+export const pickBlogTitle = (item: ContentItem<BlogFrontmatter>): string =>
+  blogArticleTitle(item.frontmatter.tags);
+
+// Blog はリンクの受け手にならない (docs/blog-spec.md「リンクグラフへの参加」)。
+// index には Notes / Glossary / Books のみを登録し、backlinks は配線しない。
+export async function renderBlog(
+  items: ContentItem<BlogFrontmatter>[],
+  config: SiteConfigParsed,
+  index?: ContentIndex,
+): Promise<RenderedBlogArticle[]> {
+  const drafts = await renderContentDrafts<BlogFrontmatter>({
+    items,
+    config,
+    index: index ?? buildContentIndex([]),
+    pickTitle: pickBlogTitle,
+    idPrefix: (item) => `${parseBlogSlugDate(item.slug, "+00:00")!.anchorId}-`,
+  });
+  return drafts.map((draft) => Object.assign(draft, { incomingLinks: [] }));
+}
+
 type AnyProcessor = Processor<Root, Root, Root, Root, string>;
 
-function createFinalRenderer(): AnyProcessor {
+function createFinalRenderer(idPrefix?: string): AnyProcessor {
+  if (idPrefix === undefined) {
+    const processor = unified()
+      .use(remarkGfm)
+      .use(remarkRehype, { allowDangerousHtml: true })
+      .use(rehypeSlug)
+      .use(rehypeSectionize)
+      .use(rehypeShiki, SHIKI_OPTIONS)
+      .use(rehypeStringify, { allowDangerousHtml: true });
+    return processor as unknown as AnyProcessor;
+  }
   const processor = unified()
     .use(remarkGfm)
-    .use(remarkRehype, { allowDangerousHtml: true })
+    .use(remarkRehype, { allowDangerousHtml: true, clobberPrefix: idPrefix })
     .use(rehypeSlug)
+    .use(rehypePrefixIds, { prefix: idPrefix })
     .use(rehypeSectionize)
     .use(rehypeShiki, SHIKI_OPTIONS)
     .use(rehypeStringify, { allowDangerousHtml: true });
