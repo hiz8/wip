@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as stylex from "@stylexjs/stylex";
 import {
   Button,
@@ -185,9 +185,23 @@ export function BlogTagTreeSidebar({ tree, currentTagset }: BlogTagTreeSidebarPr
     return new Set<Key>(canonicalChainIds(tree, decodeTagset(currentTagset)));
   });
 
+  // ユーザー保存集合と、直近レンダーで Tree へ渡した集合 (= effectiveExpanded) を
+  // イベントハンドラから参照するための ref。onExpandedChange はレンダー後に発火するため、
+  // effect でコミット後の値を追従させれば handler は最新値を読める。
+  const expandedRef = useRef(expandedKeys);
+  const effectiveRef = useRef<Set<Key>>(expandedKeys);
+
+  // フィルタ中の chevron 操作でも matchedIds を保存集合へ焼き込まないよう、直近 effective 集合
+  // との差分だけをユーザー集合へ適用する (added を足し、removed を引く)。保存も差分適用後の
+  // ユーザー集合のみ。クエリ空時は effective === expanded なので keys をそのまま保存する従来挙動と等価。
   const handleExpandedChange = useCallback((keys: Set<Key>) => {
-    setExpandedKeys(keys);
-    saveTreeExpansion(new Set([...keys].map(String)));
+    const prevEffective = effectiveRef.current;
+    const nextUser = new Set<Key>(expandedRef.current);
+    for (const key of keys) if (!prevEffective.has(key)) nextUser.add(key);
+    for (const key of prevEffective) if (!keys.has(key)) nextUser.delete(key);
+    expandedRef.current = nextUser;
+    setExpandedKeys(nextUser);
+    saveTreeExpansion(new Set([...nextUser].map(String)));
   }, []);
 
   const { tree: visibleTree, matchedIds } = useMemo(
@@ -200,6 +214,13 @@ export function BlogTagTreeSidebar({ tree, currentTagset }: BlogTagTreeSidebarPr
     () => (query.trim() === "" ? expandedKeys : new Set<Key>([...expandedKeys, ...matchedIds])),
     [expandedKeys, matchedIds, query],
   );
+
+  useEffect(() => {
+    expandedRef.current = expandedKeys;
+  }, [expandedKeys]);
+  useEffect(() => {
+    effectiveRef.current = effectiveExpanded;
+  }, [effectiveExpanded]);
 
   return (
     <div {...stylex.props(styles.root)}>

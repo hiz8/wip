@@ -37,7 +37,7 @@ describe("BlogTagTreeSidebar", () => {
 
   it("ノードのリンクは正規形 URL を data-href に持つ", () => {
     render(<BlogTagTreeSidebar tree={tree} currentTagset="映画" />);
-    const hrefs = screen.getAllByRole("row").map((r) => r.dataset.href);
+    const hrefs = screen.getAllByRole("row").map((r) => r.dataset["href"]);
     expect(hrefs).toContain("/blog/tags/映画");
   });
 
@@ -51,6 +51,22 @@ describe("BlogTagTreeSidebar", () => {
     render(<BlogTagTreeSidebar tree={tree} currentTagset="スターウォーズ+映画" />);
     // チェーン (スターウォーズ > 映画) が開き、トップレベルの根より行が増える
     expect(screen.getAllByRole("row").length).toBeGreaterThan(tree.length);
+  });
+
+  it("フィルタ中に chevron を往復操作してもフィルタ解除で展開が既定へ戻る", async () => {
+    const user = userEvent.setup();
+    render(<BlogTagTreeSidebar tree={tree} currentTagset={null} />);
+    // コールド null の可視行はトップの根のみ
+    const before = screen.getAllByRole("row").length;
+    const input = screen.getByRole("textbox", { name: /filter/iu });
+    await user.type(input, "UI-UX");
+    // フィルタで自動展開されない子ノードの chevron を 開→閉 (純増減ゼロの往復)。
+    // 自動展開分 (matchedIds) がユーザー保存状態へ焼き込まれると、クリア後も枝が開いたまま残る
+    const chevron = screen.getAllByRole("button", { name: /^expand/iu })[0]!;
+    await user.click(chevron);
+    await user.click(chevron);
+    await user.click(screen.getByRole("button", { name: /clear/iu }));
+    expect(screen.getAllByRole("row")).toHaveLength(before);
   });
 
   it("フィルタ入力で一致ノードだけを残す", async () => {
