@@ -10,8 +10,9 @@ interface ContentTypeEntriesProps {
   counts: HomeCounts;
 }
 
+// Blog のホームページ入り口カードは Task 11 で HomeCounts に blog を足してから追加する。
 const ENTRIES: ReadonlyArray<{
-  type: ContentType;
+  type: Exclude<ContentType, "blog">;
   to: "/notes" | "/glossary" | "/books";
   jp: string;
   desc: string;

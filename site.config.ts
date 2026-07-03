@@ -20,6 +20,7 @@ export default defineConfig({
       exclude: [
         "Glossary/**",
         "Books/**",
+        "Blog/**",
         "Clips/**",
         "Clippings/**",
         "_site/**",
@@ -33,6 +34,13 @@ export default defineConfig({
     },
     books: {
       path: "Books",
+    },
+    blog: {
+      path: "Blog",
+      // /blog/feed.xml の最大件数
+      feedMaxItems: 20,
+      // ファイル名日時の解釈タイムゾーン
+      timezone: "+09:00",
     },
   },
   pages: {

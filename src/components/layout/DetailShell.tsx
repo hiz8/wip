@@ -29,7 +29,9 @@ export interface DetailCrumb {
 
 interface DetailShellProps {
   tree: readonly TreeNode[];
-  treeKind: ContentType;
+  // Blog に個別詳細ページはない (docs/blog-spec.md) ため、DetailShell は
+  // Notes / Glossary / Books のみを扱う。
+  treeKind: Exclude<ContentType, "blog">;
   activeSlug: string;
   toc: readonly TocEntry[];
   backlinks: readonly BacklinkRef[];
