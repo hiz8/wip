@@ -8,6 +8,7 @@ import {
   TreeItemContent,
   type Key,
 } from "react-aria-components";
+import { Link } from "@tanstack/react-router";
 import { TreeSearch } from "@/components/tree/TreeSearch.tsx";
 import { canonicalChainIds, filterBlogTree, type BlogTreeNode } from "@/lib/blog/tree.ts";
 import { decodeTagset } from "@/lib/blog/tagset.ts";
@@ -105,10 +106,13 @@ const styles = stylex.create({
     flexShrink: 0,
   },
   label: {
+    // ラベルは <a> (TanStack Link)。行の色をそのまま継ぎ、既定リンク装飾は消す。
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
     minWidth: 0,
+    color: "inherit",
+    textDecoration: "none",
   },
 });
 
@@ -123,14 +127,15 @@ function BlogTreeItem({
 }) {
   const isActive = node.tagset === currentTagset;
   const hasChildren = node.children.length > 0;
+  // react-perf(jsx-no-new-object-as-prop) を満たすため params は node ごとに memo 化する。
+  const tagsetParams = useMemo(() => ({ tagset: node.tagset }), [node.tagset]);
   return (
     <TreeItem
       id={node.id}
       textValue={node.label}
-      // 行全体が正規形ページへのリンク。開閉は chevron ボタンに委ね、リンクとは独立させる
-      // (RAC は href を data-href の JS ナビゲーションに変換し、chevron の usePress は
-      // 伝播を止めるため chevron クリックで遷移しない)。
-      href={`/blog/tags/${node.tagset}`}
+      // TreeItem 自体は非ナビゲーショナル。可視ラベルを実 <a href> (TanStack Link) にして
+      // SSG の crawlLinks に tagset ページを発見させる。RAC の href だと data-href の JS
+      // ナビゲーションになりクローラが辿れない。開閉は独立して chevron ボタンに委ねる。
       {...stylex.props(styles.item(level))}
     >
       <TreeItemContent>
@@ -157,10 +162,15 @@ function BlogTreeItem({
               <span aria-hidden="true" {...stylex.props(styles.toggleSpacer)} />
             )}
             {/* aria-current は row 要素に乗せられない (filterDOMProps が弾く) ため、
-                行の可視ラベルに付与して現在ページを AT に伝える。 */}
-            <span aria-current={isActive ? "page" : undefined} {...stylex.props(styles.label)}>
+                実アンカーのラベルに付与して現在ページを AT に伝える。 */}
+            <Link
+              to="/blog/tags/$tagset"
+              params={tagsetParams}
+              aria-current={isActive ? "page" : undefined}
+              {...stylex.props(styles.label)}
+            >
               {node.label}
-            </span>
+            </Link>
           </div>
         )}
       </TreeItemContent>
