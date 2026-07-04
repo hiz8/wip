@@ -19,7 +19,10 @@ const item = (
 
 describe("buildSitemapEntries", () => {
   it("emits the four root routes first", () => {
-    const entries = buildSitemapEntries({ notes: [], glossary: [], books: [] }, SITE);
+    const entries = buildSitemapEntries(
+      { notes: [], glossary: [], books: [], blogPages: [] },
+      SITE,
+    );
     expect(entries.slice(0, 4).map((e) => e.loc)).toEqual([
       "https://example.com/",
       "https://example.com/notes",
@@ -32,7 +35,10 @@ describe("buildSitemapEntries", () => {
   });
 
   it("always emits the per-type tag index pages", () => {
-    const entries = buildSitemapEntries({ notes: [], glossary: [], books: [] }, SITE);
+    const entries = buildSitemapEntries(
+      { notes: [], glossary: [], books: [], blogPages: [] },
+      SITE,
+    );
     const locs = entries.map((e) => e.loc);
     expect(locs).toContain("https://example.com/notes/tags");
     expect(locs).toContain("https://example.com/glossary/tags");
@@ -45,6 +51,7 @@ describe("buildSitemapEntries", () => {
         notes: [item("notes", "a", "2026-05-01", ["frontend/react"])],
         glossary: [],
         books: [],
+        blogPages: [],
       },
       SITE,
     );
@@ -64,6 +71,7 @@ describe("buildSitemapEntries", () => {
         ],
         glossary: [],
         books: [],
+        blogPages: [],
       },
       SITE,
     );
@@ -83,6 +91,7 @@ describe("buildSitemapEntries", () => {
         notes: [],
         glossary: [item("glossary", "term-a")],
         books: [],
+        blogPages: [],
       },
       SITE,
     );
@@ -97,6 +106,7 @@ describe("buildSitemapEntries", () => {
         notes: [item("notes", "日本語スラッグ", "2026-05-01")],
         glossary: [],
         books: [],
+        blogPages: [],
       },
       SITE,
     );
@@ -107,12 +117,28 @@ describe("buildSitemapEntries", () => {
 
   it("trims a trailing slash on siteUrl", () => {
     const entries = buildSitemapEntries(
-      { notes: [item("notes", "a", "2026-05-01")], glossary: [], books: [] },
+      { notes: [item("notes", "a", "2026-05-01")], glossary: [], books: [], blogPages: [] },
       "https://example.com/",
     );
     expect(entries[0]?.loc).toBe("https://example.com/");
     const detail = entries.find((e) => e.loc.endsWith("/notes/a"));
     expect(detail?.loc).toBe("https://example.com/notes/a");
+  });
+
+  it("appends blogPages, percent-encoding non-ascii segments and preserving lastmod", () => {
+    const entries = buildSitemapEntries(
+      {
+        notes: [],
+        glossary: [],
+        books: [],
+        blogPages: [{ path: "/blog", lastmod: "2026-05-01" }, { path: "/blog/tags/映画" }],
+      },
+      SITE,
+    );
+    const locs = entries.map((e) => e.loc);
+    expect(locs).toContain("https://example.com/blog");
+    expect(locs).toContain(`https://example.com/blog/tags/${encodeURIComponent("映画")}`);
+    expect(entries.find((e) => e.loc === "https://example.com/blog")?.lastmod).toBe("2026-05-01");
   });
 });
 

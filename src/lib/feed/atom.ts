@@ -7,6 +7,8 @@ export interface FeedEntry {
   id: string;
   title: string;
   updated: string;
+  /** 作成日時 (frontmatter に created を持たない Blog 向け)。省略時は <published> を出力しない */
+  published?: string;
   href: string;
   summary: string;
 }
@@ -69,15 +71,19 @@ export function renderAtomXml(site: FeedSiteInfo, entries: readonly FeedEntry[])
   const updated = entries[0]?.updated ?? new Date(0).toISOString();
   const langAttr = site.language === undefined ? "" : ` xml:lang="${escapeXml(site.language)}"`;
   const body = entries
-    .map(
-      (entry) => `  <entry>
+    .map((entry) => {
+      const published =
+        entry.published === undefined
+          ? ""
+          : `    <published>${escapeXml(entry.published)}</published>\n`;
+      return `  <entry>
     <title>${escapeXml(entry.title)}</title>
     <link rel="alternate" type="text/html" href="${escapeXml(entry.href)}"/>
     <id>${escapeXml(entry.id)}</id>
-    <updated>${escapeXml(entry.updated)}</updated>
+${published}    <updated>${escapeXml(entry.updated)}</updated>
     <summary type="text">${escapeXml(entry.summary)}</summary>
-  </entry>`,
-    )
+  </entry>`;
+    })
     .join("\n");
   return `<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom"${langAttr}>

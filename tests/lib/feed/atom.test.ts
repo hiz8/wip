@@ -163,6 +163,31 @@ describe("renderAtomXml", () => {
     expect(xml).toContain('<summary type="text">x &lt; y &amp; y &gt; z</summary>');
   });
 
+  it("emits <published> only when the entry provides it", () => {
+    const withPublished = renderAtomXml(site, [
+      {
+        id: "https://example.com/blog/a",
+        title: "A",
+        updated: "2026-05-10T00:00:00Z",
+        published: "2026-05-01T09:00:00+09:00",
+        href: "https://example.com/blog/a",
+        summary: "",
+      },
+    ]);
+    expect(withPublished).toContain("<published>2026-05-01T09:00:00+09:00</published>");
+
+    const withoutPublished = renderAtomXml(site, [
+      {
+        id: "https://example.com/notes/a",
+        title: "A",
+        updated: "2026-05-10T00:00:00Z",
+        href: "https://example.com/notes/a",
+        summary: "",
+      },
+    ]);
+    expect(withoutPublished).not.toContain("<published>");
+  });
+
   it("uses the latest entry updated as the feed-level updated", () => {
     const xml = renderAtomXml(site, [
       {

@@ -12,6 +12,8 @@ import {
 import type { ImageMappingEntry } from "@/lib/images/index.ts";
 import { buildSitemapEntries, renderSitemapXml } from "@/lib/feed/sitemap.ts";
 import { buildAtomEntries, renderAtomXml } from "@/lib/feed/atom.ts";
+import { buildBlogFeedEntries, buildBlogSitemapPages } from "@/lib/feed/blogFeed.ts";
+import { getBlogModel, type BlogModel } from "@/server/blog.ts";
 import {
   FEED_MAX_ITEMS,
   SITE_DESCRIPTION,
@@ -38,13 +40,18 @@ async function main(): Promise<void> {
   __setSiteDatasetConfigForTests(config);
 
   const dataset = await getSiteDataset();
+  const blogModel = await getBlogModel();
 
   // コンテンツ内の <img src> 書き換えは今や SSR dataset ビルド
   // (src/server/datasets.ts) で行われるため、プリレンダー済みの HTML は既に
   // /images/<publicPath> を参照している。ここではソースファイルを dist へ
   // コピーするだけでよい。
   await copyImages(dataset.imageMapping);
-  await Promise.all([writeSitemap(dataset), writeFeed(dataset)]);
+  await Promise.all([
+    writeSitemap(dataset, blogModel),
+    writeFeed(dataset),
+    writeBlogFeed(blogModel, config.content.blog.feedMaxItems),
+  ]);
   await runPagefind();
 
   console.log("[post-build] images, sitemap, feed, pagefind index written under dist/client/");
@@ -89,12 +96,13 @@ async function copyImages(entries: readonly ImageMappingEntry[]): Promise<void> 
   }
 }
 
-async function writeSitemap(dataset: SiteDataset): Promise<void> {
+async function writeSitemap(dataset: SiteDataset, blogModel: BlogModel): Promise<void> {
   const entries = buildSitemapEntries(
     {
       notes: dataset.notes,
       glossary: dataset.glossary,
       books: dataset.books,
+      blogPages: buildBlogSitemapPages(blogModel),
     },
     SITE_URL,
   );
@@ -123,6 +131,23 @@ async function writeFeed(dataset: SiteDataset): Promise<void> {
     entries,
   );
   await writeFile(join(DIST_DIR, "feed.xml"), xml, "utf8");
+}
+
+async function writeBlogFeed(blogModel: BlogModel, feedMaxItems: number): Promise<void> {
+  const entries = buildBlogFeedEntries(blogModel, SITE_URL, feedMaxItems);
+  const xml = renderAtomXml(
+    {
+      siteUrl: SITE_URL,
+      siteName: SITE_NAME,
+      description: SITE_DESCRIPTION,
+      selfHref: `${SITE_URL}/blog/feed.xml`,
+      language: SITE_LOCALE,
+    },
+    entries,
+  );
+  const blogDir = join(DIST_DIR, "blog");
+  await mkdir(blogDir, { recursive: true });
+  await writeFile(join(blogDir, "feed.xml"), xml, "utf8");
 }
 
 try {
