@@ -42,9 +42,11 @@
 ### Task 1: 仕様ドキュメントの整合修正
 
 **Files:**
+
 - Modify: `docs/blog-spec.md`
 
 **Interfaces:**
+
 - Consumes: なし
 - Produces: 以降の全タスクが参照する確定仕様
 
@@ -93,10 +95,12 @@ git commit -m "docs(blog): 実装前のレビューで確定した事項を仕�
 ### Task 2: タグセット純関数 (`src/lib/blog/tagset.ts`)
 
 **Files:**
+
 - Create: `src/lib/blog/tagset.ts`
 - Test: `tests/lib/blog/tagset.test.ts`
 
 **Interfaces:**
+
 - Consumes: `tagAncestors`, `encodeTagToSlug`, `decodeTagSlug` (`@/lib/tags/index.ts`)
 - Produces:
   - `compareCodePoints(a: string, b: string): number`
@@ -128,9 +132,22 @@ import {
 
 describe("compareCodePoints", () => {
   it("Latin → カタカナ → 漢字 の順になる (仕様 L88 の例)", () => {
-    const sorted = ["映画", "スターウォーズ", "UI-UX", "マイクロコピー", "デザインシステム", "ライティング"]
-      .sort(compareCodePoints);
-    expect(sorted).toEqual(["UI-UX", "スターウォーズ", "デザインシステム", "マイクロコピー", "ライティング", "映画"]);
+    const sorted = [
+      "映画",
+      "スターウォーズ",
+      "UI-UX",
+      "マイクロコピー",
+      "デザインシステム",
+      "ライティング",
+    ].sort(compareCodePoints);
+    expect(sorted).toEqual([
+      "UI-UX",
+      "スターウォーズ",
+      "デザインシステム",
+      "マイクロコピー",
+      "ライティング",
+      "映画",
+    ]);
   });
 
   it("階層ファセットは論理パス文字列で比較する", () => {
@@ -164,24 +181,28 @@ describe("validateBlogTagToken", () => {
 
 describe("facets / 正規形", () => {
   it("articleFacets は全プレフィックスの和を返す", () => {
-    expect(articleFacets(["UI-UX/デザインシステム", "映画"]))
-      .toEqual(["UI-UX", "UI-UX/デザインシステム", "映画"]);
+    expect(articleFacets(["UI-UX/デザインシステム", "映画"])).toEqual([
+      "UI-UX",
+      "UI-UX/デザインシステム",
+      "映画",
+    ]);
   });
 
   it("canonicalizeFacetSet は冗長な祖先を落とす (仕様 L111)", () => {
-    expect(canonicalizeFacetSet(["UI-UX", "UI-UX/デザインシステム"]))
-      .toEqual(["UI-UX/デザインシステム"]);
+    expect(canonicalizeFacetSet(["UI-UX", "UI-UX/デザインシステム"])).toEqual([
+      "UI-UX/デザインシステム",
+    ]);
   });
 
   it("canonicalizeFacetSet はコードポイント昇順に並べる", () => {
-    expect(canonicalizeFacetSet(["映画", "スターウォーズ"]))
-      .toEqual(["スターウォーズ", "映画"]);
+    expect(canonicalizeFacetSet(["映画", "スターウォーズ"])).toEqual(["スターウォーズ", "映画"]);
   });
 
   it("canonicalFullFacetSet はトークンから最特定の antichain を作る", () => {
     // #A と #A/B を両方持つ記事 → A は冗長
-    expect(canonicalFullFacetSet(["UI-UX", "UI-UX/デザインシステム"]))
-      .toEqual(["UI-UX/デザインシステム"]);
+    expect(canonicalFullFacetSet(["UI-UX", "UI-UX/デザインシステム"])).toEqual([
+      "UI-UX/デザインシステム",
+    ]);
   });
 
   it("encodeTagset / decodeTagset は仕様の例と一致する (L104-108)", () => {
@@ -189,12 +210,17 @@ describe("facets / 正規形", () => {
     expect(encodeTagset(["UI-UX/デザインシステム"])).toBe("UI-UX--デザインシステム");
     expect(encodeTagset(["スターウォーズ", "映画"])).toBe("スターウォーズ+映画");
     expect(encodeTagset(["UI-UX/デザインシステム", "映画"])).toBe("UI-UX--デザインシステム+映画");
-    expect(decodeTagset("UI-UX--デザインシステム+映画")).toEqual(["UI-UX/デザインシステム", "映画"]);
+    expect(decodeTagset("UI-UX--デザインシステム+映画")).toEqual([
+      "UI-UX/デザインシステム",
+      "映画",
+    ]);
   });
 
   it("canonicalTagsetOf は非正規入力 (順序違い・冗長祖先) を正規形へ収束させる", () => {
     expect(canonicalTagsetOf(["映画", "スターウォーズ"])).toBe("スターウォーズ+映画");
-    expect(canonicalTagsetOf(["UI-UX", "UI-UX/デザインシステム", "映画"])).toBe("UI-UX--デザインシステム+映画");
+    expect(canonicalTagsetOf(["UI-UX", "UI-UX/デザインシステム", "映画"])).toBe(
+      "UI-UX--デザインシステム+映画",
+    );
   });
 
   it("facetSetSatisfies は部分集合判定 (⊇) を行う", () => {
@@ -205,8 +231,9 @@ describe("facets / 正規形", () => {
   });
 
   it("blogArticleTitle は正規順の # 併記 (階層はフルパス)", () => {
-    expect(blogArticleTitle(["ライティング", "UI-UX", "マイクロコピー"]))
-      .toBe("#UI-UX#マイクロコピー#ライティング");
+    expect(blogArticleTitle(["ライティング", "UI-UX", "マイクロコピー"])).toBe(
+      "#UI-UX#マイクロコピー#ライティング",
+    );
     expect(blogArticleTitle(["UI-UX/デザインシステム"])).toBe("#UI-UX/デザインシステム");
   });
 });
@@ -254,7 +281,8 @@ export function validateBlogTagToken(token: string): string | null {
     if (seg.startsWith("-") || seg.endsWith("-")) {
       return `タグセグメントを "-" で始める・終わることはできません (${token})`;
     }
-    if (seg === RESERVED_SEGMENT) return `"page" は予約語のためタグセグメントに使えません (${token})`;
+    if (seg === RESERVED_SEGMENT)
+      return `"page" は予約語のためタグセグメントに使えません (${token})`;
   }
   return null;
 }
@@ -300,7 +328,9 @@ export function facetSetSatisfies(
 // 記事の実質タイトル: 全ファセット集合の正規形を # 併記 (階層はフルパス)。
 // feed エントリ・トップ「最近更新」・pickContentTitle のフォールバックで共用する。
 export function blogArticleTitle(tokens: readonly string[]): string {
-  return canonicalFullFacetSet(tokens).map((f) => `#${f}`).join("");
+  return canonicalFullFacetSet(tokens)
+    .map((f) => `#${f}`)
+    .join("");
 }
 ```
 
@@ -321,10 +351,12 @@ git commit -m "feat(blog): タグセット正規形の純関数群を追加"
 ### Task 3: ファイル名日時の純関数 (`src/lib/blog/filename.ts`)
 
 **Files:**
+
 - Create: `src/lib/blog/filename.ts`
 - Test: `tests/lib/blog/filename.test.ts`
 
 **Interfaces:**
+
 - Consumes: なし
 - Produces:
   - `interface BlogArticleDate { slug: string; createdIso: string; displayDate: string; anchorId: string }`
@@ -348,14 +380,14 @@ describe("parseBlogSlugDate", () => {
   });
 
   it.each([
-    "2025-12-11",          // 時刻なし
-    "2025-12-11 09:30",    // コロン入り
-    "2025-12-11T0930",     // 区切りが T
-    "2025-12-11 093000",   // 秒付き
-    "2025-13-01 0930",     // 13 月
-    "2025-02-30 0930",     // 非実在日
-    "2025-12-11 2460",     // 時刻範囲外
-    "メモ",                 // 日付でない
+    "2025-12-11", // 時刻なし
+    "2025-12-11 09:30", // コロン入り
+    "2025-12-11T0930", // 区切りが T
+    "2025-12-11 093000", // 秒付き
+    "2025-13-01 0930", // 13 月
+    "2025-02-30 0930", // 非実在日
+    "2025-12-11 2460", // 時刻範囲外
+    "メモ", // 日付でない
   ])("%s は null を返す", (slug) => {
     expect(parseBlogSlugDate(slug, "+09:00")).toBeNull();
   });
@@ -421,6 +453,7 @@ git commit -m "feat(blog): ファイル名日時パースの純関数を追加"
 `ContentType` union に `"blog"` を足すと `satisfies Record<ContentType, …>` を使う複数ファイルが型エラーになる。このタスクで全部まとめて解消し、`npm run typecheck` グリーンで完結させる。
 
 **Files:**
+
 - Modify: `src/types/content.ts` (L1 の `ContentType`、`BlogFrontmatter` 追加)
 - Modify: `src/types/config.ts` (`BlogContentConfig`、`ContentConfig`、`SiteConfigInput`)
 - Modify: `src/lib/config/schema.ts` (`blogContentSchema` + `contentSchema.blog`)
@@ -437,6 +470,7 @@ git commit -m "feat(blog): ファイル名日時パースの純関数を追加"
 - Test: `tests/lib/content/blog.test.ts`
 
 **Interfaces:**
+
 - Consumes: `collectContentItems` (`src/lib/content/collect.ts:47`)、`validateBlogTagToken` (Task 2)、`parseBlogSlugDate` (Task 3)
 - Produces:
   - `type ContentType = "notes" | "glossary" | "books" | "blog"`
@@ -482,12 +516,16 @@ describe("validateBlogFrontmatter", () => {
     [{ ...valid, featured: true }, "禁止キー featured"],
     [{ ...valid, created: "2025-01-01" }, "禁止キー created"],
   ])("%# %s はビルドエラー", (raw) => {
-    expect(() => validateBlogFrontmatter(raw as Record<string, unknown>, path)).toThrowError(BuildError);
+    expect(() => validateBlogFrontmatter(raw as Record<string, unknown>, path)).toThrowError(
+      BuildError,
+    );
   });
 
   it("ファイル名が YYYY-MM-DD HHmm 形式でないとビルドエラー", () => {
     expect(() => validateBlogFrontmatter(valid, "Blog/メモ.md")).toThrowError(BuildError);
-    expect(() => validateBlogFrontmatter(valid, "Blog/2025-13-99 0930.md")).toThrowError(BuildError);
+    expect(() => validateBlogFrontmatter(valid, "Blog/2025-13-99 0930.md")).toThrowError(
+      BuildError,
+    );
   });
 });
 
@@ -511,6 +549,7 @@ describe("collectBlog", () => {
 `tests/fixtures/vault/Blog/` に 6 ファイル (仕様イメージ A / A2 / B を再現できるタグ構成):
 
 `tests/fixtures/vault/Blog/2025-12-11 0930.md`
+
 ```markdown
 ---
 tags:
@@ -520,10 +559,12 @@ tags:
 updated: 2025-12-20T10:00:00+09:00
 status: published
 ---
+
 マイクロコピーの書き方について。[[note-a]] も参照。
 ```
 
 `tests/fixtures/vault/Blog/2025-10-29 1400.md`
+
 ```markdown
 ---
 tags:
@@ -531,10 +572,12 @@ tags:
 updated: 2025-11-01T09:00:00+09:00
 status: published
 ---
+
 デザインシステムの階層タグ記事。
 ```
 
 `tests/fixtures/vault/Blog/2025-07-24 0800.md`
+
 ```markdown
 ---
 tags:
@@ -542,10 +585,12 @@ tags:
 updated: 2025-07-24T08:00:00+09:00
 status: published
 ---
+
 UI-UX 単独タグの記事。
 ```
 
 `tests/fixtures/vault/Blog/2025-04-09 2145.md`
+
 ```markdown
 ---
 tags:
@@ -555,10 +600,12 @@ tags:
 updated: 2025-04-10T00:00:00+09:00
 status: published
 ---
+
 2 本目のマイクロコピー記事。
 ```
 
 `tests/fixtures/vault/Blog/2025-02-14 0930.md`
+
 ```markdown
 ---
 tags:
@@ -567,6 +614,7 @@ tags:
 updated: 2025-02-14T09:30:00+09:00
 status: published
 ---
+
 脚注付きの記事[^1]。
 
 > [!note] メモ
@@ -576,6 +624,7 @@ status: published
 ```
 
 `tests/fixtures/vault/Blog/2024-12-01 0000.md`
+
 ```markdown
 ---
 tags:
@@ -583,10 +632,12 @@ tags:
 updated: 2024-12-01T00:00:00+09:00
 status: draft
 ---
+
 draft は除外される。
 ```
 
 `tests/fixtures/vault-blog-invalid/Blog/2025-13-99 0930.md`
+
 ```markdown
 ---
 tags:
@@ -594,6 +645,7 @@ tags:
 updated: 2025-01-01T00:00:00+09:00
 status: published
 ---
+
 13 月 99 日は実在しない。
 ```
 
@@ -677,7 +729,10 @@ import { deriveSlug } from "./slug.ts";
 const BLOG_FORBIDDEN_KEYS = ["title", "summary", "featured", "created"] as const;
 
 const blogFrontmatterSchema = z.object({
-  tags: z.array(z.string()).min(1, "tags は 1 個以上必要です").max(4, "タグは 1 記事あたり最大 4 トークンです"),
+  tags: z
+    .array(z.string())
+    .min(1, "tags は 1 個以上必要です")
+    .max(4, "タグは 1 記事あたり最大 4 トークンです"),
   updated: isoDateString,
   status: statusSchema,
 });
@@ -733,7 +788,9 @@ export function validateBlogFrontmatter(
 `collectBooks` の後に追加:
 
 ```typescript
-export async function collectBlog(config: SiteConfigParsed): Promise<ContentItem<BlogFrontmatter>[]> {
+export async function collectBlog(
+  config: SiteConfigParsed,
+): Promise<ContentItem<BlogFrontmatter>[]> {
   const items = await collectContentItems<BlogFrontmatter>({
     type: "blog",
     vaultRoot: config.content.vaultRoot,
@@ -782,10 +839,12 @@ git commit -m "feat(blog): コンテンツ収集層と frontmatter バリデー�
 ### Task 5: ファセット集合ページモデル (`src/lib/blog/pages.ts`)
 
 **Files:**
+
 - Create: `src/lib/blog/pages.ts`
 - Test: `tests/lib/blog/pages.test.ts`
 
 **Interfaces:**
+
 - Consumes: Task 2 の tagset 関数群
 - Produces:
   - `interface BlogFacetInput { slug: string; tags: readonly string[] }`
@@ -923,12 +982,7 @@ Expected: FAIL (モジュールが存在しない)
 
 ```typescript
 import { tagAncestors } from "@/lib/tags/index.ts";
-import {
-  articleFacets,
-  canonicalizeFacetSet,
-  compareCodePoints,
-  encodeTagset,
-} from "./tagset.ts";
+import { articleFacets, canonicalizeFacetSet, compareCodePoints, encodeTagset } from "./tagset.ts";
 
 // ファセット集合ページの列挙と、ビルド時のリンク先算出 (docs/blog-spec.md「URL 構造」)。
 // 生成対象 = 「S を部分集合として含む公開記事が 1 件以上存在する antichain S」。
@@ -949,13 +1003,13 @@ export interface FacetPage {
 
 export const BLOG_PAGE_SIZE = 10;
 
-export function enumerateFacetPages(
-  articles: readonly BlogFacetInput[],
-): Map<string, FacetPage> {
+export function enumerateFacetPages(articles: readonly BlogFacetInput[]): Map<string, FacetPage> {
   const pages = new Map<string, FacetPage>();
 
   for (const article of articles) {
-    const perToken = article.tags.map((token) => [null, ...tagAncestors(token)] as (string | null)[]);
+    const perToken = article.tags.map(
+      (token) => [null, ...tagAncestors(token)] as (string | null)[],
+    );
     for (const combo of cartesian(perToken)) {
       const chosen = combo.filter((f): f is string => f !== null);
       if (chosen.length === 0) continue;
@@ -1052,10 +1106,12 @@ git commit -m "feat(blog): ファセット集合ページの列挙とリンク�
 ### Task 6: タグ共起ツリー (`src/lib/blog/tree.ts`)
 
 **Files:**
+
 - Create: `src/lib/blog/tree.ts`
 - Test: `tests/lib/blog/tree.test.ts`
 
 **Interfaces:**
+
 - Consumes: Task 2 の tagset 関数群、Task 5 の `enumerateFacetPages` (lock-step 検証)
 - Produces:
   - `interface BlogTreeNode { id: string; label: string; tagset: string; addedFacet: string; children: BlogTreeNode[] }` — `id` は追加ファセット列を `"|"` 連結したパス一意キー、`tagset` はノードのファセット集合の正規形 (リンク先 / アクティブ判定用)
@@ -1161,7 +1217,7 @@ describe("buildBlogTagTree (仕様イメージ A2: 階層タグ)", () => {
     const uiux = find(tree, "UI-UX");
     expect(labels(uiux.children)).toEqual(["デザインシステム", "デザインシステム"]);
     expect(uiux.children[0]!.tagset).toBe("UI-UX--デザインシステム"); // 階層 (U < デ)
-    expect(uiux.children[1]!.tagset).toBe("UI-UX+デザインシステム");  // 共起
+    expect(uiux.children[1]!.tagset).toBe("UI-UX+デザインシステム"); // 共起
     expect(uiux.children[0]!.id).not.toBe(uiux.children[1]!.id);
   });
 });
@@ -1170,11 +1226,7 @@ describe("canonicalChainIds", () => {
   it("正規チェーン上のノード id を先頭から返す", () => {
     const tree = buildBlogTagTree(imageA);
     const ids = canonicalChainIds(tree, ["UI-UX", "マイクロコピー", "ライティング"]);
-    expect(ids).toEqual([
-      "UI-UX",
-      "UI-UX|マイクロコピー",
-      "UI-UX|マイクロコピー|ライティング",
-    ]);
+    expect(ids).toEqual(["UI-UX", "UI-UX|マイクロコピー", "UI-UX|マイクロコピー|ライティング"]);
   });
 
   it("階層ファセットは根 → 降下の 2 段を経由する", () => {
@@ -1191,7 +1243,7 @@ describe("filterBlogTree", () => {
     const tree = buildBlogTagTree(imageA);
     const { tree: filtered, matchedIds } = filterBlogTree(tree, "ライティング");
     expect(labels(filtered)).toContain("ライティング"); // トップ一致
-    expect(labels(filtered)).toContain("UI-UX");        // 子孫一致で温存
+    expect(labels(filtered)).toContain("UI-UX"); // 子孫一致で温存
     expect(matchedIds.length).toBeGreaterThan(0);
   });
 
@@ -1298,15 +1350,13 @@ export function buildBlogTagTree(articles: readonly BlogFacetInput[]): BlogTreeN
     });
   };
 
-  return [...promotedRoots]
-    .sort(compareCodePoints)
-    .map((root) => ({
-      id: root,
-      label: root,
-      tagset: canonicalTagsetOf([root]),
-      addedFacet: root,
-      children: buildChildren([root], root),
-    }));
+  return [...promotedRoots].sort(compareCodePoints).map((root) => ({
+    id: root,
+    label: root,
+    tagset: canonicalTagsetOf([root]),
+    addedFacet: root,
+    children: buildChildren([root], root),
+  }));
 }
 
 function lastSegment(facet: string): string {
@@ -1382,6 +1432,7 @@ git commit -m "feat(blog): タグ共起ツリーの構築・フィルタ純関�
 複数記事を 1 ページに連結するため、脚注 id (`user-content-fn-1`)・callout id (`callout-1`)・見出し slug が記事間で衝突する。記事アンカー (`p-2025-12-11-0930`) 由来のプレフィックスで名前空間を分ける。
 
 **方式** (3 点セット):
+
 1. remark-rehype の `clobberPrefix` を記事ごとに `${anchorId}-` にする → 脚注参照 `<a href="#p-…-fn-1">` / backref id が記事ごとに一意になる
 2. 新規 rehype プラグイン `prefixIds` — rehype-slug 直後に走り、**プレフィックスで始まらない** `id` 属性と `#` 始まりの `href` にプレフィックスを付与 (見出し slug・callout id を捕捉。clobber 済み脚注参照は開始一致でスキップされる)
 3. `applyFootnote` に `idPrefix` を追加 — raw HTML として挿入される `.footnote-aside` の id は hast プラグインで書き換えられないため、生成時にプレフィックスを織り込む
@@ -1389,6 +1440,7 @@ git commit -m "feat(blog): タグ共起ツリーの構築・フィルタ純関�
 `FootnoteSection` (React 側) は Task 9 で `idPrefix` prop (デフォルト `"user-content-"`) を受ける。
 
 **Files:**
+
 - Create: `src/lib/markdown/plugins/prefix-ids.ts`
 - Modify: `src/lib/markdown/plugins/footnote.ts` (`FootnoteContext` に `idPrefix?: string`、L63 の aside id 生成)
 - Modify: `src/lib/markdown/pipeline.ts` (`RenderContentSpec.idPrefix?`、`createFinalRenderer(prefix?)`、`renderBlog`、`pickBlogTitle`)
@@ -1396,6 +1448,7 @@ git commit -m "feat(blog): タグ共起ツリーの構築・フィルタ純関�
 - Test: `tests/lib/markdown/prefixIds.test.ts`、`tests/lib/markdown/renderBlog.test.ts`
 
 **Interfaces:**
+
 - Consumes: `ContentItem<BlogFrontmatter>`、`parseBlogSlugDate` (anchorId)、`blogArticleTitle`
 - Produces:
   - `rehypePrefixIds(options: { prefix: string })` — unified プラグイン
@@ -1531,8 +1584,8 @@ export interface FootnoteContext {
 L63 を:
 
 ```typescript
-    const asidePrefix = ctx.idPrefix ?? "user-content-";
-    const asideHtml = `<aside class="footnote-aside" id="${asidePrefix}fn-aside-${ordinal}"${sideAttr} role="note">${html}</aside>`;
+const asidePrefix = ctx.idPrefix ?? "user-content-";
+const asideHtml = `<aside class="footnote-aside" id="${asidePrefix}fn-aside-${ordinal}"${sideAttr} role="note">${html}</aside>`;
 ```
 
 (`asidePrefix` の宣言は `visitParents` コールバックの外、`pending` 宣言付近に置く)
@@ -1570,16 +1623,16 @@ function createFinalRenderer(idPrefix?: string): AnyProcessor {
 3. `renderContentDrafts` のループ内 (L103-108 付近) を変更:
 
 ```typescript
-    const prefix = spec.idPrefix?.(item);
+const prefix = spec.idPrefix?.(item);
 
-    await applyFootnote(tree, {
-      footnotes,
-      renderHtml: (subtree) => renderSubtree(subRenderer, subtree),
-      ...(prefix === undefined ? {} : { idPrefix: prefix }),
-    });
+await applyFootnote(tree, {
+  footnotes,
+  renderHtml: (subtree) => renderSubtree(subRenderer, subtree),
+  ...(prefix === undefined ? {} : { idPrefix: prefix }),
+});
 
-    const renderer = prefix === undefined ? finalRenderer : createFinalRenderer(prefix);
-    const html = await renderSubtree(renderer, tree);
+const renderer = prefix === undefined ? finalRenderer : createFinalRenderer(prefix);
+const html = await renderSubtree(renderer, tree);
 ```
 
 (`finalRenderer` はループ外で従来通り 1 回生成。prefix ありの場合のみ記事ごとに生成する — Blog の記事数規模ではコスト無視できる)
@@ -1636,6 +1689,7 @@ git commit -m "feat(blog): 記事単位の id 名前空間と renderBlog を追�
 ### Task 8: サーバ層 — datasets 統合・Blog モデル・loaders
 
 **Files:**
+
 - Modify: `src/server/datasets.ts` (`SiteDataset.blog` 追加、collect / render 統合)
 - Create: `src/server/blog.ts` (Blog モデルの memoize + DTO 射影)
 - Modify: `src/server/loaders.ts` (`getBlogTreeData` / `getBlogIndexData` / `getBlogTagsetData`)
@@ -1643,6 +1697,7 @@ git commit -m "feat(blog): 記事単位の id 名前空間と renderBlog を追�
 - Test: `tests/server/blog.test.ts`
 
 **Interfaces:**
+
 - Consumes: `collectBlog`、`renderBlog`、Task 2/3/5/6 の純関数、`getSiteDataset` の既存キャッシュ機構
 - Produces:
   - `SiteDataset.blog: RenderedBlogArticle[]` (slug 降順 = 作成日時降順)
@@ -1739,7 +1794,9 @@ describe("projectBlogListPage", () => {
   it("Pagefind 対象は最も特定的な正規ページのみ", async () => {
     const model = await getBlogModel();
     const onParent = projectBlogListPage(model, "UI-UX", 1)!;
-    expect(onParent.articles.find((a) => a.slug === "2025-10-29 1400")!.isCanonicalPage).toBe(false);
+    expect(onParent.articles.find((a) => a.slug === "2025-10-29 1400")!.isCanonicalPage).toBe(
+      false,
+    );
     const onCanonical = projectBlogListPage(model, "UI-UX--デザインシステム", 1)!;
     expect(onCanonical.articles[0]!.isCanonicalPage).toBe(true);
   });
@@ -1765,7 +1822,7 @@ Expected: FAIL
 - `SiteDataset` 型に `blog: RenderedBlogArticle[];` を追加
 - `Promise.all` の collect 群に `collectBlog(config)` を追加
 - **`buildContentIndex` の入力に blog items は入れない** (Blog はリンク先候補にならない — 仕様 L370)
-- `renderContentDrafts<BlogFrontmatter>({ items: blogItems, config, index, pickTitle: pickBlogTitle, idPrefix: (item) => \`${parseBlogSlugDate(item.slug, "+00:00")!.anchorId}-\` })` を既存 3 タイプの render と並べて実行 (または `renderBlog(blogItems, config, index)` を呼ぶ — `renderBlog` が index を受け取れるので後者が簡潔)
+- `renderContentDrafts<BlogFrontmatter>({ items: blogItems, config, index, pickTitle: pickBlogTitle, idPrefix: (item) => \`${parseBlogSlugDate(item.slug, "+00:00")!.anchorId}-\` })`を既存 3 タイプの render と並べて実行 (または`renderBlog(blogItems, config, index)`を呼ぶ —`renderBlog` が index を受け取れるので後者が簡潔)
 - **`buildBacklinks` へ渡す drafts の結合に blog を含めない** (他コンテンツのバックリンク欄に Blog を出さない — 仕様 L371)
 - blog 配列は `slug` の文字列降順でソートして格納 (`[...blog].sort((a, b) => (a.slug < b.slug ? 1 : -1))`)
 - 画像書換 (`rewriteItemHtml`) は blog にも適用する (本文画像 `![[image.png]]` を使えるため)。`computeImageArtifacts` の入力に blog の `images` も含める
@@ -2004,6 +2061,7 @@ git commit -m "feat(blog): サーバ層に Blog モデルと loader を追加"
 ### Task 9: ルートと記事ブロック UI
 
 **Files:**
+
 - Modify: `src/router.tsx` (`pathParamsAllowedCharacters: ["+"]`)
 - Create: `src/routes/blog/route.tsx` / `src/routes/blog/index.tsx` / `src/routes/blog/page/$n.tsx` / `src/routes/blog/tags/$tagset/index.tsx` / `src/routes/blog/tags/$tagset/page/$n.tsx`
 - Create: `src/components/blog/BlogArticleBlock.tsx` / `src/components/blog/BlogListPage.tsx` / `src/components/blog/BlogBreadcrumb.tsx`
@@ -2012,6 +2070,7 @@ git commit -m "feat(blog): サーバ層に Blog モデルと loader を追加"
 - Test: `tests/components/BlogArticleBlock.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 8 の loaders / DTO、`AppShell` (`variant="list"`)、`DetailLayout` (`hasMarginalia`)、`FootnoteSection`、`makeTitle`
 - Produces: `/blog` `/blog/page/$n` `/blog/tags/$tagset` `/blog/tags/$tagset/page/$n` の 4 ルート (+ ツリーは Task 10 で差し込み)
 
@@ -2146,7 +2205,11 @@ export function BlogArticleBlock({ article }: BlogArticleBlockProps) {
         </Link>
       )}
       {article.isCanonicalPage ? (
-        <div data-content-body data-pagefind-body dangerouslySetInnerHTML={{ __html: article.html }} />
+        <div
+          data-content-body
+          data-pagefind-body
+          dangerouslySetInnerHTML={{ __html: article.html }}
+        />
       ) : (
         <div data-content-body dangerouslySetInnerHTML={{ __html: article.html }} />
       )}
@@ -2157,6 +2220,7 @@ export function BlogArticleBlock({ article }: BlogArticleBlockProps) {
 ```
 
 注意:
+
 - `Link` の条件付き props が TanStack Router の型と合わない場合は、page > 1 とそれ以外で `<Link>` を丸ごと分岐する (型安全を優先)
 - `params` オブジェクトはレンダーごとに再生成されるため、react-perf lint が警告する場合は既存 `NoteCard` と同様に `useMemo` で安定参照化する
 
@@ -2216,16 +2280,24 @@ export function BlogBreadcrumb({ items }: BlogBreadcrumbProps) {
           {items.length === 0 ? (
             <span {...stylex.props(styles.current)}>Blog</span>
           ) : (
-            <Link to="/blog" {...stylex.props(styles.link)}>Blog</Link>
+            <Link to="/blog" {...stylex.props(styles.link)}>
+              Blog
+            </Link>
           )}
         </Breadcrumb>
         {items.map((item, i) => (
           <Breadcrumb key={item.tagset}>
-            <span aria-hidden="true" {...stylex.props(styles.separator)}>›</span>{" "}
+            <span aria-hidden="true" {...stylex.props(styles.separator)}>
+              ›
+            </span>{" "}
             {i === last ? (
               <span {...stylex.props(styles.current)}>{item.label}</span>
             ) : (
-              <Link to="/blog/tags/$tagset" params={{ tagset: item.tagset }} {...stylex.props(styles.link)}>
+              <Link
+                to="/blog/tags/$tagset"
+                params={{ tagset: item.tagset }}
+                {...stylex.props(styles.link)}
+              >
                 {item.label}
               </Link>
             )}
@@ -2284,7 +2356,9 @@ interface BlogListPageProps {
 }
 
 export function BlogListPage({ data }: BlogListPageProps) {
-  const hasMarginalia = data.articles.some((a) => a.footnotes.length > 0 || a.html.includes("data-callout"));
+  const hasMarginalia = data.articles.some(
+    (a) => a.footnotes.length > 0 || a.html.includes("data-callout"),
+  );
   const prev = data.page - 1;
   const next = data.page + 1;
   return (
@@ -2300,7 +2374,11 @@ export function BlogListPage({ data }: BlogListPageProps) {
       {(prev >= 1 || next <= data.totalPages) && (
         <nav aria-label="Pagination" {...stylex.props(styles.pager)}>
           <span>{prev >= 1 && <PagerLink tagset={data.tagset} page={prev} label="← 前へ" />}</span>
-          <span>{next <= data.totalPages && <PagerLink tagset={data.tagset} page={next} label="次へ →" />}</span>
+          <span>
+            {next <= data.totalPages && (
+              <PagerLink tagset={data.tagset} page={next} label="次へ →" />
+            )}
+          </span>
         </nav>
       )}
     </DetailLayout>
@@ -2308,15 +2386,39 @@ export function BlogListPage({ data }: BlogListPageProps) {
 }
 
 // 1 ページ目は常に base URL (/page/1 は生成しない)
-function PagerLink({ tagset, page, label }: { tagset: string | null; page: number; label: string }) {
+function PagerLink({
+  tagset,
+  page,
+  label,
+}: {
+  tagset: string | null;
+  page: number;
+  label: string;
+}) {
   if (tagset === null) {
-    return page === 1
-      ? <Link to="/blog" {...stylex.props(styles.pagerLink)}>{label}</Link>
-      : <Link to="/blog/page/$n" params={{ n: String(page) }} {...stylex.props(styles.pagerLink)}>{label}</Link>;
+    return page === 1 ? (
+      <Link to="/blog" {...stylex.props(styles.pagerLink)}>
+        {label}
+      </Link>
+    ) : (
+      <Link to="/blog/page/$n" params={{ n: String(page) }} {...stylex.props(styles.pagerLink)}>
+        {label}
+      </Link>
+    );
   }
-  return page === 1
-    ? <Link to="/blog/tags/$tagset" params={{ tagset }} {...stylex.props(styles.pagerLink)}>{label}</Link>
-    : <Link to="/blog/tags/$tagset/page/$n" params={{ tagset, n: String(page) }} {...stylex.props(styles.pagerLink)}>{label}</Link>;
+  return page === 1 ? (
+    <Link to="/blog/tags/$tagset" params={{ tagset }} {...stylex.props(styles.pagerLink)}>
+      {label}
+    </Link>
+  ) : (
+    <Link
+      to="/blog/tags/$tagset/page/$n"
+      params={{ tagset, n: String(page) }}
+      {...stylex.props(styles.pagerLink)}
+    >
+      {label}
+    </Link>
+  );
 }
 ```
 
@@ -2346,7 +2448,12 @@ export const Route = createFileRoute("/blog")({
   loader: () => getBlogTreeData(),
   head: () => ({
     links: [
-      { rel: "alternate", type: "application/atom+xml", href: `${SITE_URL}/blog/feed.xml`, title: "Blog feed" },
+      {
+        rel: "alternate",
+        type: "application/atom+xml",
+        href: `${SITE_URL}/blog/feed.xml`,
+        title: "Blog feed",
+      },
     ],
   }),
   component: BlogLayout,
@@ -2386,10 +2493,7 @@ function BlogIndex() {
   const data = Route.useLoaderData();
   const tree = useLoaderData({ from: "/blog" });
   return (
-    <AppShell
-      variant="list"
-      treeSidebar={<BlogTagTreeSidebar tree={tree} currentTagset={null} />}
-    >
+    <AppShell variant="list" treeSidebar={<BlogTagTreeSidebar tree={tree} currentTagset={null} />}>
       <BlogListPage data={data} />
     </AppShell>
   );
@@ -2521,6 +2625,7 @@ Expected: グリーン
 
 Run: `VAULT_ROOT=$PWD/tests/fixtures/vault npm run dev` (バックグラウンド起動)
 確認:
+
 - `curl -s http://localhost:3000/blog | grep "2025/12/11"` → 記事が出る
 - `curl -s "http://localhost:3000/blog/tags/UI-UX" | grep "デザインシステム"` → 階層タグ記事が親ファセットで拾われる
 - `curl -s "http://localhost:3000/blog/tags/UI-UX--デザインシステム"` → 200 相当の HTML
@@ -2538,16 +2643,19 @@ git commit -m "feat(blog): ルートと記事ブロック UI を追加"
 ### Task 10: タグツリーサイドバー
 
 **Files:**
+
 - Create: `src/components/blog/BlogTagTreeSidebar.tsx`
 - Create: `src/lib/blog/treeExpansion.ts`
 - Modify: `src/routes/blog/*.tsx` (Task 9 で省略した `treeSidebar` を差し込む)
 - Test: `tests/components/BlogTagTreeSidebar.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `BlogTreeNode` / `canonicalChainIds` / `filterBlogTree` (Task 6)、`TreeSearch` (`src/components/tree/TreeSearch.tsx`)、react-aria-components の `Tree` / `TreeItem`
 - Produces: `BlogTagTreeSidebar({ tree: readonly BlogTreeNode[]; currentTagset: string | null })`
 
 **設計要点** (docs/blog-spec.md「ツリーの挙動」):
+
 - 各ノードは**リンク** (`href = /blog/tags/${node.tagset}`、常に正規形)。開閉は chevron ボタンで行う (リンクとは独立)
 - **アクティブ**: `node.tagset === currentTagset` の**すべての**ノードに付与 (URL から導出するステートレス処理。既存 `ContentTree` の `activeSlug` 単一比較とは異なる)
 - **展開状態**: モジュールスコープのストアで保持する。ページ遷移でコンポーネントが remount されても直前の開閉状態を引き継ぎ、「操作していた枝が開いたまま残る」を満たす。コールド読み込み (ストアが空) のときのみ `canonicalChainIds(tree, 現在ファセット)` を既定展開にする
@@ -2605,7 +2713,9 @@ describe("BlogTagTreeSidebar", () => {
   it("現在ページの集合と一致するすべてのノードをアクティブ表示する", () => {
     render(<BlogTagTreeSidebar tree={tree} currentTagset="スターウォーズ+映画" />);
     // 「映画 > スターウォーズ」「スターウォーズ > 映画」の双方の末端が一致集合
-    const current = screen.getAllByRole("row").filter((r) => r.getAttribute("aria-current") === "page");
+    const current = screen
+      .getAllByRole("row")
+      .filter((r) => r.getAttribute("aria-current") === "page");
     expect(current.length).toBeGreaterThanOrEqual(1); // 既定展開は正規チェーンのみなので可視は 1 つ以上
   });
 
@@ -2631,7 +2741,14 @@ Expected: FAIL
 ```tsx
 import { useMemo, useState } from "react";
 import * as stylex from "@stylexjs/stylex";
-import { Button, Tree, TreeItem, TreeItemContent, Collection, type Key } from "react-aria-components";
+import {
+  Button,
+  Tree,
+  TreeItem,
+  TreeItemContent,
+  Collection,
+  type Key,
+} from "react-aria-components";
 import { TreeSearch } from "@/components/tree/TreeSearch.tsx";
 import { canonicalChainIds, filterBlogTree, type BlogTreeNode } from "@/lib/blog/tree.ts";
 import { decodeTagset } from "@/lib/blog/tagset.ts";
@@ -2659,7 +2776,10 @@ export function BlogTagTreeSidebar({ tree, currentTagset }: BlogTagTreeSidebarPr
     saveTreeExpansion(new Set([...keys].map(String)));
   };
 
-  const { tree: visibleTree, matchedIds } = useMemo(() => filterBlogTree(tree, query), [tree, query]);
+  const { tree: visibleTree, matchedIds } = useMemo(
+    () => filterBlogTree(tree, query),
+    [tree, query],
+  );
   // フィルタ中は一致ノードの祖先を自動展開 (ユーザー保存分と合成)
   const effectiveExpanded = useMemo(
     () => (query.trim() === "" ? expandedKeys : new Set<Key>([...expandedKeys, ...matchedIds])),
@@ -2668,7 +2788,12 @@ export function BlogTagTreeSidebar({ tree, currentTagset }: BlogTagTreeSidebarPr
 
   return (
     <div>
-      <TreeSearch value={query} onChange={setQuery} placeholder="Filter tags" ariaLabel="Filter blog tags" />
+      <TreeSearch
+        value={query}
+        onChange={setQuery}
+        placeholder="Filter tags"
+        ariaLabel="Filter blog tags"
+      />
       <Tree
         aria-label="Blog tags"
         items={visibleTree}
@@ -2701,6 +2826,7 @@ export function BlogTagTreeSidebar({ tree, currentTagset }: BlogTagTreeSidebarPr
 ```
 
 実装時の必須調整 (骨子からの具体化):
+
 - styles は `ContentTree.tsx` の `styles.item(level)` / `rowSelected` / `rowFocused` と同じトークン (`space.s3` / `colors.selectedBg` 等) で揃える。`level` は `TreeItemContent` の renderProps から取得
 - `TreeItem` の `href` + 内部 chevron `Button` の組み合わせが RAC で成立するかを確認する。RAC の `TreeItem` は `href` を渡すと行全体がリンクになるため、chevron `Button` (slot="chevron") のクリックがナビゲーションを起こさないことを dev サーバーで実際に確認する。うまく分離できない場合の代替: ラベル部分だけを `<Link>` にし、`TreeItem` 自体は非リンクにする (既存 `NoteItem` が href 方式なので、まず href 方式を試す)
 - アクティブ表示は `aria-current="page"` + `rowSelected` 相当のスタイル。**一致する全ノード**に付与される (順列の双子ノード含む) ことをテストで確認
@@ -2719,6 +2845,7 @@ Run: `npm run typecheck && npm run lint && npm run test`
 Expected: グリーン
 
 Run: `VAULT_ROOT=$PWD/tests/fixtures/vault npm run dev` で確認:
+
 - `/blog` でツリーに `UI-UX / スターウォーズ / デザインシステム / マイクロコピー / ライティング / 映画` 相当のトップレベル (fixtures のタグ構成に応じた並び)
 - ツリーのノードクリックで正規 URL へ遷移し、遷移後もクリック元の枝が開いたまま
 - `/blog/tags/UI-UX--デザインシステム` を直接リロード → `UI-UX` の枝だけが既定展開される
@@ -2735,6 +2862,7 @@ git commit -m "feat(blog): タグ共起ツリーのサイドバーを追加"
 ### Task 11: グローバル統合 — ナビ・トップページ
 
 **Files:**
+
 - Modify: `src/components/common/Icon.tsx` (`blogBold` を追加。実 bold 素材が未支給のため当面 `BLOG_MASK` と同じ data URI を流用し、TODO コメントを残す)
 - Modify: `src/components/layout/navSections.tsx` (`NavSection.to` union に `"/blog"`、`NAV_SECTIONS` に Blog エントリ)
 - Modify: `src/server/home.ts` / `src/server/projectHomePage.ts` (`HomeCounts.blog`、最近更新に Blog を横断)
@@ -2743,6 +2871,7 @@ git commit -m "feat(blog): タグ共起ツリーのサイドバーを追加"
 - Test: `tests/server/home.test.ts` (既存に追記)
 
 **Interfaces:**
+
 - Consumes: `getBlogModel` / `locateArticle` (Task 8)、`blogArticleTitle`
 - Produces:
   - `HomeCounts` に `blog: number`
@@ -2777,6 +2906,7 @@ Expected: 追記分が FAIL
 - [ ] **Step 3: サーバ側を実装**
 
 `src/server/projectHomePage.ts`:
+
 - `HomeCounts` に `blog: number` を追加し、`dataset.blog.length` を数える
 - 最近更新の横断ソート対象に Blog を追加。Blog は `updated` が必須なので全件が候補。`title` は `RenderedBlogArticle.title` (= タグ併記)。`blogLink` は `getBlogModel()` の `locateArticle(model.pages, article.canonicalTagset, slug)` + `anchorId` から作る (`projectHomePage` が dataset 直参照で組んでいる場合は、blog の canonicalTagset / anchorId / ページ番号算出のために `getBlogModel()` を併用する)
 - `RECENT_LIMIT = 5` は据え置き
@@ -2819,6 +2949,7 @@ git commit -m "feat(blog): ナビとトップページへ Blog を統合"
 ### Task 12: feed / sitemap / post-build
 
 **Files:**
+
 - Modify: `src/lib/feed/atom.ts` (`FeedEntry` に `published?: string`、`renderAtomXml` で `<published>` を出力)
 - Create: `src/lib/feed/blogFeed.ts` (Blog 専用エントリ構築)
 - Modify: `src/lib/feed/sitemap.ts` (`SitemapInput.blogPages`)
@@ -2827,6 +2958,7 @@ git commit -m "feat(blog): ナビとトップページへ Blog を統合"
 - Test: `tests/lib/feed/blogFeed.test.ts`、`tests/lib/feed/sitemap.test.ts` (追記)
 
 **Interfaces:**
+
 - Consumes: `BlogModel` (Task 8)、`extractFeedSummary` / `stripHtmlTags` / `joinSiteUrl` / `renderAtomXml` (既存)
 - Produces:
   - `buildBlogFeedEntries(model: BlogModel, siteUrl: string, maxItems: number): FeedEntry[]` — 作成日時降順、`title` = タグ併記、`href` = 全ファセット集合ページ (+ `/page/n`) + アンカー、`published` = createdIso、`updated` = frontmatter.updated、`summary` = 本文抜粋
@@ -2839,7 +2971,12 @@ import { describe, expect, it } from "vitest";
 import { buildBlogFeedEntries, buildBlogSitemapPages } from "@/lib/feed/index.ts";
 import { enumerateFacetPages } from "@/lib/blog/pages.ts";
 import { buildBlogTagTree } from "@/lib/blog/tree.ts";
-import { articleFacets, blogArticleTitle, canonicalFullFacetSet, encodeTagset } from "@/lib/blog/tagset.ts";
+import {
+  articleFacets,
+  blogArticleTitle,
+  canonicalFullFacetSet,
+  encodeTagset,
+} from "@/lib/blog/tagset.ts";
 import { parseBlogSlugDate } from "@/lib/blog/filename.ts";
 import type { BlogArticleModel, BlogModel } from "@/server/blog.ts";
 
@@ -2881,7 +3018,11 @@ function makeModel(defs: readonly Def[]): BlogModel {
 }
 
 const twoArticles: Def[] = [
-  { slug: "2025-12-11 0930", tags: ["UI-UX", "マイクロコピー"], updated: "2025-12-20T10:00:00+09:00" },
+  {
+    slug: "2025-12-11 0930",
+    tags: ["UI-UX", "マイクロコピー"],
+    updated: "2025-12-20T10:00:00+09:00",
+  },
   { slug: "2025-02-14 0930", tags: ["映画"], updated: "2025-02-14T09:30:00+09:00" },
 ];
 
@@ -2935,6 +3076,7 @@ Expected: FAIL
 - [ ] **Step 3: 実装**
 
 `src/lib/feed/atom.ts`:
+
 - `FeedEntry` に `published?: string;` を追加
 - `renderAtomXml` のエントリ出力に `published` があるときのみ `<published>…</published>` を追加 (既存の `<updated>` の並び)
 
@@ -2950,7 +3092,11 @@ import type { FeedEntry } from "./atom.ts";
 // Blog 専用 Atom フィード (docs/blog-spec.md「フィード」)。
 // エントリの link は「記事の全ファセット集合ページ (正規形) + 記事アンカー」。
 // 対象記事が 2 ページ目以降にある場合も正しい /page/[n] を指す。
-export function buildBlogFeedEntries(model: BlogModel, siteUrl: string, maxItems: number): FeedEntry[] {
+export function buildBlogFeedEntries(
+  model: BlogModel,
+  siteUrl: string,
+  maxItems: number,
+): FeedEntry[] {
   return model.articles.slice(0, maxItems).map((article) => {
     const located = locateArticle(model.pages, article.canonicalTagset, article.slug)!;
     const path =
@@ -2992,11 +3138,16 @@ export function buildBlogSitemapPages(model: BlogModel): BlogSitemapPage[] {
     const lastmod = lastmodOf(slugs);
     pages.push(lastmod ? { path: basePath, lastmod } : { path: basePath });
     for (let n = 2; n <= total; n++) {
-      pages.push(lastmod ? { path: `${basePath}/page/${n}`, lastmod } : { path: `${basePath}/page/${n}` });
+      pages.push(
+        lastmod ? { path: `${basePath}/page/${n}`, lastmod } : { path: `${basePath}/page/${n}` },
+      );
     }
   };
 
-  pushPaginated("/blog", model.articles.map((a) => a.slug));
+  pushPaginated(
+    "/blog",
+    model.articles.map((a) => a.slug),
+  );
   for (const page of model.pages.values()) {
     pushPaginated(`/blog/tags/${page.tagset}`, page.slugs);
   }
@@ -3007,10 +3158,12 @@ export function buildBlogSitemapPages(model: BlogModel): BlogSitemapPage[] {
 (`10` は `BLOG_PAGE_SIZE` を import して使う。ハードコードしない)
 
 `src/lib/feed/sitemap.ts`:
+
 - `SitemapInput` に `blogPages: readonly BlogSitemapPage[];` を追加
 - `buildSitemapEntries` で固定 URL 群に続けて `blogPages` を push (`joinSiteUrl` でエンコード。既存 `pushType` の URL 組み立てに合わせる)
 
 `scripts/post-build.ts`:
+
 - `getBlogModel()` を import して取得
 - `writeSitemap` の入力に `blogPages: buildBlogSitemapPages(model)` を追加
 - `writeBlogFeed()` を新設: `buildBlogFeedEntries(model, SITE_URL, config.content.blog.feedMaxItems)` → `renderAtomXml` (self href = `${SITE_URL}/blog/feed.xml`) → `dist/client/blog/feed.xml` に書き出し。`writeSitemap` / `writeFeed` と同じ並びで `Promise.all` に加える
@@ -3035,6 +3188,7 @@ git commit -m "feat(blog): Blog 専用フィードと sitemap 統合を追加"
 ### Task 13: E2E ビルド検証と実装ログ更新
 
 **Files:**
+
 - Modify: `docs/implementation-log.md` (Phase 9-(x) として Blog 実装のログを追記)
 - Modify: `CLAUDE.md` (「コンテンツタイプ」節に Blog を追記、実装状況の更新)
 
@@ -3083,6 +3237,7 @@ npm run build && npm run deploy:dry
 - [ ] **Step 4: 実装ログと CLAUDE.md を更新**
 
 `docs/implementation-log.md` に「Phase 9-(5) (Blog コンテンツタイプ)」節を追記 (既存フォーマット: 達成範囲 / 公開 API / 主要ファイル / 設計判断 / 検証)。設計判断には最低限以下を残す:
+
 - id 名前空間 (clobberPrefix + rehypePrefixIds + applyFootnote idPrefix の 3 点セット) の理由
 - Blog をリンク index / backlinks から除外した箇所
 - ツリー展開のモジュールストア方式
@@ -3090,6 +3245,7 @@ npm run build && npm run deploy:dry
 - lock-step (生成ページ = ツリーノード集合) をテストで担保していること
 
 `CLAUDE.md`:
+
 - 「現在の実装状況」に Blog 実装完了を追記
 - 「コンテンツタイプ」に `**Blog** — Blog/ 配下、フラット、ファイル名は作成日時 (YYYY-MM-DD HHmm)` を追記
 - 「URL 構造」「タグ」に blog-spec への参照を一行追記

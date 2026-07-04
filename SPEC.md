@@ -21,26 +21,26 @@ Vault 内の `Clips/` フォルダおよびその他のファイルはサイト�
 
 ## ページ構成
 
-| URL                    | 内容                        |
-| ---------------------- | --------------------------- |
-| `/`                    | トップページ                |
-| `/notes`               | Notes 一覧ページ            |
-| `/notes/[slug]`        | Notes 詳細ページ            |
-| `/notes/tags`          | Notes のタグ一覧ページ      |
-| `/notes/tags/[tag]`    | Notes のタグ別一覧ページ    |
-| `/glossary`            | Glossary 一覧ページ         |
-| `/glossary/[slug]`     | Glossary 詳細ページ         |
-| `/glossary/tags`       | Glossary のタグ一覧ページ   |
-| `/glossary/tags/[tag]` | Glossary のタグ別一覧ページ |
-| `/books`               | Books 一覧ページ            |
-| `/books/[isbn]`        | Books 詳細ページ            |
-| `/books/tags`          | Books のタグ一覧ページ      |
-| `/books/tags/[tag]`    | Books のタグ別一覧ページ    |
-| `/blog`                | Blog トップページ           |
-| `/blog/page/[n]`       | Blog トップのページネーション |
+| URL                    | 内容                                                                                          |
+| ---------------------- | --------------------------------------------------------------------------------------------- |
+| `/`                    | トップページ                                                                                  |
+| `/notes`               | Notes 一覧ページ                                                                              |
+| `/notes/[slug]`        | Notes 詳細ページ                                                                              |
+| `/notes/tags`          | Notes のタグ一覧ページ                                                                        |
+| `/notes/tags/[tag]`    | Notes のタグ別一覧ページ                                                                      |
+| `/glossary`            | Glossary 一覧ページ                                                                           |
+| `/glossary/[slug]`     | Glossary 詳細ページ                                                                           |
+| `/glossary/tags`       | Glossary のタグ一覧ページ                                                                     |
+| `/glossary/tags/[tag]` | Glossary のタグ別一覧ページ                                                                   |
+| `/books`               | Books 一覧ページ                                                                              |
+| `/books/[isbn]`        | Books 詳細ページ                                                                              |
+| `/books/tags`          | Books のタグ一覧ページ                                                                        |
+| `/books/tags/[tag]`    | Books のタグ別一覧ページ                                                                      |
+| `/blog`                | Blog トップページ                                                                             |
+| `/blog/page/[n]`       | Blog トップのページネーション                                                                 |
 | `/blog/tags/[tagset]`  | Blog タグ詳細ページ (ファセット集合を連結した正規形の単一セグメント。集合は `+`、階層は `--`) |
-| `/blog/feed.xml`       | Blog の Atom フィード        |
-| `/404`                 | Not Found ページ            |
+| `/blog/feed.xml`       | Blog の Atom フィード                                                                         |
+| `/404`                 | Not Found ページ                                                                              |
 
 Blog のページ構成・ページネーション・タグ集合 URL の詳細は `docs/blog-spec.md` を参照。
 
