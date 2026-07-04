@@ -26,7 +26,7 @@ Obsidian Vault をソースとした個人ブランディング目的の Digital
 - Phase 6 (Marginalia / TOC アクティブハイライト / バックリンクの type アイコン) **完了**
 - Phase 7 (画像コピー / 書影 / sitemap / Atom feed / Pagefind / Cloudflare Workers デプロイ) **完了**
 - Phase 8 (デザインの作り込みと style cleanup: 名前付き CSS var、フォント / spacing / WCAG AA、Shiki と Pagefind の dark mode、SearchDialog レスポンシブ) **完了**
-- Phase 9 以降は未着手
+- Phase 9 は複数の下位フェーズとして段階的に実装中。Phase 9-(5) (Blog コンテンツタイプ: タグ組み合わせ (ファセット集合) ごとのページ生成、タグ共起ツリー、Blog 専用 feed、sitemap / ナビ / トップページ統合) までが**完了**。完了分の詳細・残タスクは `docs/implementation-log.md` を参照
 
 完了範囲・公開 API・設計判断・次フェーズへの引き継ぎメモは `docs/implementation-log.md` に集約している。実装作業を始める前に必ず参照すること。
 
@@ -111,6 +111,7 @@ npm run fmt
 - **Notes** — Vault 直下、サブフォルダあり、`Glossary/`、`Books/`、`Clips/`、`_site/` は除外する
 - **Glossary** — `Glossary/` 配下、フラット
 - **Books** — `Books/` 配下、フラット、ファイル名は ISBN
+- **Blog** — `Blog/` 配下、フラット、ファイル名は作成日時 (`YYYY-MM-DD HHmm`)。1 記事 = 1 URL ではなく、タグの組み合わせ (ファセット集合) ごとにページが生成される。詳細は `docs/blog-spec.md` を参照
 - **Clips** — サイトには含めない (Vault には存在するが除外)
 
 ### frontmatter
@@ -137,12 +138,14 @@ npm run fmt
 - トレイリングスラッシュなし
 - Notes のサブフォルダ階層は URL に反映しない (フラット)
 - 同名ファイルが異なるサブフォルダに存在する場合はビルドエラー
+- Blog の URL 構造 (`/blog/tags/[tagset]` 等、ファセット集合の正規形) は `docs/blog-spec.md` の「URL 構造」を参照
 
 ### タグ
 
 - 階層タグ (`frontend/react`) サポート。親タグでフィルタすると子タグも含む
 - コンテンツタイプごとに名前空間が分離 (`/notes/tags/react` と `/books/tags/react` は別物)
 - 階層タグの URL は `/` を `--` でエスケープ (`frontend/react` → `frontend--react`)
+- Blog のタグは他タイプと異なりページ生成そのものを駆動する (ファセット集合)。正規形・共起ツリーの詳細は `docs/blog-spec.md` を参照
 
 ### レイアウト
 
