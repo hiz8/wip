@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { enumerateFacetPages } from "@/lib/blog/pages.ts";
+import { canonicalTagsetOf } from "@/lib/blog/tagset.ts";
 import {
   buildBlogTagTree,
   canonicalChainIds,
@@ -96,6 +97,57 @@ describe("buildBlogTagTree (仕様イメージ A2: 階層タグ)", () => {
     expect(uiux.children[0]!.tagset).toBe("UI-UX--デザインシステム");
     expect(uiux.children[1]!.tagset).toBe("UI-UX+デザインシステム");
     expect(uiux.children[0]!.id).not.toBe(uiux.children[1]!.id);
+  });
+});
+
+describe("buildBlogTagTree (既知の制約: 同じ親の兄弟サブタグ co-sibling、docs/blog-spec.md「生成するファセット集合ページの定義」直後の note)", () => {
+  // 1 記事が同じ親 UI-UX の 2 つの兄弟サブタグ (デザインシステム / アクセシビリティ) を持つケース。
+  // enumerateFacetPages はファセット集合 {UI-UX/デザインシステム, UI-UX/アクセシビリティ} のページを
+  // 生成するが、buildBlogTagTree の階層降下は root UI-UX を消費するため antichain ガード
+  // (tree.ts:69) が root の再追加を恒久的にブロックし、この集合へ降下する経路が存在しない。
+  // これは既知の制約 (docs/blog-spec.md 参照) であり、将来ツリーが co-sibling を
+  // 扱えるようになった場合はこの特性化テストの期待値を更新すること。
+  const articles = [
+    {
+      slug: "2025-01-01 0900",
+      tags: ["UI-UX/デザインシステム", "UI-UX/アクセシビリティ"],
+    },
+  ];
+  // 正規形の綴り・順序 (ア < デ) を手打ちせず、実装のヘルパーから組み立てて確認する。
+  const cosiblingTagset = canonicalTagsetOf(["UI-UX/デザインシステム", "UI-UX/アクセシビリティ"]);
+
+  it("co-sibling 集合の正規形は UI-UX--アクセシビリティ+UI-UX--デザインシステム (ア < デ)", () => {
+    expect(cosiblingTagset).toBe("UI-UX--アクセシビリティ+UI-UX--デザインシステム");
+  });
+
+  it("enumerateFacetPages は co-sibling 集合のページを生成する", () => {
+    const pages = enumerateFacetPages(articles);
+    expect(pages.has(cosiblingTagset)).toBe(true);
+  });
+
+  it("buildBlogTagTree は co-sibling 集合のノードを生成しない (lock-step の例外)", () => {
+    const tree = buildBlogTagTree(articles);
+    const fromTree = new Set<string>();
+    const walk = (nodes: readonly BlogTreeNode[]) => {
+      for (const n of nodes) {
+        fromTree.add(n.tagset);
+        walk(n.children);
+      }
+    };
+    walk(tree);
+    expect(fromTree.has(cosiblingTagset)).toBe(false);
+  });
+
+  it("ツリーは UI-UX 直下に兄弟サブタグ 2 つが並ぶのみで、互いの配下には現れない", () => {
+    const tree = buildBlogTagTree(articles);
+    expect(labels(tree)).toEqual(["UI-UX"]);
+    const uiux = find(tree, "UI-UX");
+    expect(labels(uiux.children)).toEqual(["アクセシビリティ", "デザインシステム"]);
+    // 兄弟サブタグはどちらも子を持たない (もう一方への降下経路が無い)
+    const a11y = find(uiux.children, "アクセシビリティ");
+    const ds = find(uiux.children, "デザインシステム");
+    expect(a11y.children).toEqual([]);
+    expect(ds.children).toEqual([]);
   });
 });
 
