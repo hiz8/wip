@@ -26,7 +26,9 @@ const authorSchema = z.object({
 
 const notesContentSchema = z.object({
   path: z.string().default("."),
-  exclude: z.array(z.string()).default(["Glossary/**", "Books/**", "Clips/**", "_site/**"]),
+  exclude: z
+    .array(z.string())
+    .default(["Glossary/**", "Books/**", "Blog/**", "Clips/**", "_site/**"]),
 });
 
 const glossaryContentSchema = z.object({

@@ -108,7 +108,7 @@ npm run fmt
 
 ### コンテンツタイプ
 
-- **Notes** — Vault 直下、サブフォルダあり、`Glossary/`、`Books/`、`Clips/`、`_site/` は除外する
+- **Notes** — Vault 直下、サブフォルダあり、`Glossary/`、`Books/`、`Blog/`、`Clips/`、`_site/` は除外する
 - **Glossary** — `Glossary/` 配下、フラット
 - **Books** — `Books/` 配下、フラット、ファイル名は ISBN
 - **Blog** — `Blog/` 配下、フラット、ファイル名は作成日時 (`YYYY-MM-DD HHmm`)。1 記事 = 1 URL ではなく、タグの組み合わせ (ファセット集合) ごとにページが生成される。詳細は `docs/blog-spec.md` を参照

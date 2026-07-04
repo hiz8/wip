@@ -170,7 +170,3 @@ export function projectBlogListPage(
     articles,
   };
 }
-
-export function __resetBlogModelForTests(): void {
-  cached = null;
-}
