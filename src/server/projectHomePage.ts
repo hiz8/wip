@@ -1,5 +1,7 @@
 import type { ContentType } from "@/types/content.ts";
 import { compareByUpdatedDesc } from "@/lib/content/sort.ts";
+import { locateArticle } from "@/lib/blog/pages.ts";
+import { getBlogModel, type BlogModel } from "./blog.ts";
 import { getResolvedConfig, getSiteDataset, type SiteDataset } from "./datasets.ts";
 
 // このモジュールは Vault / config (node:fs) に依存するサーバ専用ロジックを保持する。
@@ -15,6 +17,8 @@ export interface HomeRecentItem {
   slug: string;
   title: string;
   updated: string;
+  /** type === "blog" のときのみ。記事の全ファセット集合ページ (正規形) + アンカーへのリンク情報 */
+  blogLink?: { tagset: string; page: number; anchorId: string };
 }
 
 export interface HomeFeaturedItem {
@@ -28,6 +32,7 @@ export interface HomeCounts {
   notes: number;
   glossary: number;
   books: number;
+  blog: number;
 }
 
 export interface HomeSocialLink {
@@ -53,11 +58,14 @@ interface NormalizedItem {
   title: string;
   updated: string | null;
   featured: boolean;
+  blogLink?: { tagset: string; page: number; anchorId: string };
 }
 
-// Notes / Glossary / Books を横断ソート・フィルタできる共通形へ正規化する。
-// Glossary は updated を持たないことが多いため null 許容。
-function normalizeAll(ds: SiteDataset): NormalizedItem[] {
+// Notes / Glossary / Books / Blog を横断ソート・フィルタできる共通形へ正規化する。
+// Glossary は updated を持たないことが多いため null 許容。Blog は featured を
+// 持たないコンテンツタイプのため常に false とし (Featured 対象外)、代わりに
+// リンク先算出用の blogLink を積む。
+function normalizeAll(ds: SiteDataset, blogModel: BlogModel): NormalizedItem[] {
   const out: NormalizedItem[] = [];
   for (const n of ds.notes) {
     out.push({
@@ -86,6 +94,20 @@ function normalizeAll(ds: SiteDataset): NormalizedItem[] {
       featured: b.frontmatter.featured ?? false,
     });
   }
+  for (const a of blogModel.articles) {
+    // 記事は自身の全ファセット集合ページ (canonicalTagset) に必ず列挙されるため
+    // (enumerateFacetPages が各トークンのフルパスを採用する組み合わせを含む)、
+    // locateArticle は常に見つかる。
+    const located = locateArticle(blogModel.pages, a.canonicalTagset, a.slug)!;
+    out.push({
+      type: "blog",
+      slug: a.slug,
+      title: a.title,
+      updated: a.updated,
+      featured: false,
+      blogLink: { tagset: located.tagset, page: located.page, anchorId: a.anchorId },
+    });
+  }
   return out;
 }
 
@@ -93,15 +115,26 @@ function normalizeAll(ds: SiteDataset): NormalizedItem[] {
 // として projection 本体を切り出す。
 export async function projectHomePage(): Promise<HomePageData> {
   const ds = await getSiteDataset();
+  const blogModel = await getBlogModel();
   const config = getResolvedConfig();
-  const all = normalizeAll(ds);
+  const all = normalizeAll(ds, blogModel);
 
   // 最近更新: updated を持つものだけを横断し、updated 降順 上位 5 件。
   const recent: HomeRecentItem[] = all
     .filter(
       (it): it is NormalizedItem & { updated: string } => it.updated !== null && it.updated !== "",
     )
-    .map((it) => ({ type: it.type, slug: it.slug, title: it.title, updated: it.updated }))
+    .map((it) =>
+      it.blogLink === undefined
+        ? { type: it.type, slug: it.slug, title: it.title, updated: it.updated }
+        : {
+            type: it.type,
+            slug: it.slug,
+            title: it.title,
+            updated: it.updated,
+            blogLink: it.blogLink,
+          },
+    )
     .toSorted(
       compareByUpdatedDesc<HomeRecentItem>(
         (it) => it.updated,
@@ -126,6 +159,7 @@ export async function projectHomePage(): Promise<HomePageData> {
     notes: ds.notes.length,
     glossary: ds.glossary.length,
     books: ds.books.length,
+    blog: ds.blog.length,
   };
 
   const socialLinks: HomeSocialLink[] = (config.author.socialLinks ?? []).map((link) =>

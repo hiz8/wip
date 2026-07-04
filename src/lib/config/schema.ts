@@ -26,7 +26,9 @@ const authorSchema = z.object({
 
 const notesContentSchema = z.object({
   path: z.string().default("."),
-  exclude: z.array(z.string()).default(["Glossary/**", "Books/**", "Clips/**", "_site/**"]),
+  exclude: z
+    .array(z.string())
+    .default(["Glossary/**", "Books/**", "Blog/**", "Clips/**", "_site/**"]),
 });
 
 const glossaryContentSchema = z.object({
@@ -37,11 +39,18 @@ const booksContentSchema = z.object({
   path: z.string().default("Books"),
 });
 
+const blogContentSchema = z.object({
+  path: z.string().default("Blog"),
+  feedMaxItems: z.number().int().positive().default(20),
+  timezone: z.string().default("+09:00"),
+});
+
 const contentSchema = z.object({
   vaultRoot: z.string().min(1, "content.vaultRoot must not be empty"),
   notes: notesContentSchema.prefault({}),
   glossary: glossaryContentSchema.prefault({}),
   books: booksContentSchema.prefault({}),
+  blog: blogContentSchema.prefault({}),
 });
 
 const pagesSchema = z

@@ -5,6 +5,8 @@ export function getRouter() {
   return createTanStackRouter({
     routeTree,
     scrollRestoration: true,
+    // tagset セグメントの集合区切り "+" を percent-encode させない (正規 URL を素の "+" で出す)
+    pathParamsAllowedCharacters: ["+"],
   });
 }
 

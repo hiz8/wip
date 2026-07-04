@@ -877,6 +877,184 @@ tests/lib/feed/sitemap.test.ts                    # タグ URL の期待値追�
 
 - タグの型横断統合 / タグのリネーム・エイリアス / タグ別 feed / OGP 生成
 
+## Phase 9-(5) (Blog コンテンツタイプ) **完了**
+
+### 達成範囲
+
+`docs/blog-spec.md` に定義済みの Blog コンテンツタイプを実装。Notes/Glossary/Books と異なり
+「1 記事 = 1 URL」ではなく、記事に付けたタグの**組み合わせ (ファセット集合)** ごとに 1 ページ
+(`/blog/tags/[tagset]`) が生成され、該当記事が作成日時降順で連結表示される。
+
+- ファイル名がそのまま作成日時 (`YYYY-MM-DD HHmm.md`)。frontmatter は `tags` (1〜4 個) と
+  `updated` のみ持ち、`title` / `summary` / `featured` / `created` は明示的に禁止
+- タグ集合の正規形 (antichain・コードポイント昇順、`+` 区切り、階層タグは `--`) を唯一の URL
+  表現とし、記事ごとに最大 3^4-1 通りの部分集合を canonical 化してページを列挙
+  (`enumerateFacetPages`)
+- 左サイドバーにタグ共起ツリー (`buildBlogTagTree`)。ツリーが実現する集合と生成ページ集合が
+  一致することをテストで担保 (lock-step、下記)
+- 1 ページに複数記事を連結表示するため、見出し/callout/footnote の id を記事アンカーで
+  名前空間化 (下記「id 名前空間」)
+- Pagefind の重複インデックスを避けるため、記事の本文全文は「その記事の全ファセット集合の
+  正規ページ」でのみ `data-pagefind-body` を付与 (`isCanonicalPage`)。他ページでは日付見出し +
+  「他のタグ」リンクのみ表示
+- Blog 専用 Atom フィード (`/blog/feed.xml`) と sitemap 統合、ナビ・トップページ (最近更新・
+  コンテンツタイプ入り口) への統合
+- fixtures vault で記事 5 件・tagset ページ 11 種 (旧欠落 5 件を含む) を実ビルドで確認済み
+  (下記「検証」)
+
+### 公開 API
+
+`src/lib/blog/`:
+
+- `tagset.ts` — `compareCodePoints` (コードポイント順比較)、`validateBlogTagToken`、
+  `articleFacets` / `canonicalizeFacetSet` / `canonicalFullFacetSet`、`encodeTagset` /
+  `decodeTagset`、`canonicalTagsetOf`、`blogArticleTitle`
+- `pages.ts` — `enumerateFacetPages(articles): Map<tagset, FacetPage>`、`pageCount` /
+  `pageSlice` / `BLOG_PAGE_SIZE`、`locateArticle` (記事がどの tagset の何ページ目にいるか)、
+  `parsePageParam`、`remainingTokens` (「他のタグ」算出)
+- `tree.ts` — `buildBlogTagTree`、`canonicalChainIds` (コールド展開)、`filterBlogTree`
+- `treeExpansion.ts` — `loadTreeExpansion` / `saveTreeExpansion` (モジュールストア、下記)
+- `filename.ts` — `parseBlogSlugDate(slug, timezone): BlogArticleDate | null`
+
+`src/lib/markdown/pipeline.ts`:
+
+- `renderBlog(items, config, index?)` — Blog 専用レンダラ。`pickBlogTitle` (全ファセット集合の
+  `#tag` 併記) と記事アンカー由来の `idPrefix` を渡す
+
+`src/server/blog.ts`:
+
+- `getBlogModel(): Promise<BlogModel>` — dataset と同一ライフサイクルで memoize
+- `projectBlogListPage(model, tagset, page): BlogListPageDto | null` — トップ (`tagset: null`)
+  とタグ詳細を同じ射影で扱う。非正規 tagset・範囲外ページは `null` (ルート側で `notFound`)
+- 型: `BlogModel`、`BlogArticleModel`、`BlogArticleDto`、`BlogListPageDto`
+
+`src/server/loaders.ts`:
+
+- `getBlogTreeData` / `getBlogIndexData` / `getBlogTagsetData` (`createServerFn`)
+
+`src/lib/feed/blogFeed.ts`:
+
+- `buildBlogFeedEntries(model, siteUrl, maxItems): FeedEntry[]`
+- `buildBlogSitemapPages(model): BlogSitemapPage[]`
+
+`src/components/blog/`:
+
+- `BlogListPage` (記事連結 + ページャ)、`BlogArticleBlock` (1 記事分、`isCanonicalPage` で
+  pagefind-body 出し分け)、`BlogBreadcrumb`、`BlogTagTreeSidebar` (タグ共起ツリー)
+
+### 主要ファイル
+
+```
+src/lib/blog/{tagset,pages,tree,treeExpansion,filename}.ts
+src/lib/content/validate.ts             # validateBlogFrontmatter, BLOG_FORBIDDEN_KEYS
+src/lib/content/index.ts                # collectBlog
+src/lib/markdown/pipeline.ts            # renderBlog, pickBlogTitle, createFinalRenderer(idPrefix)
+src/lib/markdown/plugins/prefix-ids.ts  # rehypePrefixIds (新規)
+src/lib/markdown/plugins/footnote.ts    # applyFootnote の idPrefix オプション
+src/server/blog.ts                      # getBlogModel, projectBlogListPage
+src/server/loaders.ts                   # getBlogTreeData/getBlogIndexData/getBlogTagsetData
+src/server/datasets.ts                  # build() 内の allItems 除外・renderBlog 配線
+src/lib/feed/blogFeed.ts                # buildBlogFeedEntries, buildBlogSitemapPages
+src/lib/feed/sitemap.ts                 # buildSitemapEntries への blogPages 統合
+src/lib/feed/atom.ts                    # toIsoInstant (Notes と共用)
+src/router.tsx                          # pathParamsAllowedCharacters: ["+"]
+src/routes/blog/{index,route}.tsx
+src/routes/blog/page/$n.tsx
+src/routes/blog/tags/$tagset/{index,page/$n}.tsx
+src/components/blog/{BlogListPage,BlogArticleBlock,BlogBreadcrumb,BlogTagTreeSidebar}.tsx
+src/components/layout/navSections.tsx   # nav に Blog アイコン追加
+src/components/home/{ContentLink,ContentTypeEntries,RecentSection}.tsx  # blogLink 分岐
+tests/lib/blog/{tagset,pages,tree,filename}.test.ts
+tests/lib/content/blog.test.ts
+tests/lib/markdown/renderBlog.test.ts
+tests/lib/feed/blogFeed.test.ts
+tests/server/blog.test.ts
+tests/components/{BlogArticleBlock,BlogTagTreeSidebar}.test.tsx
+tests/fixtures/vault/Blog/ tests/fixtures/vault-blog-invalid/Blog/
+```
+
+### 設計判断
+
+1. **id 名前空間の 3 点セット** — Blog は 1 ページに複数記事を連結表示するため、見出し /
+   callout / footnote の id が記事間で衝突する。生成経路が異なる 3 箇所をそれぞれ担当させる:
+   (a) `remarkRehype({ clobberPrefix: idPrefix })` — remark-rehype 内部が自動生成する脚注系
+   id (`fn1`/`fnref1` 等) にプレフィックスを付与する標準オプション、
+   (b) `rehypePrefixIds({ prefix: idPrefix })` (新規プラグイン) — `rehype-slug` が生成する
+   見出し/callout の id と `#` フラグメント href に後付けでプレフィックスを付ける
+   (`clobberPrefix` は remark-rehype 内部生成ノードにしか効かないため別途必要)、
+   (c) `applyFootnote` の `idPrefix` オプション — `footnote-aside` は `type: "html"` の raw
+   ノードとして挿入され rehype ツリーを経由しない (`rehypePrefixIds` の対象外) ため、生成元
+   が直接プレフィックスを織り込む。3 つは「remark-rehype 内部生成」「rehype 後段プラグイン
+   生成」「raw ノードとして経路外」という異なる id 生成経路を排他的にカバーする
+2. **Blog をリンク解決 index / backlinks から除外** — `datasets.ts` の `build()` は
+   `allItems = [...notes, ...glossary, ...books]` (blog を含めない) から
+   `buildContentIndex(allItems)` を構築し、`renderBlog(blogItems, config, index)` にはこの
+   index を渡す (Blog → Notes/Glossary/Books への `[[wiki-link]]` は解決できる)。一方
+   `renderBlog` は `draft.incomingLinks` を常に `[]` に強制し、`allDrafts` (backlinks 計算対象)
+   にも blog の draft を含めない。Blog 記事は URL が記事単位でなくタグセット単位のページに
+   集約されるため、「その記事への backlink」という 1 対 1 のリンク先が存在せず、outgoing の
+   みで incoming は意味をなさない
+3. **タグツリー展開のモジュールストア** — `treeExpansion.ts` がモジュールスコープの
+   `Set<string>` に開閉状態を退避し、ルート遷移でサイドバーが remount されても開いていた枝が
+   閉じない。`BlogTagTreeSidebar` はユーザー保存集合 (`expandedRef`) と直近レンダーで実際に
+   Tree へ渡した集合 (`effectiveRef`) を分けて追跡し、`onExpandedChange` では両者の差分だけを
+   ユーザー集合へ適用してから保存する。これによりフィルタ (`filterBlogTree`) 由来の自動展開
+   (`matchedIds`) が保存状態へ混入しない (フィルタを消すと元の開閉状態に戻る)
+4. **タグツリーのノードは実 `<Link>` (SSG 発見性のバグ修正)** — 当初 RAC `TreeItem` の
+   `href` prop で遷移させていたが、react-aria-components は `href` を `data-href` +
+   `onPress` の JS ナビゲーションとして実装するため、prerender の `crawlLinks` (HTML の
+   `<a href>` 走査) がタグセットページを発見できず、11 種中 5 種 (マイクロコピー /
+   ライティング / 映画 / マイクロコピー+ライティング / UI-UX+ライティング) が SSG 出力から
+   欠落し sitemap と実体が乖離するビルド後 404 バグになっていた。`BlogTagTreeSidebar` の
+   `BlogTreeItem` を「`TreeItem` 自体は非ナビゲーショナル、可視ラベルを実 `<a href>`
+   (`@tanstack/react-router` の `Link`) にする。展開はチェブロン `Button` (`slot="chevron"`)
+   に独立させる」設計に変更して解消 (commits addb8f7 / e3d5338 / f6f3d4a)。RAC の `TreeItem`
+   に `href` を持たせる設計は SSG プロジェクトでは crawlLinks 発見性の罠になるため、以後
+   同種のツリー/リストで href 遷移を実装する際はこの罠を踏襲しないこと
+5. **`pathParamsAllowedCharacters: ["+"]`** — TanStack Router は既定で path param 中の記号を
+   percent-encode するため、指定しないと tagset の集合区切り `+` (例 `UI-UX+マイクロコピー`)
+   が `Link` 出力で `%2B` になり正規 URL 表現 (素の `+`) と食い違う。`src/router.tsx` の
+   `createTanStackRouter` オプションに追加し、`Link` が出す href / prerender が辿る href /
+   実ファイルの 3 者を素の `+` で揃えた。sitemap / Atom feed は `joinSiteUrl` 等の URL
+   エンコード経由で `%2B` になるが、Cloudflare Workers Static Assets はリクエストパスを
+   `decodeURIComponent` してからアセットを解決するため `%2B` → `+` で同一ページに解決される
+   (実ビルドで dist のディレクトリ名が素の `+`、sitemap が `%2B` であることを相互に確認済み。
+   wrangler 実地確認は前回セッションでローカルツールの Unicode パス制約により断念し、ディスク
+   照合 + 上記機序の説明で整合と判断)
+6. **lock-step (生成ページ集合 = ツリーノード集合 = `enumerateFacetPages` キー) の二重担保** —
+   `tests/lib/blog/tree.test.ts`「ツリーノードが実現する集合 = 生成ページ集合 (lock-step、
+   仕様 L144)」(純関数の合成フィクスチャ) と `tests/server/blog.test.ts`「ページ集合とツリー
+   が lock-step で一致する」(`getBlogModel()` 経由、fixtures vault) の 2 段でユニットテスト化。
+   さらに実ビルドで `dist/client/blog/tags/` のディレクトリ数と `sitemap.xml` の `blog/tags`
+   件数が一致すること (= crawlLinks が全ツリーノードを発見して SSG 出力していること) を
+   ビルド後に確認し、テストとビルド出力の双方で保証する
+7. **sitemap lastmod のページ単位算出、feed updated の正規化** — `buildBlogSitemapPages` は
+   `/blog` と各 `/blog/tags/[tagset]` についてページネーション先頭以降を列挙し
+   (`pushPaginated`)、`lastmod` は「そのページに掲載される記事群の `updated` 最大値」を
+   `pageSlice` 単位で求める (tagset 全体の一括計算だと同一 tagset の別ページ間で不正確になる
+   ため)。feed の `<updated>` は Notes 等と同じ `toIsoInstant` で RFC3339 instant に正規化する
+   (`<published>` は `createdIso` がファイル名由来で常に完全形式のため正規化不要)
+
+### 検証
+
+- `npm run typecheck` / `npm run lint` (oxlint + eslint、warning のみ・既存分) / `npm run test`
+  (66 ファイル 447 件) すべてグリーン
+- `npx tsx scripts/check-contrast.ts` — light/dark とも 0 failures
+- `VAULT_ROOT=tests/fixtures/vault npm run build` — 51 ページ中 Blog 12 ページ (`/blog` +
+  `/blog/tags/*` 11 種) を SSG 出力。`ls dist/client/blog/tags/ | wc -l` = 11 =
+  `grep -c "blog/tags" dist/client/sitemap.xml`。11 種を `urllib.parse.unquote` で照合し、
+  前回 BLOCKED の欠落 5 件 (マイクロコピー / ライティング / 映画 / マイクロコピー+ライティング
+  / UI-UX+ライティング) が含まれることを確認。`data-pagefind-body` は記事の全ファセット集合
+  正規ページのみ (4 ページ、うち 1 ページは 2 記事分) に付与されており重複インデックスなし
+- `npm run preview` / `npm run dev` の両方で `/blog` (記事 5 件・区切り線 4 本・パンくず
+  `Blog` のみ)、`/blog/tags/UI-UX` (4 件、2025-10-29 記事に `#デザインシステム` 併記しクリック
+  で `/blog/tags/UI-UX--デザインシステム#p-2025-10-29-1400` へ)、
+  `/blog/tags/UI-UX--デザインシステム`、`/blog/tags/スターウォーズ+映画`
+  (パンくず `Blog › #スターウォーズ › #スターウォーズ#映画`)、`/blog/tags/映画` (前回欠落
+  ページ、200 かつ dist に実ファイルあり) を確認
+- `tests/server/blog.test.ts` の「Blog はリンクグラフに参加しない」「lock-step」と
+  `tests/lib/blog/tree.test.ts` の lock-step テストがグリーン
+
 ## Phase 9 (引き継ぎメモ)
 
 ### 想定スコープ

@@ -12,7 +12,7 @@ interface ContentTypeEntriesProps {
 
 const ENTRIES: ReadonlyArray<{
   type: ContentType;
-  to: "/notes" | "/glossary" | "/books";
+  to: "/notes" | "/glossary" | "/books" | "/blog";
   jp: string;
   desc: string;
 }> = [
@@ -33,6 +33,12 @@ const ENTRIES: ReadonlyArray<{
     to: "/books",
     jp: "読書",
     desc: "手を動かしながら読んだ本だけ。",
+  },
+  {
+    type: "blog",
+    to: "/blog",
+    jp: "ブログ",
+    desc: "タグを軸に回遊できる短めの記事。",
   },
 ];
 

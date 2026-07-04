@@ -17,10 +17,11 @@ export function makeConfig(vaultRelative: string): SiteConfigParsed {
       vaultRoot: resolve(fixturesDir, vaultRelative),
       notes: {
         path: ".",
-        exclude: ["Glossary/**", "Books/**", "Clips/**", "_site/**"],
+        exclude: ["Glossary/**", "Books/**", "Blog/**", "Clips/**", "_site/**"],
       },
       glossary: { path: "Glossary" },
       books: { path: "Books" },
+      blog: { path: "Blog", feedMaxItems: 20, timezone: "+09:00" },
     },
     build: { outDir: "dist", publicDir: "public", strict: true },
     features: { rss: true, sitemap: true, search: true },

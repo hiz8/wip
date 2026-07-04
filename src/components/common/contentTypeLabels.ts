@@ -5,4 +5,5 @@ export const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
   notes: "Notes",
   glossary: "Glossary",
   books: "Books",
+  blog: "Blog",
 };

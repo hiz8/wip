@@ -1,7 +1,9 @@
 export {
+  pickBlogTitle,
   pickBooksTitle,
   pickGlossaryTitle,
   pickNotesTitle,
+  renderBlog,
   renderBooks,
   renderContentDrafts,
   renderGlossary,
@@ -15,6 +17,7 @@ export type {
   FootnoteEntry,
   ImageRef,
   OutgoingLink,
+  RenderedBlogArticle,
   RenderedBook,
   RenderedGlossaryTerm,
   RenderedItem,

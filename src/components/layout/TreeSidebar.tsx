@@ -41,6 +41,13 @@ const COPY: Record<ContentType, TreeKindCopy> = {
     searchAriaLabel: "Filter books",
     emptyMessage: "No books match.",
   },
+  // Blog は Task 10 で専用のタグツリーサイドバーに置き換わるため、この文言が表示されることはない。
+  blog: {
+    ariaLabel: "Blog tags",
+    searchPlaceholder: "Filter tags",
+    searchAriaLabel: "Filter tags",
+    emptyMessage: "No tags",
+  },
 };
 
 const styles = stylex.create({

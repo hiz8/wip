@@ -31,11 +31,20 @@ export interface BooksContentConfig {
   path: string;
 }
 
+export interface BlogContentConfig {
+  path: string;
+  /** /blog/feed.xml の最大件数 */
+  feedMaxItems: number;
+  /** ファイル名日時の解釈タイムゾーン (例 "+09:00") */
+  timezone: string;
+}
+
 export interface ContentConfig {
   vaultRoot: string;
   notes: NotesContentConfig;
   glossary: GlossaryContentConfig;
   books: BooksContentConfig;
+  blog: BlogContentConfig;
 }
 
 export interface PagesConfig {
@@ -74,6 +83,7 @@ export type SiteConfigInput = {
     notes?: Partial<NotesContentConfig>;
     glossary?: Partial<GlossaryContentConfig>;
     books?: Partial<BooksContentConfig>;
+    blog?: Partial<BlogContentConfig>;
   };
   pages?: PagesConfig;
   build?: Partial<BuildConfig>;

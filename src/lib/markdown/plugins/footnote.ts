@@ -5,6 +5,8 @@ import type { FootnoteEntry } from "@/types/content.ts";
 export interface FootnoteContext {
   footnotes: FootnoteEntry[];
   renderHtml: (subtree: Root) => Promise<string>;
+  /** 複数記事を同一ページに載せる Blog 用の id 名前空間。省略時は remark-rehype 既定と同じ */
+  idPrefix?: string;
 }
 
 interface PendingAside {
@@ -50,6 +52,7 @@ export async function applyFootnote(tree: Root, ctx: FootnoteContext): Promise<v
   // 引き継ぐ。
   const pending: PendingAside[] = [];
   let ordinal = 0;
+  const asidePrefix = ctx.idPrefix ?? "user-content-";
   visitParents(tree, "footnoteReference", (node, ancestors) => {
     const html = htmlByIdentifier.get(node.identifier);
     if (html === undefined) return;
@@ -60,7 +63,7 @@ export async function applyFootnote(tree: Root, ctx: FootnoteContext): Promise<v
     ordinal += 1;
     const side = readSide(node);
     const sideAttr = side ? ` data-side="${side}"` : "";
-    const asideHtml = `<aside class="footnote-aside" id="user-content-fn-aside-${ordinal}"${sideAttr} role="note">${html}</aside>`;
+    const asideHtml = `<aside class="footnote-aside" id="${asidePrefix}fn-aside-${ordinal}"${sideAttr} role="note">${html}</aside>`;
     pending.push({
       container: location.container,
       paragraphIndex: location.index,

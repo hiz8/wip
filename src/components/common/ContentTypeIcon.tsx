@@ -13,6 +13,8 @@ export function ContentTypeIcon({ type, size = 20 }: ContentTypeIconProps) {
       return <Icon type="notes" size={size} />;
     case "books":
       return <Icon type="book" size={size} />;
+    case "blog":
+      return <Icon type="blog" size={size} />;
     default:
       return null as never;
   }

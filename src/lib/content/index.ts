@@ -1,4 +1,5 @@
 import type {
+  BlogFrontmatter,
   BooksFrontmatter,
   ContentItem,
   GlossaryFrontmatter,
@@ -7,6 +8,7 @@ import type {
 import type { SiteConfigParsed } from "@/lib/config/schema.ts";
 import { collectContentItems } from "./collect.ts";
 import {
+  validateBlogFrontmatter,
   validateBooksFrontmatter,
   validateGlossaryFrontmatter,
   validateNotesFrontmatter,
@@ -18,6 +20,7 @@ export { parseMarkdownFile } from "./parse.ts";
 export type { ParsedFile } from "./parse.ts";
 export {
   isPublished,
+  validateBlogFrontmatter,
   validateBooksFrontmatter,
   validateGlossaryFrontmatter,
   validateNotesFrontmatter,
@@ -56,4 +59,22 @@ export function collectBooks(config: SiteConfigParsed): Promise<ContentItem<Book
     path: config.content.books.path,
     validate: validateBooksFrontmatter,
   });
+}
+
+export async function collectBlog(
+  config: SiteConfigParsed,
+): Promise<ContentItem<BlogFrontmatter>[]> {
+  const items = await collectContentItems<BlogFrontmatter>({
+    type: "blog",
+    vaultRoot: config.content.vaultRoot,
+    path: config.content.blog.path,
+    validate: validateBlogFrontmatter,
+  });
+  for (const item of items) {
+    // 仕様上、本文空はエラーではなく警告で継続する
+    if (item.body.trim() === "") {
+      console.warn(`[blog] ${item.filePath}: 本文が空です`);
+    }
+  }
+  return items;
 }

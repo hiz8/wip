@@ -15,29 +15,36 @@ Obsidian の単一 Vault 内で管理する 3 種のコンテンツをサイト�
 - **Notes** — トピックごとの知識メモ。Vault 直下に配置。サブフォルダによる階層構造を持つ。
 - **Glossary** — 単語・用語のメモ。`Glossary/` フォルダ配下にフラットに配置。
 - **Books** — 読了書籍の簡易メモ。`Books/` フォルダ配下にフラットに配置。ファイル名は ISBN。
+- **Blog** — 「よりストック型の、フローしないブログ」。`Blog/` フォルダ配下にフラットに配置。ファイル名は作成日時。タグの組み合わせ自体がページとなる。詳細は `docs/blog-spec.md`。
 
 Vault 内の `Clips/` フォルダおよびその他のファイルはサイトのソースには含めない。
 
 ## ページ構成
 
-| URL                    | 内容                        |
-| ---------------------- | --------------------------- |
-| `/`                    | トップページ                |
-| `/notes`               | Notes 一覧ページ            |
-| `/notes/[slug]`        | Notes 詳細ページ            |
-| `/notes/tags`          | Notes のタグ一覧ページ      |
-| `/notes/tags/[tag]`    | Notes のタグ別一覧ページ    |
-| `/glossary`            | Glossary 一覧ページ         |
-| `/glossary/[slug]`     | Glossary 詳細ページ         |
-| `/glossary/tags`       | Glossary のタグ一覧ページ   |
-| `/glossary/tags/[tag]` | Glossary のタグ別一覧ページ |
-| `/books`               | Books 一覧ページ            |
-| `/books/[isbn]`        | Books 詳細ページ            |
-| `/books/tags`          | Books のタグ一覧ページ      |
-| `/books/tags/[tag]`    | Books のタグ別一覧ページ    |
-| `/404`                 | Not Found ページ            |
+| URL                    | 内容                                                                                          |
+| ---------------------- | --------------------------------------------------------------------------------------------- |
+| `/`                    | トップページ                                                                                  |
+| `/notes`               | Notes 一覧ページ                                                                              |
+| `/notes/[slug]`        | Notes 詳細ページ                                                                              |
+| `/notes/tags`          | Notes のタグ一覧ページ                                                                        |
+| `/notes/tags/[tag]`    | Notes のタグ別一覧ページ                                                                      |
+| `/glossary`            | Glossary 一覧ページ                                                                           |
+| `/glossary/[slug]`     | Glossary 詳細ページ                                                                           |
+| `/glossary/tags`       | Glossary のタグ一覧ページ                                                                     |
+| `/glossary/tags/[tag]` | Glossary のタグ別一覧ページ                                                                   |
+| `/books`               | Books 一覧ページ                                                                              |
+| `/books/[isbn]`        | Books 詳細ページ                                                                              |
+| `/books/tags`          | Books のタグ一覧ページ                                                                        |
+| `/books/tags/[tag]`    | Books のタグ別一覧ページ                                                                      |
+| `/blog`                | Blog トップページ                                                                             |
+| `/blog/page/[n]`       | Blog トップのページネーション                                                                 |
+| `/blog/tags/[tagset]`  | Blog タグ詳細ページ (ファセット集合を連結した正規形の単一セグメント。集合は `+`、階層は `--`) |
+| `/blog/feed.xml`       | Blog の Atom フィード                                                                         |
+| `/404`                 | Not Found ページ                                                                              |
 
-タグの名前空間はコンテンツタイプごとに分離する。Notes の `#react` と Books の `#react` は別物として扱う。
+Blog のページ構成・ページネーション・タグ集合 URL の詳細は `docs/blog-spec.md` を参照。
+
+タグの名前空間はコンテンツタイプごとに分離する。Notes の `#react` と Books の `#react`、Blog の `#react` はそれぞれ別物として扱う。
 
 ## UI
 
@@ -97,5 +104,6 @@ Vault 内の `Clips/` フォルダおよびその他のファイルはサイト�
 - `docs/content-spec.md` — コンテンツ仕様 (frontmatter スキーマ、Markdown 拡張記法)
 - `docs/ui-spec.md` — UI 仕様 (レイアウト、各ページ構成、レスポンシブ)
 - `docs/build-spec.md` — ビルド仕様 (パイプライン、設定ファイル、リンク解決)
+- `docs/blog-spec.md` — Blog 仕様 (タグ集合/階層タグページ、単一セグメント URL、タグツリー)
 - `docs/architecture.md` — アーキテクチャ (技術選定理由、ディレクトリ構成)
 - `CLAUDE.md` — Claude Code 用プロジェクトガイド

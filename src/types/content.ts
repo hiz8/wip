@@ -1,4 +1,4 @@
-export type ContentType = "notes" | "glossary" | "books";
+export type ContentType = "notes" | "glossary" | "books" | "blog";
 
 export type Status = "published" | "draft" | "archived";
 
@@ -31,6 +31,15 @@ export interface BooksFrontmatter extends BaseFrontmatter {
   pubYear?: number;
   publisher?: string;
   cover?: string;
+}
+
+// Blog は全メタデータ必須 + title / summary / featured / created を「持たない」
+// (作成日時はファイル名が唯一の正)。BaseFrontmatter は全フィールド optional
+// なので、この standalone 定義でも構造的に BaseFrontmatter へ代入可能。
+export interface BlogFrontmatter {
+  tags: string[];
+  updated: string;
+  status: Status;
 }
 
 export interface ContentItem<F extends BaseFrontmatter = BaseFrontmatter> {
@@ -96,3 +105,4 @@ export interface RenderedItem<F extends BaseFrontmatter = BaseFrontmatter> exten
 export type RenderedNote = RenderedItem<NotesFrontmatter>;
 export type RenderedGlossaryTerm = RenderedItem<GlossaryFrontmatter>;
 export type RenderedBook = RenderedItem<BooksFrontmatter>;
+export type RenderedBlogArticle = RenderedItem<BlogFrontmatter>;

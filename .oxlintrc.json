@@ -52,7 +52,8 @@
           "__resetBooksCacheForTests",
           "__setBooksConfigForTests",
           "__resetSiteDatasetForTests",
-          "__setSiteDatasetConfigForTests"
+          "__setSiteDatasetConfigForTests",
+          "__resetBlogModelForTests"
         ]
       }
     ],

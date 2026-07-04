@@ -6,8 +6,11 @@ import type { ContentType } from "@/types/content.ts";
 import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
 
 interface TagChipsProps {
-  /** chip がリンクする、名前空間付きタグページのコンテンツタイプ。 */
-  type: ContentType;
+  /**
+   * chip がリンクする、名前空間付きタグページのコンテンツタイプ。
+   * Blog はファセット集合ベースの別 URL 体系 (docs/blog-spec.md) を使うため対象外。
+   */
+  type: Exclude<ContentType, "blog">;
   tags: readonly string[];
 }
 

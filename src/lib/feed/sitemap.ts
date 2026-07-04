@@ -1,6 +1,7 @@
 import type { ContentType, RenderedItem } from "@/types/content.ts";
 import { compareByUpdatedDesc } from "@/lib/content/sort.ts";
 import { aggregateTags, encodeTagToSlug } from "@/lib/tags/index.ts";
+import type { BlogSitemapPage } from "./blogFeed.ts";
 import { escapeXml, joinSiteUrl } from "./url.ts";
 
 export interface SitemapEntry {
@@ -14,6 +15,7 @@ export interface SitemapInput {
   notes: ReadonlyArray<SitemapItem>;
   glossary: ReadonlyArray<SitemapItem>;
   books: ReadonlyArray<SitemapItem>;
+  blogPages: ReadonlyArray<BlogSitemapPage>;
 }
 
 const compareSitemapItemUpdatedDesc = compareByUpdatedDesc<SitemapItem>(
@@ -34,6 +36,10 @@ export function buildSitemapEntries(input: SitemapInput, siteUrl: string): Sitem
   pushTagPages(entries, input.notes, "notes", siteUrl);
   pushTagPages(entries, input.glossary, "glossary", siteUrl);
   pushTagPages(entries, input.books, "books", siteUrl);
+  for (const page of input.blogPages) {
+    const loc = joinSiteUrl(siteUrl, page.path);
+    entries.push(page.lastmod ? { loc, lastmod: page.lastmod } : { loc });
+  }
   return entries;
 }
 
