@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import {
@@ -37,6 +37,32 @@ function renderWithRouter(ui: ReactNode) {
   const router = createRouter({
     routeTree: rootRoute.addChildren([
       indexRoute,
+      make("/blog/tags/$tagset"),
+      make("/blog/tags/$tagset/page/$n"),
+    ]),
+    history: createMemoryHistory({ initialEntries: ["/"] }),
+    pathParamsAllowedCharacters: ["+"],
+  });
+  return render(<RouterProvider router={router} />);
+}
+
+// サイドバーをルート (Outlet の外) に置き、ラベル Link のクリックで遷移しても
+// アンマウントされないようにする。ラベルクリックが行の展開トグルを誘発するか
+// (副作用) を遷移後も観測するために使う。
+function renderPersistentSidebar(currentTagset: string | null) {
+  const rootRoute = createRootRoute({
+    component: () => (
+      <>
+        <BlogTagTreeSidebar tree={tree} currentTagset={currentTagset} />
+        <Outlet />
+      </>
+    ),
+  });
+  const make = (p: string) =>
+    createRoute({ getParentRoute: () => rootRoute, path: p, component: () => null });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([
+      make("/"),
       make("/blog/tags/$tagset"),
       make("/blog/tags/$tagset/page/$n"),
     ]),
@@ -117,5 +143,29 @@ describe("BlogTagTreeSidebar", () => {
     const labels = screen.getAllByRole("row").map((r) => r.textContent ?? "");
     expect(labels.some((l) => l.includes("映画"))).toBe(true);
     expect(labels.some((l) => l.includes("UI-UX"))).toBe(false);
+  });
+
+  // 回帰ガード: TreeItem から href を外すと react-aria が selectionMode="none" +
+  // 子あり行に onAction=toggleKey を仕込む (useGridListItem.mjs:77)。ラベル Link の
+  // press がこれへ伝播すると、遷移と同時にその行が展開/永続化されてしまう。
+  // ラベルクリックは「遷移のみ」で、行の展開状態は不変であること。
+  it("子を持つノードのラベルクリックは遷移するが行の展開状態を変えない", async () => {
+    const user = userEvent.setup();
+    renderPersistentSidebar(null);
+    const uiuxRowBefore = (await screen.findAllByRole("row")).find((r) =>
+      r.textContent?.includes("UI-UX"),
+    )!;
+    // 子ありトップレベル行は折りたたみで始まる
+    expect(uiuxRowBefore.getAttribute("aria-expanded")).toBe("false");
+    const before = screen.getAllByRole("row").length;
+
+    await user.click(within(uiuxRowBefore).getByRole("link", { name: "UI-UX" }));
+
+    // 遷移後もサイドバーは残る。行数が増えていれば toggleKey が誘発された = バグ。
+    const uiuxRowAfter = screen
+      .getAllByRole("row")
+      .find((r) => within(r).queryByRole("link", { name: "UI-UX" }))!;
+    expect(uiuxRowAfter.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.getAllByRole("row")).toHaveLength(before);
   });
 });

@@ -113,6 +113,13 @@ const styles = stylex.create({
     minWidth: 0,
     color: "inherit",
     textDecoration: "none",
+    // ネイティブ tabbable な <a>。ブラウザ既定アウトラインに委ねず、chevronFocused と
+    // 同じフォーカスリングを与える (row/chevron とフォーカス表現をそろえる)。
+    outlineWidth: { default: 0, ":focus-visible": 2 },
+    outlineStyle: { default: "none", ":focus-visible": "solid" },
+    outlineColor: colors.focusRing,
+    outlineOffset: "1px",
+    borderRadius: radius.sm,
   },
 });
 
