@@ -1,6 +1,7 @@
 import type { BlogModel } from "@/server/blog.ts";
-import { BLOG_PAGE_SIZE, locateArticle } from "@/lib/blog/pages.ts";
+import { locateArticle, pageCount, pageSlice } from "@/lib/blog/pages.ts";
 import { extractSummaryFromHtml } from "./summary.ts";
+import { toIsoInstant } from "./atom.ts";
 import { joinSiteUrl } from "./url.ts";
 import type { FeedEntry } from "./atom.ts";
 
@@ -22,7 +23,9 @@ export function buildBlogFeedEntries(
     return {
       id: href,
       title: article.title,
-      updated: article.updated,
+      // updated は Notes 等の feed (atom.ts) と同様に RFC3339 instant へ正規化する。
+      // published (createdIso) はファイル名由来で常に完全なため正規化しない。
+      updated: toIsoInstant(article.updated),
       published: article.createdIso,
       href,
       summary: extractSummaryFromHtml(article.html),
@@ -37,6 +40,8 @@ export interface BlogSitemapPage {
 
 // `/blog`、`/blog/tags/[tagset]` それぞれについて、ページネーション先頭
 // (`/page/1` は生成しない) 以降の全ページを列挙する (docs/blog-spec.md「グローバル統合」)。
+// lastmod は「そのページに掲載される記事の updated 最大値」なので、tagset 全体で
+// 一括計算せずページ (pageSlice) ごとに求める。
 export function buildBlogSitemapPages(model: BlogModel): BlogSitemapPage[] {
   const pages: BlogSitemapPage[] = [];
   const lastmodOf = (slugs: readonly string[]): string | undefined => {
@@ -45,13 +50,11 @@ export function buildBlogSitemapPages(model: BlogModel): BlogSitemapPage[] {
   };
 
   const pushPaginated = (basePath: string, slugs: readonly string[]) => {
-    const total = Math.max(1, Math.ceil(slugs.length / BLOG_PAGE_SIZE));
-    const lastmod = lastmodOf(slugs);
-    pages.push(lastmod ? { path: basePath, lastmod } : { path: basePath });
-    for (let n = 2; n <= total; n++) {
-      pages.push(
-        lastmod ? { path: `${basePath}/page/${n}`, lastmod } : { path: `${basePath}/page/${n}` },
-      );
+    const total = pageCount(slugs.length);
+    for (let n = 1; n <= total; n++) {
+      const path = n === 1 ? basePath : `${basePath}/page/${n}`;
+      const lastmod = lastmodOf(pageSlice(slugs, n));
+      pages.push(lastmod ? { path, lastmod } : { path });
     }
   };
 

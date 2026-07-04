@@ -66,7 +66,8 @@ describe("buildBlogFeedEntries", () => {
       `${SITE}/blog/tags/${encodeURIComponent("UI-UX+マイクロコピー")}#p-2025-12-11-0930`,
     );
     expect(entries[0]!.published).toBe("2025-12-11T09:30:00+09:00");
-    expect(entries[0]!.updated).toBe("2025-12-20T10:00:00+09:00");
+    // updated は toIsoInstant で UTC instant に正規化される (published は正規化しない)
+    expect(entries[0]!.updated).toBe("2025-12-20T01:00:00.000Z");
   });
 
   it("maxItems で切り詰める", () => {
@@ -83,15 +84,31 @@ describe("buildBlogSitemapPages", () => {
     expect(pages.find((p) => p.path === "/blog")!.lastmod).toBe("2025-12-20T10:00:00+09:00");
   });
 
-  it("11 件以上の集合にはページネーション URL を含める (/page/1 は含めない)", () => {
-    const many: Def[] = Array.from({ length: 12 }, (_, i) => ({
-      slug: `2025-01-${String(i + 1).padStart(2, "0")} 0900`,
-      tags: ["映画"],
-      updated: "2025-02-01T00:00:00+09:00",
-    }));
-    const paths = buildBlogSitemapPages(makeModel(many)).map((p) => p.path);
+  it("11 件以上の集合にはページネーション URL を含め、lastmod はページごとに計算する", () => {
+    // slug 降順の 2 ページ目 = 最古の 2 slug (01/02 日)。ここにだけ最新 updated を置き、
+    // page1 (古い) と page2 (最新) の lastmod が別値になることで集約バグを検出する。
+    const many: Def[] = Array.from({ length: 12 }, (_, i) => {
+      const day = String(i + 1).padStart(2, "0");
+      const onLastPage = day === "01" || day === "02";
+      return {
+        slug: `2025-01-${day} 0900`,
+        tags: ["映画"],
+        updated: onLastPage ? "2025-06-01T00:00:00+09:00" : "2025-03-01T00:00:00+09:00",
+      };
+    });
+    const pages = buildBlogSitemapPages(makeModel(many));
+    const at = (path: string) => pages.find((p) => p.path === path);
+
+    const paths = pages.map((p) => p.path);
     expect(paths).toContain("/blog/page/2");
     expect(paths).toContain("/blog/tags/映画/page/2");
     expect(paths).not.toContain("/blog/page/1");
+
+    // 各ページの lastmod はそのページ掲載記事の updated 最大値 (ページ間で異なる)
+    expect(at("/blog")!.lastmod).toBe("2025-03-01T00:00:00+09:00");
+    expect(at("/blog/page/2")!.lastmod).toBe("2025-06-01T00:00:00+09:00");
+    expect(at("/blog")!.lastmod).not.toBe(at("/blog/page/2")!.lastmod);
+    expect(at("/blog/tags/映画")!.lastmod).toBe("2025-03-01T00:00:00+09:00");
+    expect(at("/blog/tags/映画/page/2")!.lastmod).toBe("2025-06-01T00:00:00+09:00");
   });
 });

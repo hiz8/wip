@@ -58,7 +58,9 @@ export function buildAtomEntries(input: FeedInput, siteUrl: string, maxItems: nu
   });
 }
 
-function toIsoInstant(value: string): string {
+// date のみ (YYYY-MM-DD) 等の frontmatter 由来 updated を RFC3339 instant へ正規化する。
+// Blog feed (blogFeed.ts) と共用する。
+export function toIsoInstant(value: string): string {
   if (value === "") return new Date(0).toISOString();
   if (/T.*Z$/u.test(value)) return value;
   if (/^\d{4}-\d{2}-\d{2}$/u.test(value)) return `${value}T00:00:00Z`;
