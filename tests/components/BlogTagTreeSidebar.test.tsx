@@ -13,7 +13,7 @@ import {
 } from "@tanstack/react-router";
 import { BlogTagTreeSidebar } from "@/components/blog/BlogTagTreeSidebar.tsx";
 import { buildBlogTagTree } from "@/lib/blog/tree.ts";
-import { __resetTreeExpansionForTests } from "@/lib/blog/treeExpansion.ts";
+import { __resetTreeExpansionForTests, loadTreeExpansion } from "@/lib/blog/treeExpansion.ts";
 
 // RAC の Tree は treegrid としてレンダリングされ、各ノードは role="row"。
 // ラベルは TanStack Router の <Link> で実 <a href> を出す (SSG の crawlLinks が
@@ -145,10 +145,31 @@ describe("BlogTagTreeSidebar", () => {
     expect(labels.some((l) => l.includes("UI-UX"))).toBe(false);
   });
 
-  // 回帰ガード: TreeItem から href を外すと react-aria が selectionMode="none" +
-  // 子あり行に onAction=toggleKey を仕込む (useGridListItem.mjs:77)。ラベル Link の
-  // press がこれへ伝播すると、遷移と同時にその行が展開/永続化されてしまう。
-  // ラベルクリックは「遷移のみ」で、行の展開状態は不変であること。
+  // 陽性対照: TreeItem から href を外すと react-aria が selectionMode="none" + 子あり行に
+  // onAction=toggleKey を仕込む (useGridListItem.mjs:77)。行 press 自体は生きており、行 div
+  // 本体を直接クリックすれば展開トグル + 永続化が起きる。次の陰性ケースと対にすることで、
+  // 「行アクションは生きているがラベルクリックはそれを発火しない」を過不足なく固定する。
+  // この対照が無いと、将来 react-aria が行 press ごと止めた場合に陰性ケースが空虚に PASS する。
+  it("[陽性対照] 子を持つ行の div 本体クリックは展開をトグルし永続化する", async () => {
+    const user = userEvent.setup();
+    renderPersistentSidebar(null);
+    const uiuxRow = (await screen.findAllByRole("row")).find((r) =>
+      r.textContent?.includes("UI-UX"),
+    )!;
+    expect(uiuxRow.getAttribute("aria-expanded")).toBe("false");
+
+    // ラベル a ではなく行 (role=row) 要素そのものを press する
+    await user.click(uiuxRow);
+
+    const uiuxRowAfter = screen
+      .getAllByRole("row")
+      .find((r) => within(r).queryByRole("link", { name: "UI-UX" }))!;
+    expect(uiuxRowAfter.getAttribute("aria-expanded")).toBe("true");
+    expect(loadTreeExpansion()).toContain("UI-UX");
+  });
+
+  // 回帰ガード (陰性): 上の行アクションが生きている環境で、ラベル Link の press は
+  // それへ伝播しない。ラベルクリックは「遷移のみ」で、行の展開状態は不変であること。
   it("子を持つノードのラベルクリックは遷移するが行の展開状態を変えない", async () => {
     const user = userEvent.setup();
     renderPersistentSidebar(null);
@@ -167,5 +188,7 @@ describe("BlogTagTreeSidebar", () => {
       .find((r) => within(r).queryByRole("link", { name: "UI-UX" }))!;
     expect(uiuxRowAfter.getAttribute("aria-expanded")).toBe("false");
     expect(screen.getAllByRole("row")).toHaveLength(before);
+    // 永続化ストアにも焼き込まれていないこと (遷移/再レンダーのマスキングに依らない検証)
+    expect(loadTreeExpansion()).toBeNull();
   });
 });
