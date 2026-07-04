@@ -54,6 +54,7 @@ export function RecentSection({ items }: RecentSectionProps) {
           <ContentLink
             type={item.type}
             slug={item.slug}
+            {...(item.blogLink === undefined ? {} : { blogLink: item.blogLink })}
             style={index > 0 ? ROW_STYLE_WITH_DIVIDER : ROW_STYLE}
           >
             <span {...stylex.props(styles.category)}>{CONTENT_TYPE_LABELS[item.type]}</span>

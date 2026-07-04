@@ -24,14 +24,14 @@ describe("projectHomePage (home page loader)", () => {
     __resetSiteDatasetForTests();
   });
 
-  it("最近更新は Notes/Glossary/Books を横断し updated 降順 上位 5 件を返す", async () => {
+  it("最近更新は Notes/Glossary/Books/Blog を横断し updated 降順 上位 5 件を返す", async () => {
     __setSiteDatasetConfigForTests(loadFixtureConfig());
     const data = await projectHomePage();
 
     expect(data.recent).toHaveLength(5);
-    // 公開かつ updated を持つ中で最新 (note-with-marginalia 2025-04-20)。
-    expect(data.recent[0]?.slug).toBe("note-with-marginalia");
-    expect(data.recent[0]?.type).toBe("notes");
+    // 公開かつ updated を持つ中で最新 (Blog 2025-12-11 0930 の updated 2025-12-20)。
+    expect(data.recent[0]?.slug).toBe("2025-12-11 0930");
+    expect(data.recent[0]?.type).toBe("blog");
 
     // すべて updated を持ち、降順であること。
     for (const item of data.recent) {
@@ -104,5 +104,28 @@ describe("projectHomePage (home page loader)", () => {
     const data = await projectHomePage();
 
     expect(data.socialLinks).toEqual([{ label: "GitHub", url: "https://github.com/example" }]);
+  });
+
+  it("最近更新に Blog 記事が updated 降順で混ざる", async () => {
+    __setSiteDatasetConfigForTests(loadFixtureConfig());
+    const data = await projectHomePage();
+
+    const blogItem = data.recent.find((r) => r.type === "blog");
+    expect(blogItem).toBeDefined();
+    // updated 最新の Blog fixture。
+    expect(blogItem!.title).toBe("#UI-UX#マイクロコピー#ライティング");
+    expect(blogItem!.blogLink).toEqual({
+      tagset: "UI-UX+マイクロコピー+ライティング",
+      page: 1,
+      anchorId: "p-2025-12-11-0930",
+    });
+  });
+
+  it("コンテンツ入口の件数に blog が入る", async () => {
+    __setSiteDatasetConfigForTests(loadFixtureConfig());
+    const data = await projectHomePage();
+
+    // published のみ。
+    expect(data.counts.blog).toBe(5);
   });
 });
