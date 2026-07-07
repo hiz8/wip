@@ -47,6 +47,9 @@ const styles = stylex.create({
     display: "flex",
     flexDirection: "column",
     gap: space.s5,
+    listStyle: "none",
+    margin: 0,
+    padding: 0,
   },
 });
 
@@ -69,20 +72,26 @@ function WorksPage() {
 
         <section {...stylex.props(styles.section)}>
           <h2 {...stylex.props(styles.sectionHeading)}>Works</h2>
-          <div {...stylex.props(styles.list)}>
+          {/* oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示 */}
+          <ul {...stylex.props(styles.list)} role="list">
             {WORKS.map((work) => (
-              <WorksCard key={work.title} {...work} />
+              <li key={work.title}>
+                <WorksCard {...work} />
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
 
         <section {...stylex.props(styles.section)}>
           <h2 {...stylex.props(styles.sectionHeading)}>Legacy / Archived</h2>
-          <div {...stylex.props(styles.list)}>
+          {/* oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示 */}
+          <ul {...stylex.props(styles.list)} role="list">
             {ARCHIVED.map((work) => (
-              <WorksCard key={work.title} {...work} />
+              <li key={work.title}>
+                <WorksCard {...work} />
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
       </div>
     </AppShell>
