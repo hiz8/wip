@@ -4,7 +4,7 @@ import { CONTENT_TYPE_LABELS } from "@/components/common/contentTypeLabels.ts";
 // アイコンナビ (IconNav) とモバイルボトムナビ (MobileBottomNav) が共有するセクション
 // 定義。ナビ構造とアクティブ判定をここに一元化し、各コンポーネントは見た目だけを担う。
 export interface NavSection {
-  to: "/" | "/notes" | "/glossary" | "/books" | "/blog";
+  to: "/" | "/notes" | "/glossary" | "/books" | "/blog" | "/works";
   label: string;
   // 通常時とアクティブ時のアイコン種別。アクティブ表現を背景装飾ではなく字形 (bold) で
   // 示すため対で持つ。アイコンサイズは呼び出し側が指定する (レール=28 / ボトムナビ=22)。
@@ -52,5 +52,12 @@ export const NAV_SECTIONS: NavSection[] = [
     icon: "blog",
     iconActive: "blogBold",
     isActive: sectionActive("/blog"),
+  },
+  {
+    to: "/works",
+    label: "Works",
+    icon: "works",
+    iconActive: "worksBold",
+    isActive: sectionActive("/works"),
   },
 ];

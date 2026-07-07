@@ -54,6 +54,7 @@ function renderAtPath(path: string) {
       make("/glossary/$slug"),
       make("/books"),
       make("/books/$isbn"),
+      make("/works"),
     ]),
     history: createMemoryHistory({ initialEntries: [path] }),
   });
@@ -103,5 +104,17 @@ describe("IconNav", () => {
     const searchButton = await screen.findByRole("button", { name: /search/iu });
     await user.click(searchButton);
     expect(await screen.findByRole("dialog", { name: "サイト内検索" })).toBeInTheDocument();
+  });
+
+  it("renders Works as an enabled <a> link", async () => {
+    renderAtPath("/");
+    await waitFor(() => expect(screen.getByText("Works")).toBeInTheDocument());
+    expect(document.querySelector('a[href="/works"]')).not.toBeNull();
+  });
+
+  it("treats /works as the active section", async () => {
+    renderAtPath("/works");
+    await waitFor(() => expect(screen.getByText("Works")).toBeInTheDocument());
+    expect(document.querySelector('a[href="/works"]')).not.toBeNull();
   });
 });
