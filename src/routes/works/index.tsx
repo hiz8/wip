@@ -51,6 +51,12 @@ const styles = stylex.create({
     margin: 0,
     padding: 0,
   },
+  cardItem: {
+    paddingBlockEnd: { default: space.s4, ":last-child": space.s0 },
+    borderBlockEndWidth: { default: 1, ":last-child": 0 },
+    borderBlockEndStyle: "solid",
+    borderBlockEndColor: colors.borderSubtle,
+  },
 });
 
 export const Route = createFileRoute("/works/")({
@@ -75,7 +81,7 @@ function WorksPage() {
           {/* oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示 */}
           <ul {...stylex.props(styles.list)} role="list">
             {WORKS.map((work) => (
-              <li key={work.title}>
+              <li key={work.title} {...stylex.props(styles.cardItem)}>
                 <WorksCard {...work} />
               </li>
             ))}
@@ -87,7 +93,7 @@ function WorksPage() {
           {/* oxlint-disable-next-line jsx-a11y/no-redundant-roles -- list-style:none で失われる list ロールを VoiceOver 向けに明示 */}
           <ul {...stylex.props(styles.list)} role="list">
             {ARCHIVED.map((work) => (
-              <li key={work.title}>
+              <li key={work.title} {...stylex.props(styles.cardItem)}>
                 <WorksCard {...work} />
               </li>
             ))}

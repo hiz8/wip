@@ -16,10 +16,6 @@ const styles = stylex.create({
   root: {
     display: "flex",
     gap: space.s3,
-    paddingBlockEnd: { default: space.s4, ":last-child": space.s0 },
-    borderBlockEndWidth: { default: 1, ":last-child": 0 },
-    borderBlockEndStyle: "solid",
-    borderBlockEndColor: colors.borderSubtle,
   },
   imageWrapper: {
     flexShrink: 0,
