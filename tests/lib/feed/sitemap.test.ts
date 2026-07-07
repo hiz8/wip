@@ -18,16 +18,17 @@ const item = (
 });
 
 describe("buildSitemapEntries", () => {
-  it("emits the four root routes first", () => {
+  it("emits the five root routes first", () => {
     const entries = buildSitemapEntries(
       { notes: [], glossary: [], books: [], blogPages: [] },
       SITE,
     );
-    expect(entries.slice(0, 4).map((e) => e.loc)).toEqual([
+    expect(entries.slice(0, 5).map((e) => e.loc)).toEqual([
       "https://example.com/",
       "https://example.com/notes",
       "https://example.com/glossary",
       "https://example.com/books",
+      "https://example.com/works",
     ]);
     for (const entry of entries) {
       expect(entry.lastmod).toBeUndefined();

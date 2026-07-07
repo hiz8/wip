@@ -29,6 +29,7 @@ export function buildSitemapEntries(input: SitemapInput, siteUrl: string): Sitem
     { loc: joinSiteUrl(siteUrl, "/notes") },
     { loc: joinSiteUrl(siteUrl, "/glossary") },
     { loc: joinSiteUrl(siteUrl, "/books") },
+    { loc: joinSiteUrl(siteUrl, "/works") },
   ];
   pushType(entries, input.notes, "notes", siteUrl);
   pushType(entries, input.glossary, "glossary", siteUrl);
