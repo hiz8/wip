@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import * as stylex from "@stylexjs/stylex";
 import {
   Focusable,
@@ -49,6 +49,16 @@ function tooltipClassName({ isEntering, isExiting }: TooltipRenderProps) {
   );
 }
 
+// Tooltip の吹き出し要素。react-aria の Button など pressable な RAC 要素と TooltipTrigger を
+// 直接組む場合 (NavOverflowMenu のドットトリガー) にも単体で使えるよう分離している。
+export function TooltipBubble({ children }: { children: ReactNode }) {
+  return (
+    <AriaTooltip placement="end" offset={8} className={tooltipClassName}>
+      {children}
+    </AriaTooltip>
+  );
+}
+
 // アイコンのみのトリガーにホバー/フォーカスでラベルを表示する薄いラッパー。
 // children は単一の focusable 要素 (TanStack の Link や素の button)。
 // react-aria 製でない要素を Focusable でラップしてホバー/フォーカス配線を成立させる。
@@ -63,9 +73,7 @@ export function Tooltip({
   return (
     <TooltipTrigger delay={0} closeDelay={0}>
       <Focusable>{children}</Focusable>
-      <AriaTooltip placement="end" offset={8} className={tooltipClassName}>
-        {label}
-      </AriaTooltip>
+      <TooltipBubble>{label}</TooltipBubble>
     </TooltipTrigger>
   );
 }

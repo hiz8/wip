@@ -10,10 +10,29 @@ import { Icon } from "@/components/common/Icon.tsx";
 import { SearchDialog } from "@/components/common/SearchDialog.tsx";
 import { bindSlashShortcut } from "@/lib/search/slashShortcut.ts";
 import { NAV_SECTIONS } from "./navSections.tsx";
+import { NavOverflowMenu } from "./NavOverflowMenu.tsx";
+import { useMenuSections } from "./useMenuSections.ts";
 
 // モバイル (< 768px) ではレールを隠し、MobileTopBar / MobileBottomNav に置き換える。
 // 同一ファイルのフラットな文字列 const にする (StyleX media-query order の制約)。
 const BP_TABLET = "@media (min-width: 768px)";
+
+// レールが各ボタンに 44px を確保できなくなる高さで、末端セクションからドットメニューへ
+// 退避する。値は src/lib/nav/overflowThresholds.ts の desktopHideQuery(index) の出力。
+// StyleX の制約でリテラルを直接持ち、テスト (navHideQueries) が導出式との一致を検証する。
+const MQ_HIDE_NOTES = "@media (max-height: 340px)";
+const MQ_HIDE_GLOSSARY = "@media (max-height: 400px)";
+const MQ_HIDE_BOOKS = "@media (max-height: 460px)";
+const MQ_HIDE_BLOG = "@media (max-height: 520px)";
+
+// NAV_SECTIONS[1..] (Home は退避しない) に index を合わせた hide クエリ。
+// CSS (下の styles) と useOverflowCount (メニュー内容) が同じ値を共有する。
+export const RAIL_HIDE_QUERIES = [
+  MQ_HIDE_NOTES,
+  MQ_HIDE_GLOSSARY,
+  MQ_HIDE_BOOKS,
+  MQ_HIDE_BLOG,
+] as const;
 
 const styles = stylex.create({
   nav: {
@@ -38,7 +57,30 @@ const styles = stylex.create({
   spacer: {
     flexGrow: 1,
   },
+  // navChrome.iconButton (display: inline-flex) と合成するため default も明示する
+  // (StyleX は後勝ちでプロパティ全体を置き換える)。
+  hideNotes: { display: { default: "inline-flex", [MQ_HIDE_NOTES]: "none" } },
+  hideGlossary: { display: { default: "inline-flex", [MQ_HIDE_GLOSSARY]: "none" } },
+  hideBooks: { display: { default: "inline-flex", [MQ_HIDE_BOOKS]: "none" } },
+  hideBlog: { display: { default: "inline-flex", [MQ_HIDE_BLOG]: "none" } },
+  // ドットの暫定アイコンには bold 字形がないため、現在地がメニュー内にあるときは色で示す。
+  dotsActive: {
+    color: colors.navIconActive,
+  },
 });
+
+// NAV_SECTIONS と index を揃えた hide スタイル。Home (index 0) は退避しない。
+const HIDE_STYLES = [
+  null,
+  styles.hideNotes,
+  styles.hideGlossary,
+  styles.hideBooks,
+  styles.hideBlog,
+];
+
+// ドットトリガーのスタイル。レンダー内での配列生成を避けるため 2 状態を事前に持つ。
+const DOTS_TRIGGER_STYLE = [navChrome.iconButton];
+const DOTS_TRIGGER_ACTIVE_STYLE = [navChrome.iconButton, styles.dotsActive];
 
 export function IconNav() {
   const matches = useMatches();
@@ -47,6 +89,9 @@ export function IconNav() {
   const [searchOpen, setSearchOpen] = useState(false);
   const openSearch = useCallback(() => setSearchOpen(true), []);
   useEffect(() => bindSlashShortcut(openSearch), [openSearch]);
+
+  const menuSections = useMenuSections(RAIL_HIDE_QUERIES);
+  const menuHoldsActive = menuSections.some((section) => section.isActive(path));
 
   return (
     <>
@@ -63,14 +108,22 @@ export function IconNav() {
           </button>
         </Tooltip>
         <div {...stylex.props(styles.spacer)} />
-        {NAV_SECTIONS.map((section) => (
+        {NAV_SECTIONS.map((section, index) => (
           <Tooltip key={section.to} label={section.label}>
-            <Link to={section.to} {...stylex.props(navChrome.iconButton)}>
+            <Link to={section.to} {...stylex.props(navChrome.iconButton, HIDE_STYLES[index])}>
               <Icon type={section.isActive(path) ? section.iconActive : section.icon} size={28} />
               <span {...stylex.props(a11y.srOnly)}>{section.label}</span>
             </Link>
           </Tooltip>
         ))}
+        <NavOverflowMenu
+          sections={menuSections}
+          path={path}
+          placement="end"
+          label="More"
+          withTooltip
+          triggerStyle={menuHoldsActive ? DOTS_TRIGGER_ACTIVE_STYLE : DOTS_TRIGGER_STYLE}
+        />
         <div {...stylex.props(styles.spacer)} />
         <ThemeToggle />
       </nav>
