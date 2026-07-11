@@ -5,5 +5,10 @@
   "assets": {
     "directory": "./dist/client",
     "not_found_handling": "404-page",
+    // サイト仕様の「トレイリングスラッシュなし」に合わせ、/notes を正規形として
+    // 200 で配信し /notes/ 側をリダイレクトする (デフォルト auto-trailing-slash は逆)。
+    // SPA 遷移 (スラッシュなし) とリロード後の URL が一致する。
+    // https://developers.cloudflare.com/workers/static-assets/routing/advanced/html-handling/
+    "html_handling": "drop-trailing-slash",
   },
 }
