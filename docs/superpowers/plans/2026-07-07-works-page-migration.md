@@ -136,8 +136,7 @@ export const WORKS: Work[] = [
   },
   {
     title: "Giji one",
-    description:
-      "A tool for the assistance of people in the creation of meeting minutes.",
+    description: "A tool for the assistance of people in the creation of meeting minutes.",
     image: "/images/icon-gijione.svg",
     urls: [
       { type: "website", url: "https://gijione.hizapp.blue/" },
@@ -298,9 +297,7 @@ describe("WorksCard", () => {
   it("title と description を表示する", () => {
     render(<WorksCard {...withImage} />);
     expect(screen.getByText("airbeat")).toBeInTheDocument();
-    expect(
-      screen.getByText("Offline first metronome application."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Offline first metronome application.")).toBeInTheDocument();
   });
 
   it("画像を title を alt として表示する", () => {
@@ -348,10 +345,7 @@ const IMAGE_SIZE = 44;
 const URL_META = {
   website: { icon: "global", label: "Website" },
   github: { icon: "github", label: "GitHub" },
-} satisfies Record<
-  Work["urls"][number]["type"],
-  { icon: IconType; label: string }
->;
+} satisfies Record<Work["urls"][number]["type"], { icon: IconType; label: string }>;
 
 const styles = stylex.create({
   root: {
@@ -414,12 +408,7 @@ const styles = stylex.create({
 export function WorksCard({ title, description, image, urls }: Work) {
   return (
     <div {...stylex.props(styles.root)}>
-      <div
-        {...stylex.props(
-          styles.imageWrapper,
-          image === undefined && styles.imageWrapperEmpty,
-        )}
-      >
+      <div {...stylex.props(styles.imageWrapper, image === undefined && styles.imageWrapperEmpty)}>
         {image !== undefined && (
           <img
             src={image}
@@ -548,10 +537,7 @@ const styles = stylex.create({
 
 export const Route = createFileRoute("/works/")({
   head: () => ({
-    meta: [
-      { title: makeTitle("Works") },
-      { name: "description", content: PAGE_DESCRIPTION },
-    ],
+    meta: [{ title: makeTitle("Works") }, { name: "description", content: PAGE_DESCRIPTION }],
   }),
   component: WorksPage,
 });
