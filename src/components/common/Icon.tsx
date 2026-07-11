@@ -18,7 +18,8 @@ export type IconType =
   | "externalLink"
   | "search"
   | "sun"
-  | "moon";
+  | "moon"
+  | "menuDots";
 
 // SVG は参考リポジトリ hiz8/hiz.blue-ui の icon/assets/encodedSvgs.ts と Solar by 480 Design
 // (CC BY 4.0、data URI 内にライセンスコメントを保持) から流用。
@@ -65,6 +66,10 @@ const SUN_MASK =
 const MOON_MASK =
   "url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDI0IDI0Ij48IS0tIEljb24gZnJvbSBTb2xhciBieSA0ODAgRGVzaWduIC0gaHR0cHM6Ly9jcmVhdGl2ZWNvbW1vbnMub3JnL2xpY2Vuc2VzL2J5LzQuMC8gLS0+PGcgZmlsbD0iY3VycmVudENvbG9yIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCI+PHBhdGggZD0iTTIwLjM2NiAyLjEyNGMtLjMyOC0uODMyLTEuNTA0LS44MzItMS44MyAwbC0uNDI5IDEuMDlsLTEuMDg0LjQyOWMtLjgzLjMyOC0uODMgMS41MDQgMCAxLjgzMmwxLjA4NC40M2wuNDI4IDEuMDg5Yy4zMjcuODMyIDEuNTAzLjgzMiAxLjgzIDBsLjQyOS0xLjA5bDEuMDg0LS40MjljLjgzLS4zMjguODMtMS41MDQgMC0xLjgzMmwtMS4wODQtLjQzbC0uNDI4LTEuMDg5Wm0tLjkxNi40MDZsLjQxNSAxLjA1NWMuMS4yNTQuMy40NTUuNTU0LjU1NmwxLjA1Ny40MThsLTEuMDU3LjQxOWEuOTg0Ljk4NCAwIDAgMC0uNTU0LjU1NWwtLjQxNSAxLjA1NWwtLjQxNC0xLjA1NWEuOTg0Ljk4NCAwIDAgMC0uNTU0LS41NTVsLTEuMDU3LS40MTlsMS4wNTctLjQxOGEuOTg0Ljk4NCAwIDAgMCAuNTU0LS41NTZsLjQxNC0xLjA1NVptLTIuOTUyIDUuNDE3Yy0uMzI3LS44MzMtMS41MDMtLjgzMy0xLjgzIDBsLS4xNTUuMzkzbC0uMzkuMTU1Yy0uODMuMzI4LS44MyAxLjUwNCAwIDEuODMzbC4zOS4xNTRsLjE1NS4zOTRjLjMyNy44MzIgMS41MDMuODMyIDEuODMgMGwuMTU1LS4zOTRsLjM5LS4xNTRjLjgzLS4zMjkuODMtMS41MDUgMC0xLjgzM2wtLjM5LS4xNTVsLS4xNTUtLjM5M1ptLS45MTUuNDA1bC4xNDEuMzZjLjEuMjUzLjMuNDU1LjU1NC41NTVsLjM2NC4xNDRsLS4zNjQuMTQ0YS45ODQuOTg0IDAgMCAwLS41NTQuNTU2bC0uMTQxLjM2bC0uMTQxLS4zNmEuOTg0Ljk4NCAwIDAgMC0uNTU0LS41NTZsLS4zNjQtLjE0NGwuMzY0LS4xNDRhLjk4NC45ODQgMCAwIDAgLjU1NC0uNTU1bC4xNDEtLjM2WiIvPjxwYXRoIGQ9Ik0xMS4wMTcgMi44MDJhOS4yNSA5LjI1IDAgMSAwIDEwLjE4MSAxMC4xODFBNy4yNSA3LjI1IDAgMSAxIDExLjAxNyAyLjgwMlpNMS4yNSAxMkMxLjI1IDYuMDYzIDYuMDYzIDEuMjUgMTIgMS4yNWMuNzE3IDAgMS4wNzUuNTcxIDEuMTM3IDEuMDI2Yy4wNTkuNDM4LS4xMDMuOTk1LS42MDYgMS4yOTlhNS43NSA1Ljc1IDAgMSAwIDcuODk0IDcuODk0Yy4zMDQtLjUwMy44NjEtLjY2NSAxLjI5OS0uNjA2Yy40NTUuMDYyIDEuMDI2LjQyIDEuMDI2IDEuMTM3YzAgNS45MzctNC44MTMgMTAuNzUtMTAuNzUgMTAuNzVTMS4yNSAxNy45MzcgMS4yNSAxMloiLz48L2c+PC9zdmc+)";
 
+// TODO: ナビのオーバーフローメニュー用の暫定ドット (横 3 点)。正式素材ができ次第差し替える。
+const MENU_DOTS_MASK =
+  "url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik03IDEyYTIgMiAwIDEgMS00IDBhMiAyIDAgMCAxIDQgMFptNyAwYTIgMiAwIDEgMS00IDBhMiAyIDAgMCAxIDQgMFptNyAwYTIgMiAwIDEgMS00IDBhMiAyIDAgMCAxIDQgMFoiLz48L3N2Zz4=)";
+
 const styles = stylex.create({
   // span 自身ではなく ::before に mask を当てる。span に直接当てると子要素ごとマスクされるため、
   // CSS mask 方式では ::before が必須 (stylex-authoring.md の「::before より実要素を優先」への意図的逸脱)。
@@ -105,6 +110,7 @@ const styles = stylex.create({
   typeSearch: { "::before": { maskImage: SEARCH_MASK } },
   typeSun: { "::before": { maskImage: SUN_MASK } },
   typeMoon: { "::before": { maskImage: MOON_MASK } },
+  typeMenuDots: { "::before": { maskImage: MENU_DOTS_MASK } },
 });
 
 // vanilla-extract の styleVariants 代替。type から style を引くマップ (ContentTypeIcon の PATHS と同手法)。
@@ -127,6 +133,7 @@ const TYPE_STYLES = {
   search: styles.typeSearch,
   sun: styles.typeSun,
   moon: styles.typeMoon,
+  menuDots: styles.typeMenuDots,
 } satisfies Record<IconType, unknown>;
 
 interface IconProps {

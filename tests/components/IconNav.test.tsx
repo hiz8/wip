@@ -106,15 +106,27 @@ describe("IconNav", () => {
     expect(await screen.findByRole("dialog", { name: "サイト内検索" })).toBeInTheDocument();
   });
 
-  it("renders Works as an enabled <a> link", async () => {
+  it("does not render Works as a bar item (it lives in the overflow menu)", async () => {
     renderAtPath("/");
-    await waitFor(() => expect(screen.getByText("Works")).toBeInTheDocument());
-    expect(document.querySelector('a[href="/works"]')).not.toBeNull();
+    await waitFor(() => expect(screen.getByText("Notes")).toBeInTheDocument());
+    expect(document.querySelector('a[href="/works"]')).toBeNull();
   });
 
-  it("treats /works as the active section", async () => {
+  it("opens the overflow menu and renders Works as an enabled <a> link", async () => {
+    const user = userEvent.setup();
+    renderAtPath("/");
+    await user.click(await screen.findByRole("button", { name: "More" }));
+    const item = await screen.findByRole("menuitem", { name: "Works" });
+    expect(item).toHaveAttribute("href", "/works");
+  });
+
+  it("keeps Works reachable from the menu on /works (active section)", async () => {
+    const user = userEvent.setup();
     renderAtPath("/works");
-    await waitFor(() => expect(screen.getByText("Works")).toBeInTheDocument());
-    expect(document.querySelector('a[href="/works"]')).not.toBeNull();
+    await user.click(await screen.findByRole("button", { name: "More" }));
+    expect(await screen.findByRole("menuitem", { name: "Works" })).toHaveAttribute(
+      "href",
+      "/works",
+    );
   });
 });

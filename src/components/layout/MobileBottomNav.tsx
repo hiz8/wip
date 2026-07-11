@@ -3,10 +3,29 @@ import { Link, useMatches } from "@tanstack/react-router";
 import { colors, radius, space, typography } from "@/styles/tokens.stylex.ts";
 import { Icon } from "@/components/common/Icon.tsx";
 import { NAV_SECTIONS } from "./navSections.tsx";
+import { NavOverflowMenu } from "./NavOverflowMenu.tsx";
+import { useMenuSections } from "./useMenuSections.ts";
 
 // モバイル (< 768px) 限定。≥ 768 では非表示にしデスクトップの IconNav に戻す。
 // 同一ファイルのフラットな文字列 const (StyleX media-query order の制約)。
 const BP_TABLET = "@media (min-width: 768px)";
+
+// タブ 1 個の幅が 56px 以下になる幅で、末端セクションからドットメニューへ退避する。
+// 値は src/lib/nav/overflowThresholds.ts の mobileHideQuery(index) の出力。
+// StyleX の制約でリテラルを直接持ち、テスト (navHideQueries) が導出式との一致を検証する。
+const MQ_HIDE_NOTES = "@media (max-width: 168px)";
+const MQ_HIDE_GLOSSARY = "@media (max-width: 224px)";
+const MQ_HIDE_BOOKS = "@media (max-width: 280px)";
+const MQ_HIDE_BLOG = "@media (max-width: 336px)";
+
+// NAV_SECTIONS[1..] (Home は退避しない) に index を合わせた hide クエリ。
+// CSS (下の styles) と useOverflowCount (メニュー内容) が同じ値を共有する。
+export const BAR_HIDE_QUERIES = [
+  MQ_HIDE_NOTES,
+  MQ_HIDE_GLOSSARY,
+  MQ_HIDE_BOOKS,
+  MQ_HIDE_BLOG,
+] as const;
 
 // 高さは AppShell の body 下パディング (`calc(3.5rem + env(...))`) と同期させること。
 const styles = stylex.create({
@@ -54,22 +73,69 @@ const styles = stylex.create({
     lineHeight: 1,
     fontWeight: typography.weightMedium,
   },
+  // styles.tab (display: flex) と合成するため default も明示する (StyleX は後勝ちで
+  // プロパティ全体を置き換える)。
+  hideNotes: { display: { default: "flex", [MQ_HIDE_NOTES]: "none" } },
+  hideGlossary: { display: { default: "flex", [MQ_HIDE_GLOSSARY]: "none" } },
+  hideBooks: { display: { default: "flex", [MQ_HIDE_BOOKS]: "none" } },
+  hideBlog: { display: { default: "flex", [MQ_HIDE_BLOG]: "none" } },
+  // ドットトリガーをタブと同じ見た目にするための button リセット込みスタイル。
+  menuTab: {
+    flexGrow: 1,
+    flexBasis: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 0,
+    padding: 0,
+    borderWidth: 0,
+    backgroundColor: "transparent",
+    cursor: "pointer",
+  },
+  // ドットの暫定アイコンには bold 字形がないため、現在地がメニュー内にあるときは色で示す。
+  innerActive: {
+    color: colors.navIconActive,
+  },
 });
+
+// NAV_SECTIONS と index を揃えた hide スタイル。Home (index 0) は退避しない。
+const HIDE_STYLES = [
+  null,
+  styles.hideNotes,
+  styles.hideGlossary,
+  styles.hideBooks,
+  styles.hideBlog,
+];
 
 export function MobileBottomNav() {
   const matches = useMatches();
   const path = matches.at(-1)?.pathname ?? "/";
 
+  const menuSections = useMenuSections(BAR_HIDE_QUERIES);
+  const menuHoldsActive = menuSections.some((section) => section.isActive(path));
+
   return (
     <nav {...stylex.props(styles.nav)} aria-label="Site sections">
-      {NAV_SECTIONS.map((section) => (
-        <Link key={section.to} to={section.to} {...stylex.props(styles.tab)}>
+      {NAV_SECTIONS.map((section, index) => (
+        <Link key={section.to} to={section.to} {...stylex.props(styles.tab, HIDE_STYLES[index])}>
           <span {...stylex.props(styles.inner)}>
             <Icon type={section.isActive(path) ? section.iconActive : section.icon} size={22} />
             <span {...stylex.props(styles.label)}>{section.label}</span>
           </span>
         </Link>
       ))}
+      <NavOverflowMenu
+        sections={menuSections}
+        path={path}
+        placement="top"
+        label="More"
+        triggerStyle={styles.menuTab}
+      >
+        <span {...stylex.props(styles.inner, menuHoldsActive && styles.innerActive)}>
+          <Icon type="menuDots" size={22} />
+          <span {...stylex.props(styles.label)}>More</span>
+        </span>
+      </NavOverflowMenu>
     </nav>
   );
 }

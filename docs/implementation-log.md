@@ -1216,6 +1216,35 @@ Cloudflare Workers (Static Assets のみ、Worker スクリプトなし) への�
 - Cloudflare はパス中の `+` を `%2B` へ正規化リダイレクトする (`/blog/tags/Notion+UI` → `/blog/tags/Notion%2BUI`)。`html_handling` 変更以前の本番でも発生していた Cloudflare 自体の挙動で、`%2B` は `+` と同一パスの別表記なので実害なし。SPA 遷移ではアドレスバーに `+`、リロード後は `%2B` と表示が揺れる点だけ既知事項として残る
 - prerender のエンコード形出力は上流 (tanstack/router の start-plugin-core、1.171.19 時点) の挙動。将来のバージョンで crawl リンクもデコードされるようになったら `decodePrerenderedPaths` は no-op になる (renamed 0 件ログで気付ける) ので、その時点で削除を検討
 
+## ナビのオーバーフローメニュー (ドットメニュー) ✅ (2026-07-11)
+
+ナビ項目の増加に備え、Blog の次に「ドットメニュー」トリガーを追加した。Works はバーから外れて常時メニュー内に移り、ビューポートが狭くタップサイズを確保できないときは末端セクション (Blog → Books → …、Home は退避しない) が順にメニューへ退避する。設計の全体は `docs/superpowers/specs/2026-07-11-nav-overflow-menu-design.md` を参照。
+
+### 公開 API / 主要ファイル
+
+- `navSections.tsx` — `NAV_SECTIONS` (バー常設候補 5 件、icon 必須) と `MENU_NAV_SECTIONS` (メニュー常駐、icon **任意**) に分割。アイコンなしの項目はメニューのアイコンスロットを空白で描画しラベル位置を揃える
+- `NavOverflowMenu.tsx` — react-aria-components の `MenuTrigger + Button + Popover + Menu + MenuItem`。内部リンクは TanStack Router 公式の `createLink(MenuItem ラッパー)` 統合でクライアントサイド遷移 (<https://tanstack.com/router/latest/docs/framework/react/guide/custom-link>)
+- `useMenuSections.ts` — CSS で退避した数をメニュー内容へ同期する hook (両ナビ共有)
+- `src/lib/nav/overflowThresholds.ts` — しきい値 media query の導出式 (純関数)。モバイル: `vw ≤ 56×(i+2)` → 168/224/280/336px、デスクトップ: レール所要高 `60S+220` → 340/400/460/520px
+- `src/lib/nav/useOverflowCount.ts` — `matchMedia` + `useSyncExternalStore` (SSR は 0)
+- `Icon.tsx` — 暫定 `menuDots` (横 3 点、TODO: 正式素材で差し替え)。`Tooltip.tsx` から吹き出し部を `TooltipBubble` として分離 (RAC Button と直接組むため)
+
+### 設計判断
+
+- **退避は静的 media query の列挙で行う** (JS 計測なし)。ナビ項目数はビルド時に確定しているため、プリレンダー HTML だけで正しい表示になり hydration 前のちらつきがない。StyleX の制約で各ナビはクエリ文字列をリテラルに持つが、`tests/components/navHideQueries.test.ts` が導出式・セクション数との一致を検証して乖離を防ぐ
+- メニュー内容 (退避分 + Works) は同じクエリ文字列を `matchMedia` で数えて決める。メニューは JS 必須の UI なので SSR 初期値 0 で不整合は起きない
+- ドットトリガーの現在地表示は暫定アイコンに bold 字形がないため色 (`navIconActive`) で代替
+
+### 検証
+
+- `npm run typecheck` / `npm run lint` / `npm run test` (482 件、新規 22 件) グリーン
+- dev サーバー + Playwright 実操作: デスクトップでメニュー開閉・Works へのクライアントサイド遷移、高さ 500px で Blog がレールから退避しメニューに出現、モバイル 375px で全タブ + More、320px で Blog タブ退避 (残タブ 61px)、メニューからの Blog 遷移、キーボード操作 (Enter で開いて先頭項目フォーカス / 矢印 / Escape)、レールトリガーのツールチップ表示
+
+### 引き継ぎメモ
+
+- **重要度の低いページを増やすときは `MENU_NAV_SECTIONS` に追加するだけ**でよい (アイコン省略可)。バー常設の `NAV_SECTIONS` を増減する場合は、両ナビの hide クエリの再導出と `HIDE_STYLES` の更新が必要 — 忘れても `navHideQueries` テストが長さ不一致で落ちる
+- ブラウザコンソールの `<Focusable> child must be focusable` 警告は既存の `Tooltip` + 非 RAC 要素の組み合わせ由来で、本変更の前から発生している (今回のスコープ外、別途調査)
+
 ## Storybook 導入 (UI コンポーネントカタログ) ✅ (2026-07-11)
 
 UI コンポーネントをアプリ全体 (Vault 接続 + SSG) を起動せずに単体で開発・確認できる環境を追加した。設計の全体像は `docs/superpowers/specs/2026-07-11-storybook-design.md` を参照。
