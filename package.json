@@ -11,6 +11,8 @@
     "deploy": "npm run build && wrangler deploy",
     "deploy:dry": "npm run build && wrangler deploy --dry-run",
     "deploy:preview": "wrangler dev",
+    "storybook": "storybook dev -p 6006",
+    "storybook:build": "storybook build",
     "typecheck": "tsx scripts/generate-routes.ts && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -44,6 +46,8 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "@storybook/addon-a11y": "10.4.6",
+    "@storybook/react-vite": "10.4.6",
     "@stylexjs/eslint-plugin": "0.19.0",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
@@ -61,6 +65,7 @@
     "oxfmt": "0.55.0",
     "oxlint": "1.70.0",
     "pagefind": "1.5.2",
+    "storybook": "10.4.6",
     "tsx": "4.22.4",
     "typescript": "6.0.3",
     "vite": "8.0.16",
