@@ -60,8 +60,12 @@ export interface Work {
   urls: { type: "website" | "github"; url: string }[];
 }
 
-export const WORKS: Work[] = [ /* 6 件、表示順 (降順) で直書き */ ];
-export const ARCHIVED: Work[] = [ /* 6 件、表示順 (降順) で直書き */ ];
+export const WORKS: Work[] = [
+  /* 6 件、表示順 (降順) で直書き */
+];
+export const ARCHIVED: Work[] = [
+  /* 6 件、表示順 (降順) で直書き */
+];
 ```
 
 `hiz.blue` の `id` 降順ソートは、配列を**表示順で直書き**して runtime ソートを
@@ -133,4 +137,7 @@ UI は「重要な部分のみ」の方針に沿い、`WorksCard` の render smo
 - `about` / `now` ページ自体の実装 (本移植では works のみ)。
 - リポジトリ内完結ページの共通スキャフォールド / 抽象化。
 - works データの外部化 (CMS 等) — 当面はコード内の静的データで足りる。
+
+```
+
 ```

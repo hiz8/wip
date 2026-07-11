@@ -1245,6 +1245,42 @@ Cloudflare Workers (Static Assets のみ、Worker スクリプトなし) への�
 - **重要度の低いページを増やすときは `MENU_NAV_SECTIONS` に追加するだけ**でよい (アイコン省略可)。バー常設の `NAV_SECTIONS` を増減する場合は、両ナビの hide クエリの再導出と `HIDE_STYLES` の更新が必要 — 忘れても `navHideQueries` テストが長さ不一致で落ちる
 - ブラウザコンソールの `<Focusable> child must be focusable` 警告は既存の `Tooltip` + 非 RAC 要素の組み合わせ由来で、本変更の前から発生している (今回のスコープ外、別途調査)
 
+## Storybook 導入 (UI コンポーネントカタログ) ✅ (2026-07-11)
+
+UI コンポーネントをアプリ全体 (Vault 接続 + SSG) を起動せずに単体で開発・確認できる環境を追加した。設計の全体像は `docs/superpowers/specs/2026-07-11-storybook-design.md` を参照。
+
+### 達成範囲
+
+- Storybook 10.4.6 (`@storybook/react-vite` + `@storybook/addon-a11y`)。`npm run storybook` (dev、port 6006) / `npm run storybook:build` (静的ビルド → `storybook-static/`、gitignore 済み)。Vault (`VAULT_ROOT`) は不要
+- ツールバーからの light / dark テーマ切替、グローバル CSS (`@layer` 順序含む) と StyleX テーマの本体同等の再現、`Link` 依存コンポーネントの描画対応
+- 代表ストーリー 4 件 (以降追加する際の雛形): `common/Icon` (純粋表示 + 全 `IconType` ギャラリー)、`common/TagChips` (router 依存)、`common/Tooltip` (react-aria-components overlay)、`card/NoteListRow` (一覧行 + レスポンシブ)
+
+### 主要ファイル
+
+- `.storybook/main.ts` — stories glob と framework。`viteConfigPath` で専用 Vite 設定を指定
+- `.storybook/vite.config.ts` — alias `@` + StyleX unplugin + react のみ (`tanstackStart()` は載せない)
+- `.storybook/preview.tsx` — グローバル CSS import、テーマ decorator、router decorator、dev 限定の `/virtual:stylex.css` link
+- `.storybook/preview-head.html` — `@layer` 順序の先行宣言 (`__root.tsx` の `LAYER_ORDER_HTML` 相当)
+- `vite/stylex-plugin-options.ts` — StyleX unplugin オプション生成をアプリ本体の `vite.config.ts` と共有 (乖離するとクラス名・CSS 変数名が食い違う)
+- `src/components/**/*.stories.tsx` — コンポーネントにコロケーション
+
+### 設計判断メモ
+
+- アプリ vite 設定の auto-merge + `viteFinal` でのプラグイン除去は、TanStack Start の内部プラグイン名に依存して静かに壊れるため不採用。専用設定 + 共有ヘルパー方式にした
+- router は `createRootRoute()` のみの最小ツリー + `RouterContextProvider`。実ルート (`/notes/$slug` 等) は未登録でも `Link` の href は to + params から正しく補間される (検証済み: `/notes/tags/frontend--react`)
+- テーマ decorator は `useTheme` の `applyPreference` と同じ操作 (テーマクラス + `data-theme` / `data-theme-resolved` + `color-scheme`) を localStorage 抜きで iframe の `documentElement` に適用する。常に明示 light / dark 指定にし、`defineVars` の prefers-color-scheme フォールバックで閲覧者の OS 設定が混ざらないようにした
+
+### 検証
+
+- `storybook dev` をブラウザ実操作: 4 コンポーネント全ストーリーの描画、テーマ切替 (light / dark) での配色反映、Tooltip のキーボードフォーカス発火、NoteListRow の 720px ブレークポイント、階層タグ href の `--` エスケープを確認
+- `storybook build` 成功 + 静的ビルドの配信確認 (StyleX CSS がバンドルに含まれ、dev 限定 link に依存しない)
+- `npm run typecheck` / `lint` / `test` (470 件) / `fmt` すべてグリーン
+
+### 引き継ぎメモ
+
+- Storybook dev では `@stylexjs/unplugin` の transformIndexHtml link 注入が iframe.html に届かないため、`preview.tsx` が `/virtual:stylex.css` の link を手動追加している (本番ビルドではバンドルされるため不要)。unplugin 側の改善でこの回避策が不要になったら削除する
+- 新しいストーリーは既存 4 件を雛形にする。`Link` 依存・react-aria overlay とも preview.tsx の decorator だけで動き、ストーリー側の追加設定は不要
+
 ## ログ更新ルール
 
 - フェーズ完了時にこのファイルを更新する (達成範囲・公開 API・主要ファイル・設計判断)

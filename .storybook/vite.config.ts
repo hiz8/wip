@@ -1,25 +1,17 @@
 import { defineConfig } from "vite";
 import viteReact from "@vitejs/plugin-react";
-import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import stylex from "@stylexjs/unplugin";
-import { devImagesPlugin } from "./vite/dev-images-plugin.ts";
-import { createStylexPluginOptions } from "./vite/stylex-plugin-options.ts";
+import { createStylexPluginOptions } from "../vite/stylex-plugin-options.ts";
 
+// Storybook 専用の Vite 設定。コンポーネント描画に必要な alias / StyleX / React
+// だけを載せる (アプリ本体の設定は .storybook/main.ts のコメントを参照)。
 export default defineConfig({
   resolve: {
     alias: {
-      "@": `${import.meta.dirname}/src`,
+      "@": `${import.meta.dirname}/../src`,
     },
   },
   plugins: [
-    devImagesPlugin(),
-    tanstackStart({
-      prerender: {
-        enabled: true,
-        crawlLinks: true,
-        failOnError: true,
-      },
-    }),
     // oxlint-disable-next-line import/no-named-as-default-member -- 型情報は default にしか含まれていないため
     stylex.vite(createStylexPluginOptions()),
     viteReact(),
