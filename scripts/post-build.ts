@@ -1,8 +1,9 @@
-import { copyFile, mkdir, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readdir, rename, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { join, resolve } from "node:path";
 import { loadConfig } from "@/lib/config/load.ts";
+import { decodeAssetSegment } from "@/lib/assets/decodePrerenderName.ts";
 import {
   __setSiteDatasetConfigForTests,
   __resetSiteDatasetForTests,
@@ -53,8 +54,52 @@ async function main(): Promise<void> {
     writeBlogFeed(blogModel, config.content.blog.feedMaxItems),
   ]);
   await runPagefind();
+  await decodePrerenderedPaths();
 
   console.log("[post-build] images, sitemap, feed, pagefind index written under dist/client/");
+}
+
+// URL 由来ではない名前を持つパイプライン成果物。これらの配下はデコード対象にしない
+// (例: images/ は Vault の実ファイル名のコピーで、素の % を含み得る)。
+const PIPELINE_ARTIFACT_DIRS = new Set(["assets", "images", "pagefind", "__tsr"]);
+
+// prerender は crawlLinks の href をエンコード形のままディレクトリ名にするが、
+// Cloudflare Static Assets はリクエストパスを一度デコードしてから照合するため、
+// エンコード形の名前は 404 になる。ディスク名をデコード形へ揃える (Pagefind の後に
+// 実行することで、生成済みリンクはエンコード形 = 正しい URL 表記のまま保たれる)。
+// dist 直下のファイル (public/ 由来) は対象外。
+async function decodePrerenderedPaths(): Promise<void> {
+  const top = await readdir(DIST_DIR, { withFileTypes: true });
+  let renamed = 0;
+  for (const entry of top) {
+    if (!entry.isDirectory() || PIPELINE_ARTIFACT_DIRS.has(entry.name)) continue;
+    renamed += await decodeTreeInPlace(join(DIST_DIR, entry.name));
+  }
+  if (renamed > 0) {
+    console.log(`[post-build] decoded ${renamed} prerendered path segment(s) for static hosting`);
+  }
+}
+
+async function decodeTreeInPlace(dir: string): Promise<number> {
+  let count = 0;
+  const entries = await readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const currentPath = join(dir, entry.name);
+    // 子を先に処理してから自身をリネームする (post-order)。
+    if (entry.isDirectory()) count += await decodeTreeInPlace(currentPath);
+    const decoded = decodeAssetSegment(entry.name);
+    if (decoded === null) continue;
+    const target = join(dir, decoded);
+    if (existsSync(target)) {
+      throw new Error(
+        `[post-build] decode collision: "${currentPath}" -> "${target}" は既に存在します。` +
+          "スラッグのエンコード形と衝突する実ファイル名がないか確認してください。",
+      );
+    }
+    await rename(currentPath, target);
+    count += 1;
+  }
+  return count;
 }
 
 function runPagefind(): Promise<void> {
