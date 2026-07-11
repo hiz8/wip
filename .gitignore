@@ -20,3 +20,6 @@ src/routeTree.gen.ts
 
 # Playwright MCP のスナップショット・ログ保存先
 .playwright-mcp/
+
+# Storybook のビルド成果物
+storybook-static/

@@ -1,0 +1,6 @@
+<!-- CSS の @layer カスケード順序を先行宣言で固定する (src/routes/__root.tsx の
+     LAYER_ORDER_HTML と同じ役割)。@layer の優先順位は名前の初出順で決まるため、
+     StyleX の @layer priorityN が injection 順序に関係なく常に後勝ちになる。 -->
+<style>
+  @layer reset, base, components, utilities;
+</style>
