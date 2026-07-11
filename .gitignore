@@ -14,3 +14,9 @@ src/routeTree.gen.ts
 
 # TanStack Start build cache
 .tanstack/
+
+# wrangler dev (miniflare) のローカル状態・一時バンドル
+.wrangler/
+
+# Playwright MCP のスナップショット・ログ保存先
+.playwright-mcp/
