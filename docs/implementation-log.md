@@ -1183,32 +1183,38 @@ Phase 9 着手前に環境を `npm run dev` で改めて起動して判明した
 1. **CSS var + `[data-theme-resolved="dark"]` で統一** — バナー色はこれまで「ブランド固定 (テーマ非依存)」として TSX に const で持っていたが、夜空化のため code / callout / prose と同じ named CSS var + dark override 方式へ寄せた。StyleX の `createTheme` ではなく CSS var を使うのは、多段グラデーション (星のレイヤー + 線形) がトークン化しづらいため
 2. **星は背景レイヤーで表現** — DOM 要素を増やさず、dark の `--banner-gradient` 値に複数の radial-gradient を重ねる (`background-image` のレイヤーは先頭が手前)。月の光輪は既存の光輪要素を流用し radial を差し替えるだけ
 
-## 本番デプロイ後のランタイム障害修正 (SPA 遷移の Invariant failed / Pagefind UI) ✅ (2026-07-11)
+## 本番デプロイ後のランタイム障害修正 (SPA 遷移の Invariant failed / Pagefind UI / 非 ASCII slug の 404) ✅ (2026-07-11)
 
-Cloudflare Workers (Static Assets のみ、Worker スクリプトなし) への初回デプロイで、`npm run dev` / `vite preview` では出ない 2 つの本番ランタイムエラーを修正した。
+Cloudflare Workers (Static Assets のみ、Worker スクリプトなし) への初回デプロイで、`npm run dev` / `vite preview` では出ない 3 つの本番ランタイムエラーを修正した。
 
 ### 症状と根本原因
 
 1. **クライアントサイド遷移で `Invariant failed`** — ルート loader の `createServerFn` は、prerender 時はビルドプロセス内で実行されるが、クライアント遷移時は RPC (`GET /_serverFn/<hash>`) を fetch する。static-only デプロイにはこのエンドポイントが存在せず 404 ページ HTML が返り、server fn クライアントスタブの invariant で全ルート遷移が失敗していた。**`vite preview` では再現しない** (Start プラグインが `/_serverFn` を処理するため)。本番相当の検証は `npm run deploy:preview` (wrangler dev) が必須
 2. **検索モーダルで `PagefindUI is not a constructor`** — `pagefind-ui.js` (v1.5.2) は ESM ではなく、`window.PagefindUI` へ代入する IIFE (export 0 件)。`import(URL)` の module namespace には `PagefindUI` が無く、`mod.PagefindUI` が undefined になっていた。配信自体は 200 で正常 (環境非依存の純コード問題)
+3. **非 ASCII / スペース入り slug の詳細ページが直接ロードで 404** (デプロイ後にユーザー発見) — TanStack Start の prerender は `crawlLinks` で発見したページを href の**エンコード形のまま**ディレクトリ名に書き出す (`Version%20Skew/index.html` など。明示的な `pages` 設定だけは `validateAndNormalizePrerenderPages` がデコードする非対称が上流にある)。一方 Cloudflare Static Assets は**リクエストパスを一度 percent-decode してから**アセットを照合するため一致せず 404。証拠: 二重エンコードした `/glossary/Version%2520Skew` はヒット (307)、ASCII slug (`PPA` / `AI`) は正常。SPA 遷移はサーバへ HTML を要求しないため影響しない (直接ロード・検索結果クリック・共有リンクのみ 404)
 
 ### 修正
 
 1. **全 server fn (loaders.ts 18 + home.ts 1) に `staticFunctionMiddleware` を適用** — `@tanstack/start-static-server-functions` (公式・experimental)。prerender 時に結果を `dist/client/__tsr/staticServerFnCache/<sha1(functionId__payloadHash)>.json` へ書き出し、本番クライアント (`NODE_ENV=production`) は RPC の代わりにこの静的 JSON を fetch する。payload はソート済み JSON 文字列としてハッシュ化されるため、`{ slug }` 等の引数付き fn もページ単位で正しいファイルに解決される。dev では従来どおり RPC にフォールスルーする (回帰なし)。static-only 構成 (`wrangler.jsonc` に `main` なし) は維持。<https://tanstack.com/start/latest/docs/framework/react/guide/static-server-functions>
    - peer 要件により `@tanstack/react-start` 1.168.26 → 1.168.27、`@tanstack/react-router` 1.170.16 → 1.170.17 に更新
 2. **Pagefind UI を公式手順どおり `<script>` タグで遅延ロード** — `SearchDialog.tsx` の `import(PAGEFIND_BUNDLE_PATH)` を script 注入 + `window.PagefindUI` 参照に変更 (singleton promise は維持)。<https://pagefind.app/docs/ui/>
+3. **post-build の最終ステップで prerender 出力のパスセグメントをデコード形へリネーム** — `src/lib/assets/decodePrerenderName.ts` の `decodeAssetSegment` (純関数、テスト 9 件) + `scripts/post-build.ts` の `decodePrerenderedPaths` (post-order walk)。Pagefind の**後**に実行するので、生成済みリンクはエンコード形 (正しい URL 表記) のまま、ディスク名だけが Cloudflare の照合形になる。`assets/` `images/` `pagefind/` `__tsr/` は URL 由来でない名前 (素の `%` を含み得る) のため対象外。不正な percent シーケンスや `/` `..` へのデコードはスキップ、デコード先が既存ならビルドエラー
+4. **トレイリングスラッシュをサイト仕様どおり「なし」へ統一** — `wrangler.jsonc` に `assets.html_handling: "drop-trailing-slash"` を追加。デフォルトの `auto-trailing-slash` はフォルダ形式 (`notes/index.html`) の正規形を `/notes/` とするため、SPA 遷移 (`/notes`) とリロード後 (`/notes/`) で URL が食い違っていた。変更後は `/notes` が 200 で直接配信され、`/notes/` 側が 307 でスラッシュなしへ寄る。<https://developers.cloudflare.com/workers/static-assets/routing/advanced/html-handling/>
 
 ### 検証
 
 - `npm run deploy:preview` (wrangler dev) + ブラウザ実操作: `/` → `/notes` → ノート詳細 (日本語 + スペース slug) → `/glossary` → `/blog` の SPA 遷移がすべてエラーなし。`__tsr/staticServerFnCache/*.json` が 200。検索モーダルで Pagefind UI が表示され「ダークモード」検索で 2 件ヒット
-- `npm run typecheck` / `npm run test` (461 件) / `npm run lint` グリーン。クライアントバンドルへの `node:fs` 混入なし
+- 404 修正後: 旧 404 の 3 URL + 日本語 blog tagset + ASCII 対照群がすべて 307 (trailing-slash 正規化) → 200。旧 404 ページの直接ロード → hydration → SPA 遷移 → 検索結果クリックまでコンソールエラー 0 件
+- `npm run typecheck` / `npm run test` (470 件) / `npm run lint` グリーン。クライアントバンドルへの `node:fs` 混入なし
 
 ### 引き継ぎメモ
 
 - **新しい `createServerFn` を追加するときは必ず `.middleware([staticFunctionMiddleware])` を付ける** (middleware チェーンの最後に置く)。付け忘れると dev では動くが本番のクライアント遷移で 404 → `Invariant failed` になる
 - 検証乖離の教訓 (「ツールチェーン追従メモ」の dev/preview 乖離に追加): server fn / ルーティング / アセット配信に触る変更は `wrangler dev` でも確認する。`vite preview` は `dist/server` の SSR ハンドラが生きており「サーバなし」を再現しない
 - Pagefind 1.5 系は新しい Component UI (`pagefind-component-ui.js`, custom elements) を推奨し始めている。旧 `PagefindUI` は引き続き同梱・動作するが、UI 刷新のタイミングで移行を検討する
-- 検索結果のリンクはトレイリングスラッシュ付き URL (`/blog/tags/Notion+UI/` 等) を指す (Pagefind がフォルダ形式の HTML からインデックスするため)。Cloudflare 側の正規化リダイレクトで動作はするが、「トレイリングスラッシュなし」ポリシーとの不整合は未対応の既知事項
+- 検索結果のリンクはトレイリングスラッシュ付き URL (`/blog/tags/Notion+UI/` 等) を指す (Pagefind がフォルダ形式の HTML からインデックスするため)。`html_handling: drop-trailing-slash` によりスラッシュなしの正規形へ 307 で寄るため動作・ポリシーとも整合する (リダイレクト 1 hop は許容)
+- Cloudflare はパス中の `+` を `%2B` へ正規化リダイレクトする (`/blog/tags/Notion+UI` → `/blog/tags/Notion%2BUI`)。`html_handling` 変更以前の本番でも発生していた Cloudflare 自体の挙動で、`%2B` は `+` と同一パスの別表記なので実害なし。SPA 遷移ではアドレスバーに `+`、リロード後は `%2B` と表示が揺れる点だけ既知事項として残る
+- prerender のエンコード形出力は上流 (tanstack/router の start-plugin-core、1.171.19 時点) の挙動。将来のバージョンで crawl リンクもデコードされるようになったら `decodePrerenderedPaths` は no-op になる (renamed 0 件ログで気付ける) ので、その時点で削除を検討
 
 ## ログ更新ルール
 
