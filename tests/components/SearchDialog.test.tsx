@@ -7,12 +7,13 @@ import { SearchDialog } from "@/components/common/SearchDialog.tsx";
 
 const pagefindCtor = vi.fn<(options: { element: HTMLElement }) => void>();
 
-vi.mock("/pagefind/pagefind-ui.js", () => {
+// pagefind-ui.js (IIFE) が script onload 時に window.PagefindUI を生やす挙動を再現する。
+function installPagefindGlobal(): void {
   function MockPagefindUI(this: object, options: { element: HTMLElement }) {
     pagefindCtor(options);
   }
-  return { PagefindUI: MockPagefindUI };
-});
+  window.PagefindUI = MockPagefindUI as unknown as NonNullable<typeof window.PagefindUI>;
+}
 
 const noop = () => {};
 
@@ -39,6 +40,7 @@ describe("SearchDialog", () => {
     for (const link of document.querySelectorAll('link[href="/pagefind/pagefind-ui.css"]')) {
       link.remove();
     }
+    delete window.PagefindUI;
   });
 
   it("does not render the dialog when closed", () => {
@@ -46,11 +48,25 @@ describe("SearchDialog", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("renders the dialog and mounts Pagefind UI when opened", async () => {
+  // モジュールスコープの singleton が構築済みコンストラクタをキャッシュするため、
+  // script 注入経路を検証するこのテストは同一ファイル内の最初の open である必要がある。
+  it("loads pagefind-ui.js via a script tag and mounts Pagefind UI when opened", async () => {
     const user = userEvent.setup();
     render(<Harness />);
     await user.click(screen.getByRole("button", { name: "open" }));
     expect(screen.getByRole("dialog", { name: "サイト内検索" })).toBeInTheDocument();
+
+    // jsdom は script を実ロードしないため、IIFE 実行 (グローバル定義) と load を模倣する。
+    const script = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLScriptElement>(
+        'script[src="/pagefind/pagefind-ui.js"]',
+      );
+      expect(found).not.toBeNull();
+      return found as HTMLScriptElement;
+    });
+    installPagefindGlobal();
+    script.dispatchEvent(new Event("load"));
+
     await vi.waitFor(() => {
       expect(pagefindCtor).toHaveBeenCalledTimes(1);
     });

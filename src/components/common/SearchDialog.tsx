@@ -18,8 +18,10 @@ interface PagefindUIConstructor {
   new (options: ReturnType<typeof makePagefindUIOptions>): unknown;
 }
 
-interface PagefindUIModule {
-  PagefindUI: PagefindUIConstructor;
+declare global {
+  interface Window {
+    PagefindUI?: PagefindUIConstructor;
+  }
 }
 
 const styles = stylex.create({
@@ -55,16 +57,34 @@ const styles = stylex.create({
   },
 });
 
-let pagefindModulePromise: Promise<PagefindUIModule> | null = null;
+let pagefindUiPromise: Promise<PagefindUIConstructor> | null = null;
 
-function loadPagefindModule(): Promise<PagefindUIModule> {
-  if (pagefindModulePromise === null) {
-    // バンドルは post-build スクリプトによって /pagefind から配信される。Vite が
-    // ビルド時に解決しようとしてはならないため、ランタイムの URL を使う。
-    const dynamicImport = import(PAGEFIND_BUNDLE_PATH);
-    pagefindModulePromise = dynamicImport as Promise<PagefindUIModule>;
+// pagefind-ui.js は ESM ではなく、window.PagefindUI を生やす IIFE。公式の
+// ロード手順 (https://pagefind.app/docs/ui/) どおり <script> タグで読み込む。
+// dynamic import では module namespace に export が無く constructor を得られない。
+function loadPagefindUi(): Promise<PagefindUIConstructor> {
+  if (pagefindUiPromise === null) {
+    pagefindUiPromise = new Promise<PagefindUIConstructor>((resolve, reject) => {
+      if (window.PagefindUI) {
+        resolve(window.PagefindUI);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = PAGEFIND_BUNDLE_PATH;
+      script.addEventListener("load", () => {
+        if (window.PagefindUI) {
+          resolve(window.PagefindUI);
+        } else {
+          reject(new Error(`PagefindUI global not found after loading ${PAGEFIND_BUNDLE_PATH}`));
+        }
+      });
+      script.addEventListener("error", () => {
+        reject(new Error(`Failed to load ${PAGEFIND_BUNDLE_PATH}`));
+      });
+      document.head.append(script);
+    });
   }
-  return pagefindModulePromise;
+  return pagefindUiPromise;
 }
 
 function injectPagefindCss(): void {
@@ -78,9 +98,9 @@ function injectPagefindCss(): void {
 }
 
 async function mountPagefindUI(container: HTMLElement): Promise<void> {
-  const mod = await loadPagefindModule();
+  const PagefindUI = await loadPagefindUi();
   // Pagefind UI は副作用で自身を設置する。インスタンスは意図的に保持しない。
-  void new mod.PagefindUI(makePagefindUIOptions(container));
+  void new PagefindUI(makePagefindUIOptions(container));
 }
 
 export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
