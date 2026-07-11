@@ -38,11 +38,11 @@ src/components/**/X.stories.tsx — ストーリー (コンポーネントにコ
 
 ## 初期ストーリー (パターンの手本となる 4 つ)
 
-| ストーリー | 手本にするパターン |
-| --- | --- |
-| `common/Icon` | 純粋表示。全 `IconType` の一覧 + Controls |
-| `common/TagChips` | router 依存 (`Link`) コンポーネント |
-| `common/Tooltip` | react-aria-components の overlay |
+| ストーリー         | 手本にするパターン                             |
+| ------------------ | ---------------------------------------------- |
+| `common/Icon`      | 純粋表示。全 `IconType` の一覧 + Controls      |
+| `common/TagChips`  | router 依存 (`Link`) コンポーネント            |
+| `common/Tooltip`   | react-aria-components の overlay               |
 | `card/NoteListRow` | 一覧行 + `listRow` 共有スタイル + レスポンシブ |
 
 以降のコンポーネントは上記を雛形に随時追加する。網羅は目的にしない。
