@@ -1183,6 +1183,33 @@ Phase 9 着手前に環境を `npm run dev` で改めて起動して判明した
 1. **CSS var + `[data-theme-resolved="dark"]` で統一** — バナー色はこれまで「ブランド固定 (テーマ非依存)」として TSX に const で持っていたが、夜空化のため code / callout / prose と同じ named CSS var + dark override 方式へ寄せた。StyleX の `createTheme` ではなく CSS var を使うのは、多段グラデーション (星のレイヤー + 線形) がトークン化しづらいため
 2. **星は背景レイヤーで表現** — DOM 要素を増やさず、dark の `--banner-gradient` 値に複数の radial-gradient を重ねる (`background-image` のレイヤーは先頭が手前)。月の光輪は既存の光輪要素を流用し radial を差し替えるだけ
 
+## 本番デプロイ後のランタイム障害修正 (SPA 遷移の Invariant failed / Pagefind UI) ✅ (2026-07-11)
+
+Cloudflare Workers (Static Assets のみ、Worker スクリプトなし) への初回デプロイで、`npm run dev` / `vite preview` では出ない 2 つの本番ランタイムエラーを修正した。
+
+### 症状と根本原因
+
+1. **クライアントサイド遷移で `Invariant failed`** — ルート loader の `createServerFn` は、prerender 時はビルドプロセス内で実行されるが、クライアント遷移時は RPC (`GET /_serverFn/<hash>`) を fetch する。static-only デプロイにはこのエンドポイントが存在せず 404 ページ HTML が返り、server fn クライアントスタブの invariant で全ルート遷移が失敗していた。**`vite preview` では再現しない** (Start プラグインが `/_serverFn` を処理するため)。本番相当の検証は `npm run deploy:preview` (wrangler dev) が必須
+2. **検索モーダルで `PagefindUI is not a constructor`** — `pagefind-ui.js` (v1.5.2) は ESM ではなく、`window.PagefindUI` へ代入する IIFE (export 0 件)。`import(URL)` の module namespace には `PagefindUI` が無く、`mod.PagefindUI` が undefined になっていた。配信自体は 200 で正常 (環境非依存の純コード問題)
+
+### 修正
+
+1. **全 server fn (loaders.ts 18 + home.ts 1) に `staticFunctionMiddleware` を適用** — `@tanstack/start-static-server-functions` (公式・experimental)。prerender 時に結果を `dist/client/__tsr/staticServerFnCache/<sha1(functionId__payloadHash)>.json` へ書き出し、本番クライアント (`NODE_ENV=production`) は RPC の代わりにこの静的 JSON を fetch する。payload はソート済み JSON 文字列としてハッシュ化されるため、`{ slug }` 等の引数付き fn もページ単位で正しいファイルに解決される。dev では従来どおり RPC にフォールスルーする (回帰なし)。static-only 構成 (`wrangler.jsonc` に `main` なし) は維持。<https://tanstack.com/start/latest/docs/framework/react/guide/static-server-functions>
+   - peer 要件により `@tanstack/react-start` 1.168.26 → 1.168.27、`@tanstack/react-router` 1.170.16 → 1.170.17 に更新
+2. **Pagefind UI を公式手順どおり `<script>` タグで遅延ロード** — `SearchDialog.tsx` の `import(PAGEFIND_BUNDLE_PATH)` を script 注入 + `window.PagefindUI` 参照に変更 (singleton promise は維持)。<https://pagefind.app/docs/ui/>
+
+### 検証
+
+- `npm run deploy:preview` (wrangler dev) + ブラウザ実操作: `/` → `/notes` → ノート詳細 (日本語 + スペース slug) → `/glossary` → `/blog` の SPA 遷移がすべてエラーなし。`__tsr/staticServerFnCache/*.json` が 200。検索モーダルで Pagefind UI が表示され「ダークモード」検索で 2 件ヒット
+- `npm run typecheck` / `npm run test` (461 件) / `npm run lint` グリーン。クライアントバンドルへの `node:fs` 混入なし
+
+### 引き継ぎメモ
+
+- **新しい `createServerFn` を追加するときは必ず `.middleware([staticFunctionMiddleware])` を付ける** (middleware チェーンの最後に置く)。付け忘れると dev では動くが本番のクライアント遷移で 404 → `Invariant failed` になる
+- 検証乖離の教訓 (「ツールチェーン追従メモ」の dev/preview 乖離に追加): server fn / ルーティング / アセット配信に触る変更は `wrangler dev` でも確認する。`vite preview` は `dist/server` の SSR ハンドラが生きており「サーバなし」を再現しない
+- Pagefind 1.5 系は新しい Component UI (`pagefind-component-ui.js`, custom elements) を推奨し始めている。旧 `PagefindUI` は引き続き同梱・動作するが、UI 刷新のタイミングで移行を検討する
+- 検索結果のリンクはトレイリングスラッシュ付き URL (`/blog/tags/Notion+UI/` 等) を指す (Pagefind がフォルダ形式の HTML からインデックスするため)。Cloudflare 側の正規化リダイレクトで動作はするが、「トレイリングスラッシュなし」ポリシーとの不整合は未対応の既知事項
+
 ## ログ更新ルール
 
 - フェーズ完了時にこのファイルを更新する (達成範囲・公開 API・主要ファイル・設計判断)
