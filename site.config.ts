@@ -2,15 +2,15 @@ import { defineConfig } from "@/lib/config/define.ts";
 
 export default defineConfig({
   site: {
-    name: "Digital Garden",
-    description: "個人ブランディング目的の Digital Garden 型サイト",
-    url: "https://example.com",
+    name: "hiz.blue",
+    description: "UI/UX designer, Front-of-the-front-end-ish front-end developer.",
+    url: "https://hiz.blue",
     locale: "ja",
     ogImage: "/og-default.png",
   },
   author: {
-    name: "(著者名)",
-    bio: "(簡潔な紹介)",
+    name: "hiz",
+    bio: "UI/UX designer, Front-of-the-front-end-ish front-end developer.",
     socialLinks: [],
   },
   content: {

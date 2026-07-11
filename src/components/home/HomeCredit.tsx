@@ -24,7 +24,7 @@ export function HomeCredit({ authorName }: HomeCreditProps) {
     <div {...stylex.props(styles.credit)}>
       <span>{authorName}</span>
       <span aria-hidden="true">·</span>
-      <span>Digital Garden</span>
+      <span>hiz.blue</span>
     </div>
   );
 }
