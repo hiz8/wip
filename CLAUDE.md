@@ -70,6 +70,10 @@ npm run typecheck
 npm run test
 npm run test:watch
 
+# Storybook (UI コンポーネントカタログ、Vault 不要)
+npm run storybook        # dev サーバー (port 6006)
+npm run storybook:build  # 静的ビルド (storybook-static/)
+
 # リント (oxlint)
 npm run lint
 
