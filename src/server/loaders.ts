@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { staticFunctionMiddleware } from "@tanstack/start-static-server-functions";
 import { z } from "zod";
 import { getAllNotes, getNoteBySlug } from "./notes.ts";
 import { getAllGlossaryTerms, getGlossaryTermBySlug } from "./glossary.ts";
@@ -78,14 +79,23 @@ export interface BookDetail {
 // 一覧・タグ別一覧の loader は、投影からタグ集計・フィルタ専用の tags を
 // omitTags で取り除き、ページが表示するフィールドだけを返す (SSG では loader の
 // 戻り値がそのままページ HTML に埋め込まれるため)。
+//
+// 全 server fn に staticFunctionMiddleware を適用する。本番は Worker なしの
+// Static Assets のみで /_serverFn RPC が存在しないため、prerender 時に結果を
+// dist/client/__tsr/staticServerFnCache/*.json へ書き出し、クライアント遷移時は
+// その静的 JSON を fetch させる (payload はハッシュ化されファイル名に入る)。
+// https://tanstack.com/start/latest/docs/framework/react/guide/static-server-functions
 
-export const getNotesIndexData = createServerFn({ method: "GET" }).handler(
-  async (): Promise<NoteIndexItem[]> => (await projectNotesIndex()).map((item) => omitTags(item)),
-);
+export const getNotesIndexData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
+  .handler(
+    async (): Promise<NoteIndexItem[]> => (await projectNotesIndex()).map((item) => omitTags(item)),
+  );
 
 const noteSlugSchema = z.object({ slug: z.string().min(1) });
 
 export const getNoteDetailData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
   .inputValidator((value: unknown) => noteSlugSchema.parse(value))
   .handler(async ({ data }): Promise<NoteDetail | null> => {
     const note = await getNoteBySlug(data.slug);
@@ -106,24 +116,27 @@ export const getNoteDetailData = createServerFn({ method: "GET" })
     };
   });
 
-export const getNotesTreeData = createServerFn({ method: "GET" }).handler(
-  async (): Promise<TreeNode[]> => {
+export const getNotesTreeData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
+  .handler(async (): Promise<TreeNode[]> => {
     const notes = await getAllNotes();
     return buildTreeFromRenderedNotes(notes);
-  },
-);
+  });
 
-export const getGlossaryIndexData = createServerFn({ method: "GET" }).handler(
-  async (): Promise<GlossaryIndexSection[]> =>
-    (await projectGlossaryIndex()).map((section) => ({
-      name: section.name,
-      items: section.items.map((item) => omitTags(item)),
-    })),
-);
+export const getGlossaryIndexData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
+  .handler(
+    async (): Promise<GlossaryIndexSection[]> =>
+      (await projectGlossaryIndex()).map((section) => ({
+        name: section.name,
+        items: section.items.map((item) => omitTags(item)),
+      })),
+  );
 
 const glossarySlugSchema = z.object({ slug: z.string().min(1) });
 
 export const getGlossaryDetailData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
   .inputValidator((value: unknown) => glossarySlugSchema.parse(value))
   .handler(async ({ data }): Promise<GlossaryDetail | null> => {
     const term = await getGlossaryTermBySlug(data.slug);
@@ -143,20 +156,23 @@ export const getGlossaryDetailData = createServerFn({ method: "GET" })
     };
   });
 
-export const getGlossaryTreeData = createServerFn({ method: "GET" }).handler(
-  async (): Promise<TreeNode[]> => {
+export const getGlossaryTreeData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
+  .handler(async (): Promise<TreeNode[]> => {
     const terms = await getAllGlossaryTerms();
     return buildGlossaryTree(terms);
-  },
-);
+  });
 
-export const getBooksIndexData = createServerFn({ method: "GET" }).handler(
-  async (): Promise<BookIndexItem[]> => (await projectBooksIndex()).map((item) => omitTags(item)),
-);
+export const getBooksIndexData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
+  .handler(
+    async (): Promise<BookIndexItem[]> => (await projectBooksIndex()).map((item) => omitTags(item)),
+  );
 
 const bookIsbnSchema = z.object({ isbn: z.string().min(1) });
 
 export const getBookDetailData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
   .inputValidator((value: unknown) => bookIsbnSchema.parse(value))
   .handler(async ({ data }): Promise<BookDetail | null> => {
     const book = await getBookByIsbn(data.isbn);
@@ -181,36 +197,38 @@ export const getBookDetailData = createServerFn({ method: "GET" })
     };
   });
 
-export const getBooksTreeData = createServerFn({ method: "GET" }).handler(
-  async (): Promise<TreeNode[]> => {
+export const getBooksTreeData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
+  .handler(async (): Promise<TreeNode[]> => {
     const books = await getAllBooks();
     return buildBooksTree(books);
-  },
-);
+  });
 
 // タグはコンテンツタイプごとに名前空間が分離されており、各タイプは自身の item
 // だけを集計・フィルタする。tag slug は階層区切りを `--` で保持する (ここで decode)。
 const tagSlugSchema = z.object({ tag: z.string().min(1) });
 
-export const getNotesTagsData = createServerFn({ method: "GET" }).handler(
-  async (): Promise<TagCount[]> => aggregateTags(await projectNotesIndex()),
-);
+export const getNotesTagsData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
+  .handler(async (): Promise<TagCount[]> => aggregateTags(await projectNotesIndex()));
 
 export const getNotesByTagData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
   .inputValidator((value: unknown) => tagSlugSchema.parse(value))
   .handler(
     async ({ data }): Promise<NoteIndexItem[]> =>
       filterByTag(await projectNotesIndex(), decodeTagSlug(data.tag)).map((item) => omitTags(item)),
   );
 
-export const getGlossaryTagsData = createServerFn({ method: "GET" }).handler(
-  async (): Promise<TagCount[]> => {
+export const getGlossaryTagsData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
+  .handler(async (): Promise<TagCount[]> => {
     const sections = await projectGlossaryIndex();
     return aggregateTags(sections.flatMap((section) => section.items));
-  },
-);
+  });
 
 export const getGlossaryByTagData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
   .inputValidator((value: unknown) => tagSlugSchema.parse(value))
   .handler(async ({ data }): Promise<GlossaryIndexItem[]> => {
     const sections = await projectGlossaryIndex();
@@ -220,27 +238,29 @@ export const getGlossaryByTagData = createServerFn({ method: "GET" })
     ).map((item) => omitTags(item));
   });
 
-export const getBooksTagsData = createServerFn({ method: "GET" }).handler(
-  async (): Promise<TagCount[]> => aggregateTags(await projectBooksIndex()),
-);
+export const getBooksTagsData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
+  .handler(async (): Promise<TagCount[]> => aggregateTags(await projectBooksIndex()));
 
 export const getBooksByTagData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
   .inputValidator((value: unknown) => tagSlugSchema.parse(value))
   .handler(
     async ({ data }): Promise<BookIndexItem[]> =>
       filterByTag(await projectBooksIndex(), decodeTagSlug(data.tag)).map((item) => omitTags(item)),
   );
 
-export const getBlogTreeData = createServerFn({ method: "GET" }).handler(
-  async (): Promise<BlogTreeNode[]> => {
+export const getBlogTreeData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
+  .handler(async (): Promise<BlogTreeNode[]> => {
     const model = await getBlogModel();
     return model.tree;
-  },
-);
+  });
 
 const blogIndexSchema = z.object({ page: z.number().int().min(1) });
 
 export const getBlogIndexData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
   .inputValidator((value: unknown) => blogIndexSchema.parse(value))
   .handler(async ({ data }): Promise<BlogListPageDto | null> => {
     const model = await getBlogModel();
@@ -250,6 +270,7 @@ export const getBlogIndexData = createServerFn({ method: "GET" })
 const blogTagsetSchema = z.object({ tagset: z.string().min(1), page: z.number().int().min(1) });
 
 export const getBlogTagsetData = createServerFn({ method: "GET" })
+  .middleware([staticFunctionMiddleware])
   .inputValidator((value: unknown) => blogTagsetSchema.parse(value))
   .handler(async ({ data }): Promise<BlogListPageDto | null> => {
     const model = await getBlogModel();
