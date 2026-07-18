@@ -1,4 +1,6 @@
-import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
+import { HeadContent, Outlet, Scripts, createRootRoute, useRouter } from "@tanstack/react-router";
+import { RouterProvider as AriaRouterProvider } from "react-aria-components";
+import { useCallback } from "react";
 // グローバルスタイルシートは router.tsx ではなく root route から import する。
 // root route なら tanstack-start の dev style collector がスタイルシートを SSR の
 // <head> に含め、dev サーバー初回描画のスタイル未適用ちらつきを防ぐ。
@@ -78,6 +80,15 @@ const STYLEX_DEV_CSS_HREF = "/virtual:stylex.css";
 const LAYER_ORDER_HTML = { __html: "@layer reset, base, components, utilities;" };
 
 function RootDocument() {
+  const router = useRouter();
+  // react-aria の href ベースのコンポーネント (ContentTree の TreeItem 等) を TanStack
+  // Router のクライアントサイド遷移へ橋渡しする。これがないと react-aria は素の <a> を
+  // 出力し、フルページ遷移になる。navigate / useHref のシグネチャは react-aria の
+  // RouterProviderProps に従う (Href は RouterConfig 未拡張のため既定で string、never の
+  // routerOptions 引数は渡さない)。関数は再レンダリング毎に新規生成しないよう useCallback
+  // で安定させる (react-perf の jsx-no-new-function-as-prop 対応)。
+  const navigate = useCallback((to: string) => router.navigate({ to }), [router]);
+  const buildHref = useCallback((to: string) => router.buildLocation({ to }).href, [router]);
   return (
     <html lang={SITE_LOCALE} suppressHydrationWarning>
       <head>
@@ -87,7 +98,9 @@ function RootDocument() {
         <HeadContent />
       </head>
       <body>
-        <Outlet />
+        <AriaRouterProvider navigate={navigate} useHref={buildHref}>
+          <Outlet />
+        </AriaRouterProvider>
         <Scripts />
       </body>
     </html>
