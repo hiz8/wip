@@ -9,20 +9,24 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
-  useNavigate,
 } from "@tanstack/react-router";
 import { useCloseOnNavigate } from "@/components/layout/useCloseOnNavigate.ts";
 
+// `navigate()`（フック・`router.navigate` メソッドとも）の `to` はアプリ本体の
+// `src/router.tsx` が `declare module` で登録した実サイトのルート集合にジェネリクスの
+// 既定 (`RegisteredRouter`) 経由で拘束される。ここだけの合成ルート (`/item/$id`) を
+// 持つローカルルーターはその集合に含まれず型付き navigate を使えないため、ルーターの
+// 型に依存しない `history.push` で直接遷移させる。
 function makeRouter(close: () => void) {
+  const history = createMemoryHistory({ initialEntries: ["/item/1"] });
   const rootRoute = createRootRoute({ component: () => <Outlet /> });
   const itemRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/item/$id",
     component: function ItemPage() {
       useCloseOnNavigate(close);
-      const navigate = useNavigate();
       return (
-        <button type="button" onClick={() => navigate({ to: "/item/$id", params: { id: "2" } })}>
+        <button type="button" onClick={() => history.push("/item/2")}>
           go
         </button>
       );
@@ -30,7 +34,7 @@ function makeRouter(close: () => void) {
   });
   return createRouter({
     routeTree: rootRoute.addChildren([itemRoute]),
-    history: createMemoryHistory({ initialEntries: ["/item/1"] }),
+    history,
   });
 }
 
