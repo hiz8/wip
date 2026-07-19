@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { describe, expect, it } from "vitest";
 import { TreeDrawer } from "@/components/layout/TreeDrawer.tsx";
 
@@ -9,9 +9,10 @@ const noop = () => {};
 
 function Harness() {
   const [open, setOpen] = useState(false);
+  const handleOpen = useCallback(() => setOpen(true), []);
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)}>
+      <button type="button" onClick={handleOpen}>
         open
       </button>
       <TreeDrawer isOpen={open} onOpenChange={setOpen}>

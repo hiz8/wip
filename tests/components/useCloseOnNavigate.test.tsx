@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useCallback } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
   Outlet,
@@ -25,8 +26,9 @@ function makeRouter(close: () => void) {
     path: "/item/$id",
     component: function ItemPage() {
       useCloseOnNavigate(close);
+      const handleClick = useCallback(() => history.push("/item/2"), []);
       return (
-        <button type="button" onClick={() => history.push("/item/2")}>
+        <button type="button" onClick={handleClick}>
           go
         </button>
       );
@@ -40,7 +42,7 @@ function makeRouter(close: () => void) {
 
 describe("useCloseOnNavigate", () => {
   it("同一ルートの兄弟遷移でパスが変わると close を呼ぶ", async () => {
-    const close = vi.fn();
+    const close = vi.fn<() => void>();
     const user = userEvent.setup();
     render(<RouterProvider router={makeRouter(close)} />);
     await waitFor(() => expect(screen.getByRole("button", { name: "go" })).toBeInTheDocument());

@@ -31,13 +31,15 @@ function installMatchMedia() {
   );
 }
 
+const treeSidebarContent = <div>TREE ITEMS</div>;
+
 function renderShell() {
   const rootRoute = createRootRoute({ component: () => <Outlet /> });
   const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/",
     component: () => (
-      <AppShell variant="list" treeSidebar={<div>TREE ITEMS</div>}>
+      <AppShell variant="list" treeSidebar={treeSidebarContent}>
         <TreeDrawerTrigger />
       </AppShell>
     ),

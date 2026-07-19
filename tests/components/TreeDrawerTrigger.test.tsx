@@ -20,7 +20,7 @@ describe("TreeDrawerTrigger", () => {
   });
 
   it("hasTree が true のときボタンを描画し、クリックで open を呼ぶ", async () => {
-    const open = vi.fn();
+    const open = vi.fn<() => void>();
     const user = userEvent.setup();
     renderWithContext({ hasTree: true, open }, <TreeDrawerTrigger />);
     const button = screen.getByRole("button", { name: "コンテンツツリーを開く" });
