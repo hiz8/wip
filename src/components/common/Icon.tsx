@@ -19,7 +19,8 @@ export type IconType =
   | "search"
   | "sun"
   | "moon"
-  | "menuDots";
+  | "menuDots"
+  | "panelLeft";
 
 // SVG は参考リポジトリ hiz8/hiz.blue-ui の icon/assets/encodedSvgs.ts と Solar by 480 Design
 // (CC BY 4.0、data URI 内にライセンスコメントを保持) から流用。
@@ -70,6 +71,11 @@ const MOON_MASK =
 const MENU_DOTS_MASK =
   "url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik03IDEyYTIgMiAwIDEgMS00IDBhMiAyIDAgMCAxIDQgMFptNyAwYTIgMiAwIDEgMS00IDBhMiAyIDAgMCAxIDQgMFptNyAwYTIgMiAwIDEgMS00IDBhMiAyIDAgMCAxIDQgMFoiLz48L3N2Zz4=)";
 
+// 左サイドバー/ツリーを開くトリガー用。角丸パネル + 左仕切り線の自作アイコン
+// (既存の Solar 素材と stroke-width 1.5 / currentColor を揃える)。
+const PANEL_LEFT_MASK =
+  "url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDI0IDI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxLjUiPjxyZWN0IHg9IjMiIHk9IjQiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxNiIgcng9IjIiLz48cGF0aCBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik05IDR2MTYiLz48L2c+PC9zdmc+)";
+
 const styles = stylex.create({
   // span 自身ではなく ::before に mask を当てる。span に直接当てると子要素ごとマスクされるため、
   // CSS mask 方式では ::before が必須 (stylex-authoring.md の「::before より実要素を優先」への意図的逸脱)。
@@ -111,6 +117,7 @@ const styles = stylex.create({
   typeSun: { "::before": { maskImage: SUN_MASK } },
   typeMoon: { "::before": { maskImage: MOON_MASK } },
   typeMenuDots: { "::before": { maskImage: MENU_DOTS_MASK } },
+  typePanelLeft: { "::before": { maskImage: PANEL_LEFT_MASK } },
 });
 
 // vanilla-extract の styleVariants 代替。type から style を引くマップ (ContentTypeIcon の PATHS と同手法)。
@@ -134,6 +141,7 @@ const TYPE_STYLES = {
   sun: styles.typeSun,
   moon: styles.typeMoon,
   menuDots: styles.typeMenuDots,
+  panelLeft: styles.typePanelLeft,
 } satisfies Record<IconType, unknown>;
 
 interface IconProps {

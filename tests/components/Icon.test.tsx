@@ -20,6 +20,7 @@ const TYPES: readonly IconType[] = [
   "search",
   "sun",
   "moon",
+  "panelLeft",
 ];
 
 describe("Icon", () => {
