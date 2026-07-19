@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { Breadcrumb as AriaBreadcrumb, Breadcrumbs } from "react-aria-components";
 import { Link } from "@tanstack/react-router";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
+import { TreeDrawerTrigger } from "@/components/layout/TreeDrawerTrigger.tsx";
 
 export type CrumbRootTo = "/notes" | "/glossary" | "/books";
 
@@ -16,6 +17,9 @@ interface BreadcrumbProps {
 
 const styles = stylex.create({
   nav: {
+    display: "flex",
+    alignItems: "center",
+    gap: space.s2,
     marginBottom: space.s5,
   },
   crumbs: {
@@ -52,6 +56,7 @@ const styles = stylex.create({
 export function Breadcrumb({ rootLabel, rootTo, middle, current }: BreadcrumbProps) {
   return (
     <nav aria-label="パンくず" {...stylex.props(styles.nav)}>
+      <TreeDrawerTrigger />
       <Breadcrumbs {...stylex.props(styles.crumbs)}>
         <AriaBreadcrumb {...stylex.props(styles.item)}>
           {rootTo === undefined ? (

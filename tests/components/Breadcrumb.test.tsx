@@ -11,6 +11,10 @@ import {
   createRouter,
 } from "@tanstack/react-router";
 import { Breadcrumb } from "@/components/common/Breadcrumb.tsx";
+import { TreeDrawerContext } from "@/components/layout/TreeDrawerContext.tsx";
+
+// react-perf(jsx-no-new-object-as-prop) 回避のため Provider value をホイストする。
+const treeCtx = { hasTree: true, open: () => {} };
 
 function renderWithRouter(ui: ReactNode) {
   const rootRoute = createRootRoute({ component: () => <Outlet /> });
@@ -56,5 +60,27 @@ describe("Breadcrumb", () => {
     renderWithRouter(<Breadcrumb rootLabel="Glossary" current="索引" />);
     await waitFor(() => expect(screen.getByRole("navigation")).toBeInTheDocument());
     expect(screen.queryByRole("link")).toBeNull();
+  });
+
+  it("ツリーがある (hasTree=true) とき、crumbs の前にトリガーを描画する", async () => {
+    renderWithRouter(
+      <TreeDrawerContext.Provider value={treeCtx}>
+        <Breadcrumb rootLabel="Notes" rootTo="/notes" current="x" />
+      </TreeDrawerContext.Provider>,
+    );
+    await waitFor(() => expect(screen.getByRole("navigation")).toBeInTheDocument());
+    const trigger = screen.getByRole("button", { name: "コンテンツツリーを開く" });
+    const ol = screen.getByRole("navigation").querySelector("ol");
+    expect(ol).not.toBeNull();
+    // トリガーは ol より前 (先頭) にある。
+    expect(
+      trigger.compareDocumentPosition(ol as Node) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("Provider が無い (hasTree=false) 既定ではトリガーを描画しない", async () => {
+    renderWithRouter(<Breadcrumb rootLabel="Notes" rootTo="/notes" current="x" />);
+    await waitFor(() => expect(screen.getByRole("navigation")).toBeInTheDocument());
+    expect(screen.queryByRole("button", { name: "コンテンツツリーを開く" })).toBeNull();
   });
 });

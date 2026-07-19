@@ -3,9 +3,13 @@ import * as stylex from "@stylexjs/stylex";
 import { Breadcrumb, Breadcrumbs } from "react-aria-components";
 import { Link } from "@tanstack/react-router";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
+import { TreeDrawerTrigger } from "@/components/layout/TreeDrawerTrigger.tsx";
 
 const styles = stylex.create({
   nav: {
+    display: "flex",
+    alignItems: "center",
+    gap: space.s2,
     marginBottom: space.s4,
   },
   crumbs: {
@@ -60,6 +64,7 @@ export function BlogBreadcrumb({ items }: BlogBreadcrumbProps) {
   const last = items.length - 1;
   return (
     <nav aria-label="Breadcrumb" {...stylex.props(styles.nav)}>
+      <TreeDrawerTrigger />
       <Breadcrumbs {...stylex.props(styles.crumbs)}>
         <Breadcrumb {...stylex.props(styles.item)}>
           {items.length === 0 ? (
