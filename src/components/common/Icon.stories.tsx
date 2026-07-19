@@ -40,6 +40,7 @@ const ALL_TYPES: readonly IconType[] = [
   "search",
   "sun",
   "moon",
+  "panelLeft",
 ];
 
 const styles = stylex.create({
