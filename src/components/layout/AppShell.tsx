@@ -1,9 +1,12 @@
 import * as stylex from "@stylexjs/stylex";
-import type { ReactNode } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { colors, space, typography } from "@/styles/tokens.stylex.ts";
 import { IconNav } from "./IconNav.tsx";
 import { MobileTopBar } from "./MobileTopBar.tsx";
 import { MobileBottomNav } from "./MobileBottomNav.tsx";
+import { TreeDrawer } from "./TreeDrawer.tsx";
+import { TreeDrawerContext } from "./TreeDrawerContext.tsx";
+import { useCloseOnNavigate } from "./useCloseOnNavigate.ts";
 
 export type AppShellVariant = "home" | "list" | "detail";
 
@@ -115,23 +118,40 @@ const styles = stylex.create({
 export function AppShell({ variant, treeSidebar, rightSidebar, children }: AppShellProps) {
   const showTree = variant !== "home" && treeSidebar !== undefined;
   const showRight = variant === "detail" && rightSidebar !== undefined;
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const openDrawer = useCallback(() => setDrawerOpen(true), []);
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+  useCloseOnNavigate(closeDrawer);
+  const drawerContext = useMemo(
+    () => ({ hasTree: showTree, open: openDrawer }),
+    [showTree, openDrawer],
+  );
+
   return (
-    <div {...stylex.props(styles.root)}>
-      <IconNav />
-      <MobileTopBar />
-      <div
-        {...stylex.props(
-          styles.body,
-          showRight ? styles.bodyWithRight : showTree ? styles.bodyWithTree : null,
-        )}
-      >
-        {showTree ? <aside {...stylex.props(styles.treeArea)}>{treeSidebar}</aside> : null}
-        <div {...stylex.props(styles.mainArea, variant === "home" && styles.mainAreaHome)}>
-          {children}
+    <TreeDrawerContext.Provider value={drawerContext}>
+      <div {...stylex.props(styles.root)}>
+        <IconNav />
+        <MobileTopBar />
+        <div
+          {...stylex.props(
+            styles.body,
+            showRight ? styles.bodyWithRight : showTree ? styles.bodyWithTree : null,
+          )}
+        >
+          {showTree ? <aside {...stylex.props(styles.treeArea)}>{treeSidebar}</aside> : null}
+          <div {...stylex.props(styles.mainArea, variant === "home" && styles.mainAreaHome)}>
+            {children}
+          </div>
+          {showRight ? <aside {...stylex.props(styles.rightArea)}>{rightSidebar}</aside> : null}
         </div>
-        {showRight ? <aside {...stylex.props(styles.rightArea)}>{rightSidebar}</aside> : null}
+        <MobileBottomNav />
+        {showTree ? (
+          <TreeDrawer isOpen={drawerOpen} onOpenChange={setDrawerOpen}>
+            {treeSidebar}
+          </TreeDrawer>
+        ) : null}
       </div>
-      <MobileBottomNav />
-    </div>
+    </TreeDrawerContext.Provider>
   );
 }
