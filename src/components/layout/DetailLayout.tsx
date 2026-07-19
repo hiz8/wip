@@ -67,7 +67,7 @@ const styles = stylex.create({
     gridColumnStart: "main",
     gridColumnEnd: "main",
     minWidth: 0,
-    fontSize: typography.fontSizeBase,
+    fontSize: typography.fontSizeMd,
     lineHeight: typography.lineHeightRelaxed,
   },
 });

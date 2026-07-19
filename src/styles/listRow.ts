@@ -35,7 +35,7 @@ export const listRow = stylex.create({
   },
   title: {
     fontFamily: typography.fontBrand,
-    fontSize: typography.fontSizeBase,
+    fontSize: typography.fontSizeMd,
     fontWeight: typography.weightMedium,
     lineHeight: typography.lineHeightTight,
     color: colors.textPrimary,

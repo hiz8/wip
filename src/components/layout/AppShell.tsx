@@ -34,7 +34,7 @@ const styles = stylex.create({
     backgroundColor: colors.bgBase,
     color: colors.textPrimary,
     fontFamily: typography.fontSans,
-    fontSize: typography.fontSizeBase,
+    fontSize: typography.fontSizeMd,
     lineHeight: typography.lineHeightNormal,
   },
   body: {
