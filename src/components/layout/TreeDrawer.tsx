@@ -29,7 +29,6 @@ const styles = stylex.create({
     insetInlineStart: 0,
     width: "16rem",
     maxWidth: "80vw",
-    height: "100vh",
     backgroundColor: colors.bgSurface,
     borderInlineEndWidth: 1,
     borderInlineEndStyle: "solid",
