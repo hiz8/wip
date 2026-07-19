@@ -33,11 +33,13 @@ const styles = stylex.create({
   },
 });
 
+// 原則フラット (folder = null) を基調に、例外として folder 付きの行を 1 つ混ぜ、
+// 両者が同一リストで並ぶ見え方を確認する。
 const ROWS = [
   {
     slug: "react-server-components",
     title: "React Server Components の理解",
-    folder: "Frontend",
+    folder: null,
     updated: "2026-06-28T10:00:00+09:00",
   },
   {
@@ -49,7 +51,7 @@ const ROWS = [
   {
     slug: "obsidian-vault-structure",
     title: "Obsidian Vault の構成メモ — 長いタイトルの折り返しを確認するための例",
-    folder: "PKM",
+    folder: null,
     updated: "2026-01-03T08:15:00+09:00",
   },
 ] as const;

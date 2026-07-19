@@ -25,6 +25,15 @@ const styles = stylex.create({
     },
     gap: space.s4,
   },
+  // folder を持たない行 (原則フラットな Notes の通常ケース) 用。先頭の folder 列を
+  // 持たず、タイトルを左端から始めて不要な空白を出さない。
+  gridFlat: {
+    gridTemplateColumns: {
+      default: "minmax(0, 1fr) auto",
+      [BP_ROW_WIDE]: "minmax(0, 1fr) auto auto",
+    },
+    gap: space.s4,
+  },
   folder: {
     fontSize: typography.fontSizeXs,
     letterSpacing: "0.02em",
@@ -35,7 +44,9 @@ const styles = stylex.create({
   },
 });
 
-// Notes 一覧の 1 行 (フォルダ / タイトル / 開く → (hover 時のみ) / 日付)。行全体がリンク。
+// Notes 一覧の 1 行 (フォルダ (あれば) / タイトル / 開く → (hover 時のみ) / 日付)。
+// 行全体がリンク。folder は原則フラットな Notes では通常 null で、その場合は
+// 先頭の folder 列を省いて左端の空白を出さない。
 export function NoteListRow({ slug, title, folder, updated, showDivider }: NoteListRowProps) {
   const params = useMemo(() => ({ slug }), [slug]);
   return (
@@ -44,12 +55,12 @@ export function NoteListRow({ slug, title, folder, updated, showDivider }: NoteL
       params={params}
       {...stylex.props(
         listRow.row,
-        styles.grid,
+        folder ? styles.grid : styles.gridFlat,
         showDivider && listRow.divider,
         stylex.defaultMarker(),
       )}
     >
-      <span {...stylex.props(styles.folder)}>{folder}</span>
+      {folder ? <span {...stylex.props(styles.folder)}>{folder}</span> : null}
       <span {...stylex.props(listRow.title, listRow.titleHoverAccent)}>{title}</span>
       <span {...stylex.props(listRow.openHint, styles.hintWide)} aria-hidden="true">
         開く →
