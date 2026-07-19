@@ -26,10 +26,9 @@ const styles = stylex.create({
   sub: {
     fontFamily: typography.fontBrand,
     fontStyle: "italic",
-    fontSize: typography.fontSizeMd,
+    fontSize: typography.fontSizeSm,
     color: colors.textMuted,
     lineHeight: typography.lineHeightNormal,
-    maxWidth: "32em",
     marginBottom: space.s4,
   },
   tagsLink: {

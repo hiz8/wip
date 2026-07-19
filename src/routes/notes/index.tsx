@@ -45,7 +45,7 @@ function NotesIndex() {
           crumbRoot="Notes"
           crumbCurrent="最近の更新"
           title="Notes"
-          sub="学んだことを書き留めた育成中のノート。更新の新しい順に並んでいる。"
+          sub="タスクなどに取り組む際に参照する情報や考えをまとめたノート。原則、意図的に書きかけの状態となっている。"
           tagsTo="/notes/tags"
         />
 

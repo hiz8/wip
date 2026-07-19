@@ -100,8 +100,8 @@ function GlossaryIndex() {
         <IndexPageHeader
           crumbRoot="Glossary"
           crumbCurrent="索引"
-          title="単語帳"
-          sub="Web 開発で「毎回ググっている」用語を、自分の言葉で定義し直したもの。Notes より粒度が細かく、Books からも参照される。"
+          title="Glossary"
+          sub="デザインや Web 開発時に参照する用語の簡易的なメモ。"
           tagsTo="/glossary/tags"
         />
 

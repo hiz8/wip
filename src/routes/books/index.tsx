@@ -52,8 +52,8 @@ function BooksIndex() {
         <IndexPageHeader
           crumbRoot="Books"
           crumbCurrent="一覧"
-          title="読んだ本"
-          sub="手を動かしながら読んだ本だけ。Notes から参照されることが多い。"
+          title="Books"
+          sub="読書ノート。"
           tagsTo="/books/tags"
         />
 
