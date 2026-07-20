@@ -8,9 +8,13 @@ import { SearchDialog } from "@/components/common/SearchDialog.tsx";
 const pagefindCtor = vi.fn<(options: { element: HTMLElement }) => void>();
 
 // pagefind-ui.js (IIFE) が script onload 時に window.PagefindUI を生やす挙動を再現する。
+// 実物同様、コンストラクタが渡された element 配下に検索 input を同期的に設置する。
 function installPagefindGlobal(): void {
   function MockPagefindUI(this: object, options: { element: HTMLElement }) {
     pagefindCtor(options);
+    const input = document.createElement("input");
+    input.className = "pagefind-ui__search-input";
+    options.element.append(input);
   }
   window.PagefindUI = MockPagefindUI as unknown as NonNullable<typeof window.PagefindUI>;
 }
@@ -79,6 +83,44 @@ describe("SearchDialog", () => {
     await user.click(screen.getByRole("button", { name: "open" }));
     await vi.waitFor(() => {
       expect(document.querySelectorAll('link[href="/pagefind/pagefind-ui.css"]').length).toBe(1);
+    });
+  });
+
+  // 再現バグ: 閉じると react-aria は Modal の中身 (Pagefind の DOM を含む) を
+  // アンマウントするため、再度開いたときは新しい空の container に Pagefind を
+  // 再マウントする必要がある。
+  it("re-mounts Pagefind UI each time the dialog is reopened", async () => {
+    installPagefindGlobal();
+    const user = userEvent.setup();
+    render(<Harness />);
+
+    await user.click(screen.getByRole("button", { name: "open" }));
+    await vi.waitFor(() => {
+      expect(screen.getByRole("dialog")).toContainHTML("pagefind-ui__search-input");
+    });
+
+    await user.keyboard("{Escape}");
+    await vi.waitFor(() => {
+      expect(screen.queryByRole("dialog")).toBeNull();
+    });
+
+    await user.click(screen.getByRole("button", { name: "open" }));
+    await vi.waitFor(() => {
+      expect(screen.getByRole("dialog")).toContainHTML("pagefind-ui__search-input");
+    });
+    expect(pagefindCtor.mock.calls.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("focuses the search input after mounting", async () => {
+    installPagefindGlobal();
+    const user = userEvent.setup();
+    render(<Harness />);
+
+    await user.click(screen.getByRole("button", { name: "open" }));
+    await vi.waitFor(() => {
+      const input = document.querySelector(".pagefind-ui__search-input");
+      expect(input).not.toBeNull();
+      expect(document.activeElement).toBe(input);
     });
   });
 });

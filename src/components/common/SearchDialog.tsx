@@ -97,26 +97,33 @@ function injectPagefindCss(): void {
   document.head.append(link);
 }
 
-async function mountPagefindUI(container: HTMLElement): Promise<void> {
-  const PagefindUI = await loadPagefindUi();
-  // Pagefind UI は副作用で自身を設置する。インスタンスは意図的に保持しない。
-  void new PagefindUI(makePagefindUIOptions(container));
+// Pagefind UI は非同期にマウントされ、その時点では react-aria の初期オートフォーカスは
+// 既に走り終えている。加えて HTML の autofocus 属性は document 内で一度しか発火せず
+// 2 回目以降の open では効かないため、マウント直後に明示的に検索 input へフォーカスする。
+function focusSearchInput(container: HTMLElement): void {
+  container.querySelector<HTMLInputElement>(".pagefind-ui__search-input")?.focus();
 }
 
 export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const mountedRef = useRef(false);
 
   useEffect(() => {
     if (!open) return;
     const container = containerRef.current;
-    if (!container || mountedRef.current) return;
+    if (!container) return;
     injectPagefindCss();
     let cancelled = false;
     void (async () => {
       try {
-        await mountPagefindUI(container);
-        if (!cancelled) mountedRef.current = true;
+        const PagefindUI = await loadPagefindUi();
+        // 閉じると react-aria が Modal ごと container を破棄するため、開くたびに
+        // 新しい空の container へ再マウントする。childElementCount による判定は
+        // container が open ごとに作り直されることで自然にリセットされ、同時に
+        // await 中の再実行 (StrictMode 等) による二重マウントも防ぐ。
+        if (cancelled || container.childElementCount > 0) return;
+        // Pagefind UI は副作用で自身を container 配下に設置する。インスタンスは保持しない。
+        void new PagefindUI(makePagefindUIOptions(container));
+        focusSearchInput(container);
       } catch (error) {
         console.error("[search] failed to load Pagefind UI", error);
       }
