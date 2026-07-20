@@ -8,29 +8,12 @@ import { useTheme } from "@/lib/theme/useTheme.ts";
 import { nextPreference, type Preference } from "@/lib/theme/constants.ts";
 
 const LABEL: Record<Preference, string> = {
-  system: "テーマ: システム",
   light: "テーマ: ライト",
   dark: "テーマ: ダーク",
 };
 
-function AutoIcon() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M12 3a9 9 0 010 18z" fill="currentColor" />
-    </svg>
-  );
-}
-
 function ThemeIcon({ preference }: { preference: Preference }) {
-  switch (preference) {
-    case "light":
-      return <Icon type="sun" size={28} />;
-    case "dark":
-      return <Icon type="moon" size={28} />;
-    default:
-      return <AutoIcon />;
-  }
+  return preference === "dark" ? <Icon type="moon" size={28} /> : <Icon type="sun" size={28} />;
 }
 
 export function ThemeToggle() {

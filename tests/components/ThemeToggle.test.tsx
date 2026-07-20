@@ -30,36 +30,34 @@ describe("ThemeToggle", () => {
     vi.unstubAllGlobals();
   });
 
-  it("renders with the system label by default", () => {
+  it("renders with the light label by default when the OS prefers light", () => {
     render(<ThemeToggle />);
-    expect(screen.getByRole("button", { name: /システム/u })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /ライト/u })).toBeInTheDocument();
   });
 
-  it("cycles through preferences on click and persists to localStorage", () => {
+  it("toggles between light and dark on click and persists to localStorage", () => {
     render(<ThemeToggle />);
-    fireEvent.click(screen.getByRole("button", { name: /システム/u }));
-    expect(window.localStorage.getItem(STORAGE_KEY)).toBe("light");
     fireEvent.click(screen.getByRole("button", { name: /ライト/u }));
     expect(window.localStorage.getItem(STORAGE_KEY)).toBe("dark");
     fireEvent.click(screen.getByRole("button", { name: /ダーク/u }));
-    expect(window.localStorage.getItem(STORAGE_KEY)).toBe("system");
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBe("light");
   });
 
   it("updates documentElement dataset to reflect the chosen preference", () => {
     render(<ThemeToggle />);
-    fireEvent.click(screen.getByRole("button", { name: /システム/u }));
-    expect(document.documentElement.dataset["theme"]).toBe("light");
     fireEvent.click(screen.getByRole("button", { name: /ライト/u }));
     expect(document.documentElement.dataset["theme"]).toBe("dark");
+    fireEvent.click(screen.getByRole("button", { name: /ダーク/u }));
+    expect(document.documentElement.dataset["theme"]).toBe("light");
   });
 
   it("exposes the label via a react-aria tooltip instead of a native title", async () => {
     const user = userEvent.setup();
     render(<ThemeToggle />);
-    const button = screen.getByRole("button", { name: /システム/u });
+    const button = screen.getByRole("button", { name: /ライト/u });
     expect(button).not.toHaveAttribute("title");
     await user.tab();
     expect(button).toHaveFocus();
-    expect(await screen.findByRole("tooltip")).toHaveTextContent("テーマ: システム");
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("テーマ: ライト");
   });
 });
