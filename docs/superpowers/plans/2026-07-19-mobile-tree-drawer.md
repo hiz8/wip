@@ -27,10 +27,12 @@
 ### Task 1: panel-left アイコンを Icon に追加
 
 **Files:**
+
 - Modify: `src/components/common/Icon.tsx`
 - Test: `tests/components/Icon.test.tsx`
 
 **Interfaces:**
+
 - Consumes: なし
 - Produces: `IconType` に `"panelLeft"` を追加。`<Icon type="panelLeft" />` が描画可能になる
 
@@ -119,11 +121,13 @@ git commit -m "feat: Icon に panelLeft アイコンを追加"
 ### Task 2: TreeDrawerContext とトリガーボタン
 
 **Files:**
+
 - Create: `src/components/layout/TreeDrawerContext.tsx`
 - Create: `src/components/layout/TreeDrawerTrigger.tsx`
 - Test: `tests/components/TreeDrawerTrigger.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `<Icon type="panelLeft" />`（Task 1）、`a11y.srOnly`（`@/styles/a11y.ts`）
 - Produces:
   - `TreeDrawerContext`（`React.Context<TreeDrawerContextValue>`）、`TreeDrawerContextValue = { hasTree: boolean; open: () => void }`、デフォルト `{ hasTree: false, open: () => {} }`
@@ -266,10 +270,12 @@ git commit -m "feat: ツリードロワーの Context とトリガーボタン�
 ### Task 3: TreeDrawer 本体（左スライドインのモーダル）
 
 **Files:**
+
 - Create: `src/components/layout/TreeDrawer.tsx`
 - Test: `tests/components/TreeDrawer.test.tsx`
 
 **Interfaces:**
+
 - Consumes: react-aria-components の `ModalOverlay` / `Modal` / `Dialog`
 - Produces: `<TreeDrawer isOpen={boolean} onOpenChange={(open: boolean) => void}>{children}</TreeDrawer>`。開いている間だけ `role="dialog"`（`aria-label="コンテンツツリー"`）と children を描画
 
@@ -427,10 +433,12 @@ git commit -m "feat: 左スライドインの TreeDrawer を追加"
 ### Task 4: 遷移時クローズ用フック useCloseOnNavigate
 
 **Files:**
+
 - Create: `src/components/layout/useCloseOnNavigate.ts`
 - Test: `tests/components/useCloseOnNavigate.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `useRouterState`（`@tanstack/react-router`）
 - Produces: `useCloseOnNavigate(close: () => void): void`。`location.pathname` が変わるたびに `close()` を呼ぶ（`close` は呼び出し側で `useCallback` により安定させる前提）。mount 時にも 1 度呼ばれる（その時点でドロワーは閉じているため無害）
 
@@ -465,10 +473,7 @@ function makeRouter(close: () => void) {
       useCloseOnNavigate(close);
       const navigate = useNavigate();
       return (
-        <button
-          type="button"
-          onClick={() => navigate({ to: "/item/$id", params: { id: "2" } })}
-        >
+        <button type="button" onClick={() => navigate({ to: "/item/$id", params: { id: "2" } })}>
           go
         </button>
       );
@@ -535,10 +540,12 @@ git commit -m "feat: 遷移時にドロワーを閉じる useCloseOnNavigate を
 ### Task 5: AppShell に状態・Provider・ドロワーを配線
 
 **Files:**
+
 - Modify: `src/components/layout/AppShell.tsx`
 - Test: `tests/components/AppShell.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `TreeDrawerContext`（Task 2）、`TreeDrawer`（Task 3）、`useCloseOnNavigate`（Task 4）、`TreeDrawerTrigger`（テストのみ、Task 2）
 - Produces: `AppShell` が `showTree` のとき Context を `{ hasTree: true, open }` で提供し、`<TreeDrawer>` に `treeSidebar` を描画。トリガー押下でドロワーが開き `treeSidebar` を表示する
 
@@ -722,12 +729,14 @@ git commit -m "feat: AppShell にツリードロワーの状態と Provider を�
 ### Task 6: パンくず先頭にトリガーを配置（Breadcrumb / BlogBreadcrumb）
 
 **Files:**
+
 - Modify: `src/components/common/Breadcrumb.tsx`
 - Modify: `src/components/blog/BlogBreadcrumb.tsx`
 - Test: `tests/components/Breadcrumb.test.tsx`（既存に追記）
 - Test: `tests/components/BlogBreadcrumb.test.tsx`（新規）
 
 **Interfaces:**
+
 - Consumes: `<TreeDrawerTrigger />`（Task 2）、`TreeDrawerContext`（テスト用）
 - Produces: `Breadcrumb` / `BlogBreadcrumb` が `<nav>` の先頭（`<Breadcrumbs>` = `ol` の前）にトリガーを描画。トリガーはボタンなので `ol` の外に置きセマンティクスを保つ
 
@@ -745,27 +754,27 @@ import { TreeDrawerContext } from "@/components/layout/TreeDrawerContext.tsx";
 `describe("Breadcrumb", …)` 内に追記:
 
 ```tsx
-  it("ツリーがある (hasTree=true) とき、crumbs の前にトリガーを描画する", async () => {
-    renderWithRouter(
-      <TreeDrawerContext.Provider value={{ hasTree: true, open: () => {} }}>
-        <Breadcrumb rootLabel="Notes" rootTo="/notes" current="x" />
-      </TreeDrawerContext.Provider>,
-    );
-    await waitFor(() => expect(screen.getByRole("navigation")).toBeInTheDocument());
-    const trigger = screen.getByRole("button", { name: "コンテンツツリーを開く" });
-    const ol = screen.getByRole("navigation").querySelector("ol");
-    expect(ol).not.toBeNull();
-    // トリガーは ol より前 (先頭) にある。
-    expect(
-      trigger.compareDocumentPosition(ol as Node) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-  });
+it("ツリーがある (hasTree=true) とき、crumbs の前にトリガーを描画する", async () => {
+  renderWithRouter(
+    <TreeDrawerContext.Provider value={{ hasTree: true, open: () => {} }}>
+      <Breadcrumb rootLabel="Notes" rootTo="/notes" current="x" />
+    </TreeDrawerContext.Provider>,
+  );
+  await waitFor(() => expect(screen.getByRole("navigation")).toBeInTheDocument());
+  const trigger = screen.getByRole("button", { name: "コンテンツツリーを開く" });
+  const ol = screen.getByRole("navigation").querySelector("ol");
+  expect(ol).not.toBeNull();
+  // トリガーは ol より前 (先頭) にある。
+  expect(
+    trigger.compareDocumentPosition(ol as Node) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+});
 
-  it("Provider が無い (hasTree=false) 既定ではトリガーを描画しない", async () => {
-    renderWithRouter(<Breadcrumb rootLabel="Notes" rootTo="/notes" current="x" />);
-    await waitFor(() => expect(screen.getByRole("navigation")).toBeInTheDocument());
-    expect(screen.queryByRole("button", { name: "コンテンツツリーを開く" })).toBeNull();
-  });
+it("Provider が無い (hasTree=false) 既定ではトリガーを描画しない", async () => {
+  renderWithRouter(<Breadcrumb rootLabel="Notes" rootTo="/notes" current="x" />);
+  await waitFor(() => expect(screen.getByRole("navigation")).toBeInTheDocument());
+  expect(screen.queryByRole("button", { name: "コンテンツツリーを開く" })).toBeNull();
+});
 ```
 
 - [ ] **Step 2: テストが失敗することを確認**
@@ -795,14 +804,12 @@ import { TreeDrawerTrigger } from "@/components/layout/TreeDrawerTrigger.tsx";
 3-3. `return` の `<nav>` 先頭にトリガーを追加:
 
 ```tsx
-  return (
-    <nav aria-label="パンくず" {...stylex.props(styles.nav)}>
-      <TreeDrawerTrigger />
-      <Breadcrumbs {...stylex.props(styles.crumbs)}>
-        {/* 既存の中身はそのまま */}
-      </Breadcrumbs>
-    </nav>
-  );
+return (
+  <nav aria-label="パンくず" {...stylex.props(styles.nav)}>
+    <TreeDrawerTrigger />
+    <Breadcrumbs {...stylex.props(styles.crumbs)}>{/* 既存の中身はそのまま */}</Breadcrumbs>
+  </nav>
+);
 ```
 
 - [ ] **Step 4: Breadcrumb テストが通ることを確認**
@@ -872,14 +879,12 @@ import { TreeDrawerTrigger } from "@/components/layout/TreeDrawerTrigger.tsx";
 7-3. `return` の `<nav>` 先頭にトリガーを追加:
 
 ```tsx
-  return (
-    <nav aria-label="Breadcrumb" {...stylex.props(styles.nav)}>
-      <TreeDrawerTrigger />
-      <Breadcrumbs {...stylex.props(styles.crumbs)}>
-        {/* 既存の中身はそのまま */}
-      </Breadcrumbs>
-    </nav>
-  );
+return (
+  <nav aria-label="Breadcrumb" {...stylex.props(styles.nav)}>
+    <TreeDrawerTrigger />
+    <Breadcrumbs {...stylex.props(styles.crumbs)}>{/* 既存の中身はそのまま */}</Breadcrumbs>
+  </nav>
+);
 ```
 
 - [ ] **Step 8: BlogBreadcrumb テストが通ることを確認**
@@ -904,9 +909,11 @@ git commit -m "feat: パンくずの先頭にツリードロワーのトリガ�
 ### Task 7: Storybook ストーリーと最終検証
 
 **Files:**
+
 - Create: `src/components/layout/TreeDrawer.stories.tsx`
 
 **Interfaces:**
+
 - Consumes: `TreeDrawer`（Task 3）
 - Produces: Storybook で TreeDrawer の開閉を確認できるストーリー（Vault 不要のダミー内容）
 
@@ -968,11 +975,14 @@ Expected: typecheck エラーなし / 全テスト PASS / lint エラーなし
 `fixtures/vault` を使えば NAS 上の Vault なしで実挙動を確認できる（sandbox 無効化が必要）。
 
 Run:
+
 ```bash
 export PATH=~/.nvm/versions/node/v24.16.0/bin:$PATH
 VAULT_ROOT=tests/fixtures/vault npm run build && VAULT_ROOT=tests/fixtures/vault npm run preview
 ```
+
 確認項目（ブラウザの devtools で幅を `< 768px` にする）:
+
 - Notes/Glossary/Books の詳細・一覧・タグ、Blog 一覧・タグでパンくず先頭に panel-left アイコンが出る
 - クリックで左からドロワーがスライドインし TreeSidebar が表示される
 - 範囲外クリック / Esc で閉じる
