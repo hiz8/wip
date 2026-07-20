@@ -47,11 +47,18 @@ describe("useTheme", () => {
     vi.unstubAllGlobals();
   });
 
-  it("defaults to system and resolves from matchMedia", () => {
+  it("defaults to light when no preference is stored and the OS prefers light", () => {
     installMatchMedia(false);
     const { result } = renderHook(() => useTheme());
-    expect(result.current.preference).toBe("system");
+    expect(result.current.preference).toBe("light");
     expect(result.current.resolved).toBe("light");
+  });
+
+  it("defaults to dark when no preference is stored and the OS prefers dark", () => {
+    installMatchMedia(true);
+    const { result } = renderHook(() => useTheme());
+    expect(result.current.preference).toBe("dark");
+    expect(result.current.resolved).toBe("dark");
   });
 
   it("reads existing preference from localStorage", () => {
@@ -74,14 +81,11 @@ describe("useTheme", () => {
     expect(document.documentElement.dataset["themeResolved"]).toBe("dark");
   });
 
-  it("follows OS change while preference is system", () => {
-    const media = installMatchMedia(false);
-    const { result, rerender } = renderHook(() => useTheme());
-    expect(result.current.resolved).toBe("light");
-    act(() => {
-      media.dispatch(true);
-    });
-    rerender();
+  it("ignores an obsolete system value in localStorage and derives from the OS", () => {
+    installMatchMedia(true);
+    window.localStorage.setItem(STORAGE_KEY, "system");
+    const { result } = renderHook(() => useTheme());
+    expect(result.current.preference).toBe("dark");
     expect(result.current.resolved).toBe("dark");
   });
 });
