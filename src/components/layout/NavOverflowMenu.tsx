@@ -13,7 +13,7 @@ import {
 } from "react-aria-components";
 import { createLink } from "@tanstack/react-router";
 import { colors, radius, shadow, space, typography } from "@/styles/tokens.stylex.ts";
-import { Icon } from "@/components/common/Icon.tsx";
+import { Icon, type IconType } from "@/components/common/Icon.tsx";
 import { TooltipBubble } from "@/components/common/Tooltip.tsx";
 import type { MenuNavSection } from "./navSections.tsx";
 
@@ -89,7 +89,10 @@ interface NavOverflowMenuProps {
   triggerStyle?:
     | stylex.StyleXStyles
     | ReadonlyArray<stylex.StyleXStyles | false | null | undefined>;
-  // トリガー Button の中身。省略時はドットアイコンのみ。
+  // 省略時トリガーに出すドットアイコン。並び軸に合わせて呼び出し側が選ぶ
+  // (縦レール = menuDotsVertical / 横バー = menuDots)。children 指定時は無視。
+  iconType?: IconType;
+  // トリガー Button の中身。省略時は iconType のドットアイコンのみ。
   children?: ReactNode;
 }
 
@@ -102,11 +105,12 @@ export function NavOverflowMenu({
   label,
   withTooltip = false,
   triggerStyle,
+  iconType = "menuDots",
   children,
 }: NavOverflowMenuProps) {
   const trigger = (
     <Button aria-label={label} {...stylex.props(triggerStyle)}>
-      {children ?? <Icon type="menuDots" size={28} />}
+      {children ?? <Icon type={iconType} size={28} />}
     </Button>
   );
   return (
@@ -123,11 +127,12 @@ export function NavOverflowMenu({
         <Menu aria-label={label} {...stylex.props(styles.menu)}>
           {sections.map((section) => {
             const active = section.isActive(path);
-            const iconType = active && section.iconActive ? section.iconActive : section.icon;
+            const sectionIconType =
+              active && section.iconActive ? section.iconActive : section.icon;
             return (
               <MenuItemLink key={section.to} to={section.to} textValue={section.label}>
                 <span {...stylex.props(styles.itemIcon)} aria-hidden>
-                  {iconType ? <Icon type={iconType} size={18} /> : null}
+                  {sectionIconType ? <Icon type={sectionIconType} size={18} /> : null}
                 </span>
                 <Text slot="label" {...stylex.props(active && styles.itemLabelActive)}>
                   {section.label}

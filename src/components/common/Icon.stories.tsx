@@ -40,6 +40,10 @@ const ALL_TYPES: readonly IconType[] = [
   "search",
   "sun",
   "moon",
+  "menuDots",
+  "menuDotsBold",
+  "menuDotsVertical",
+  "menuDotsVerticalBold",
   "panelLeft",
 ];
 

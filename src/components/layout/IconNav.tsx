@@ -63,10 +63,6 @@ const styles = stylex.create({
   hideGlossary: { display: { default: "inline-flex", [MQ_HIDE_GLOSSARY]: "none" } },
   hideBooks: { display: { default: "inline-flex", [MQ_HIDE_BOOKS]: "none" } },
   hideBlog: { display: { default: "inline-flex", [MQ_HIDE_BLOG]: "none" } },
-  // ドットの暫定アイコンには bold 字形がないため、現在地がメニュー内にあるときは色で示す。
-  dotsActive: {
-    color: colors.navIconActive,
-  },
 });
 
 // NAV_SECTIONS と index を揃えた hide スタイル。Home (index 0) は退避しない。
@@ -77,10 +73,6 @@ const HIDE_STYLES = [
   styles.hideBooks,
   styles.hideBlog,
 ];
-
-// ドットトリガーのスタイル。レンダー内での配列生成を避けるため 2 状態を事前に持つ。
-const DOTS_TRIGGER_STYLE = [navChrome.iconButton];
-const DOTS_TRIGGER_ACTIVE_STYLE = [navChrome.iconButton, styles.dotsActive];
 
 export function IconNav() {
   const matches = useMatches();
@@ -122,7 +114,9 @@ export function IconNav() {
           placement="end"
           label="More"
           withTooltip
-          triggerStyle={menuHoldsActive ? DOTS_TRIGGER_ACTIVE_STYLE : DOTS_TRIGGER_STYLE}
+          // 縦レールの並び軸に合わせて縦 3 点 (ケバブ)。横バーの MobileBottomNav は横 3 点。
+          iconType={menuHoldsActive ? "menuDotsVerticalBold" : "menuDotsVertical"}
+          triggerStyle={navChrome.iconButton}
         />
         <div {...stylex.props(styles.spacer)} />
         <ThemeToggle />

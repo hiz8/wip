@@ -92,10 +92,6 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     cursor: "pointer",
   },
-  // ドットの暫定アイコンには bold 字形がないため、現在地がメニュー内にあるときは色で示す。
-  innerActive: {
-    color: colors.navIconActive,
-  },
 });
 
 // NAV_SECTIONS と index を揃えた hide スタイル。Home (index 0) は退避しない。
@@ -131,8 +127,8 @@ export function MobileBottomNav() {
         label="More"
         triggerStyle={styles.menuTab}
       >
-        <span {...stylex.props(styles.inner, menuHoldsActive && styles.innerActive)}>
-          <Icon type="menuDots" size={22} />
+        <span {...stylex.props(styles.inner)}>
+          <Icon type={menuHoldsActive ? "menuDotsBold" : "menuDots"} size={22} />
           <span {...stylex.props(styles.label)}>More</span>
         </span>
       </NavOverflowMenu>
